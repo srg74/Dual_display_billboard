@@ -14,3 +14,7 @@
 *.checksum
 include/webcontent.h
 include/serets.h
+
+# Project specific folders
+logs/
+todo/
