@@ -137,6 +137,25 @@ def process_misc_file(path):
         return string_to_c_array(content, name=filename, compress=True)
 
 
+def process_css_file(filepath, filename):
+    with open(filepath, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Minify CSS (basic)
+    content = re.sub(r'/\*.*?\*/', '', content, flags=re.DOTALL)  # Remove comments
+    content = re.sub(r'\s+', ' ', content)  # Compress whitespace
+    content = content.strip()
+    
+    # Add to assets
+    var_name = filename.replace('.', '_').replace('-', '_').upper()
+    
+    css_content = f'''
+const char {var_name}[] PROGMEM = R"({content})";
+'''
+    
+    return css_content, filename
+
+
 def make_index():
     struct = """typedef struct {
     const char* filename;
@@ -254,7 +273,7 @@ with open(output_file, "w", encoding="utf-8") as f:
             if filename.startswith('bootstrap'):
                 f.write(process_copyright_mapping_file(full_path) + "\n")
             else:
-                f.write(process_misc_file(full_path) + "\n")
+                f.write(process_css_file(full_path, filename) + "\n")
         # ico, jpg
         elif filename.endswith((".ico",".jpg")):
             f.write(binary_to_c_array(full_path, compress=True) + "\n")

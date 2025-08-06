@@ -1,25 +1,53 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Billboard Setup Portal</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <style>
+        /* Reset and base styles */
+        * { box-sizing: border-box; }
         body {
             background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
             min-height: 100vh;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #f0f6fc;
         }
-        .main-container {
-            padding: 2rem 0;
-            min-height: 100vh;
+        .container {
+            width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+            max-width: 1140px;
+        }
+        .row {
             display: flex;
-            align-items: center;
+            flex-wrap: wrap;
+            margin-right: -15px;
+            margin-left: -15px;
         }
-        .setup-card {
-            background: rgba(22, 27, 34, 0.95);
+        .col-lg-6, .col-md-8 {
+            position: relative;
+            width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+        }
+        @media (min-width: 768px) {
+            .col-md-8 { flex: 0 0 66.666667%; max-width: 66.666667%; }
+        }
+        @media (min-width: 992px) {
+            .col-lg-6 { flex: 0 0 50%; max-width: 50%; }
+        }
+        .card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            word-wrap: break-word;
+            background-color: rgba(22, 27, 34, 0.95);
             border: 1px solid #30363d;
             border-radius: 16px;
             box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
@@ -30,24 +58,113 @@
             border-radius: 16px 16px 0 0 !important;
             border: none;
             padding: 1.5rem;
+            margin-bottom: 0;
         }
-        .btn-scan {
+        .card-body {
+            flex: 1 1 auto;
+            min-height: 1px;
+            padding: 1.5rem;
+        }
+        .btn {
+            display: inline-block;
+            font-weight: 400;
+            text-align: center;
+            vertical-align: middle;
+            user-select: none;
+            background-color: transparent;
+            border: 1px solid transparent;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-radius: 0.25rem;
+            transition: all 0.15s ease-in-out;
+            cursor: pointer;
+            text-decoration: none;
+            color: #f0f6fc;
+        }
+        .btn-primary {
             background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
             border: none;
-            transition: all 0.3s ease;
+            color: #fff;
         }
-        .btn-scan:hover {
+        .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 16px rgba(31, 111, 235, 0.3);
         }
-        .btn-connect {
+        .btn-success {
             background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
             border: none;
-            transition: all 0.3s ease;
+            color: #fff;
         }
-        .btn-connect:hover {
+        .btn-success:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 16px rgba(35, 134, 54, 0.3);
+        }
+        .btn-outline-secondary {
+            color: #8b949e;
+            border-color: #30363d;
+            background-color: transparent;
+        }
+        .btn-outline-secondary:hover {
+            color: #f0f6fc;
+            background-color: #30363d;
+            border-color: #30363d;
+        }
+        .btn-outline-info {
+            color: #58a6ff;
+            border-color: #1f6feb;
+            background-color: transparent;
+        }
+        .btn-outline-info:hover {
+            color: #fff;
+            background-color: #1f6feb;
+            border-color: #1f6feb;
+        }
+        .btn-group {
+            position: relative;
+            display: inline-flex;
+            vertical-align: middle;
+            width: 100%;
+        }
+        .btn-group > .btn {
+            position: relative;
+            flex: 1 1 auto;
+        }
+        .form-control, .form-select {
+            display: block;
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            font-weight: 400;
+            line-height: 1.5;
+            color: #f0f6fc;
+            background-color: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 0.25rem;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+        .form-control:focus, .form-select:focus {
+            color: #f0f6fc;
+            background-color: #21262d;
+            border-color: #1f6feb;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgba(31, 111, 235, 0.25);
+        }
+        .form-select option {
+            background-color: #21262d;
+            color: #f0f6fc;
+        }
+        .form-label {
+            margin-bottom: 0.5rem;
+            font-weight: 400;
+            color: #f0f6fc;
+        }
+        .alert {
+            position: relative;
+            padding: 0.75rem 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 0.25rem;
         }
         .status-info {
             background: rgba(31, 111, 235, 0.1);
@@ -64,29 +181,25 @@
             border: 1px solid #da3633;
             color: #f85149;
         }
-        .form-control:focus, .form-select:focus {
-            border-color: #1f6feb;
-            box-shadow: 0 0 0 0.25rem rgba(31, 111, 235, 0.25);
-        }
-        .form-select {
-            background-color: #21262d;
-            border-color: #30363d;
-            color: #f0f6fc;
-        }
-        .form-select option {
-            background-color: #21262d;
-            color: #f0f6fc;
-        }
-        .network-option {
+        .d-flex { display: flex; }
+        .align-items-center { align-items: center; }
+        .justify-content-center { justify-content: center; }
+        .text-center { text-align: center; }
+        .text-white { color: #fff; }
+        .w-100 { width: 100%; }
+        .mb-0 { margin-bottom: 0; }
+        .mb-3 { margin-bottom: 1rem; }
+        .mb-4 { margin-bottom: 1.5rem; }
+        .me-2 { margin-right: 0.5rem; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .p-4 { padding: 1.5rem; }
+        .h3 { font-size: 1.75rem; }
+        .mt-3 { margin-top: 1rem; }
+        .main-container {
+            padding: 2rem 0;
+            min-height: 100vh;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-        }
-        .btn-group {
-            width: 100%;
-        }
-        .btn-group .btn {
-            flex: 1;
         }
     </style>
 </head>
@@ -94,59 +207,48 @@
     <div class="container main-container">
         <div class="row justify-content-center w-100">
             <div class="col-lg-6 col-md-8">
-                <div class="card setup-card">
+                <div class="card">
                     <div class="card-header text-center">
                         <h1 class="h3 mb-0 text-white">
-                            <i class="bi bi-router"></i> Billboard Wi-Fi Connection Portal
+                            Billboard Wi-Fi Connection Portal
                         </h1>
                     </div>
                     <div class="card-body p-4">
-                        <div class="alert status-info mb-4">
-                            <div class="d-flex align-items-center">
-                                <i class="bi bi-info-circle me-2"></i>
-                                <div>
-                                    <strong>WiFi Network:</strong> Billboard AP<br>
-                                    <strong>Portal URL:</strong> http://4.3.2.1
-                                </div>
-                            </div>
-                        </div>
-                        
                         <!-- Network selection section -->
                         <div class="mb-4">
                             <div class="btn-group mb-3" role="group">
-                                <button class="btn btn-scan btn-primary" onclick="scanWifi()">
-                                    <i class="bi bi-search"></i> Scan Networks
+                                <button class="btn btn-primary" onclick="scanWifi()">
+                                    Scan Networks
                                 </button>
                                 <button class="btn btn-outline-secondary" onclick="toggleManualEntry()" id="manualBtn">
-                                    <i class="bi bi-pencil"></i> Manual Entry
+                                    Manual Entry
                                 </button>
                             </div>
                             <div id="networkSelect" class="mb-3" style="display:none;">
                                 <label for="networkDropdown" class="form-label">
-                                    <i class="bi bi-list"></i> Available Networks
+                                    Available Networks
                                 </label>
                                 <select class="form-select" id="networkDropdown" onchange="selectFromDropdown()">
                                     <option value="">Select a network...</option>
                                 </select>
                             </div>
                         </div>
-
                         <!-- WiFi form -->
                         <form id="wifiForm" onsubmit="return connectWifi(event)">
                             <div class="mb-3">
                                 <label for="ssid" class="form-label">
-                                    <i class="bi bi-wifi"></i> WiFi Network
+                                    WiFi Network
                                 </label>
                                 <input type="text" class="form-control" id="ssid" required>
                             </div>
                             <div class="mb-4">
                                 <label for="password" class="form-label">
-                                    <i class="bi bi-key"></i> Password
+                                    Password
                                 </label>
                                 <input type="password" class="form-control" id="password">
                             </div>
-                            <button type="submit" class="btn btn-connect btn-success w-100 py-2">
-                                <i class="bi bi-plug"></i> Connect to Network
+                            <button type="submit" class="btn btn-success w-100 py-2">
+                                Connect to Network
                             </button>
                         </form>
                         <div id="status" class="mt-3"></div>
@@ -155,30 +257,26 @@
             </div>
         </div>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         var isManualMode = false;
         var networksData = [];
-        
         function showStatus(message, type) {
             var statusDiv = document.getElementById('status');
             var alertClass = 'alert status-' + type;
             statusDiv.innerHTML = '<div class="' + alertClass + '">' + message + '</div>';
         }
-        
         function toggleManualEntry() {
             isManualMode = !isManualMode;
             var manualBtn = document.getElementById('manualBtn');
             var networkSelect = document.getElementById('networkSelect');
             if (isManualMode) {
-                manualBtn.innerHTML = '<i class="bi bi-list"></i> Use Dropdown';
+                manualBtn.innerHTML = 'Use Dropdown';
                 manualBtn.className = 'btn btn-outline-info';
                 networkSelect.style.display = 'none';
                 document.getElementById('ssid').value = '';
                 showStatus('Manual entry mode enabled', 'info');
             } else {
-                manualBtn.innerHTML = '<i class="bi bi-pencil"></i> Manual Entry';
+                manualBtn.innerHTML = 'Manual Entry';
                 manualBtn.className = 'btn btn-outline-secondary';
                 if (networksData.length > 0) {
                     networkSelect.style.display = 'block';
@@ -186,25 +284,26 @@
                 showStatus('Dropdown mode enabled', 'info');
             }
         }
-        
         function scanWifi() {
             showStatus('Scanning for networks...', 'info');
             var xhr = new XMLHttpRequest();
             xhr.open('GET', '/scan', true);
             xhr.onreadystatechange = function() {
                 if (xhr.readyState === 4 && xhr.status === 200) {
-                    var networks = JSON.parse(xhr.responseText);
-                    console.log('Received networks:', networks); // Debug log
-                    networksData = networks;
-                    populateNetworkDropdown(networks);
-                    showStatus('Found ' + networks.length + ' networks', 'success');
+                    try {
+                        var networks = JSON.parse(xhr.responseText);
+                        networksData = networks;
+                        populateNetworkDropdown(networks);
+                        showStatus('Found ' + networks.length + ' networks', 'success');
+                    } catch (e) {
+                        showStatus('Failed to parse network data', 'error');
+                    }
                 } else if (xhr.readyState === 4) {
-                    showStatus('Network scan failed', 'error');
+                    showStatus('Network scan failed (HTTP ' + xhr.status + ')', 'error');
                 }
             };
             xhr.send();
         }
-        
         function populateNetworkDropdown(networks) {
             var dropdown = document.getElementById('networkDropdown');
             dropdown.innerHTML = '<option value="">Select a network...</option>';
@@ -221,7 +320,6 @@
                 document.getElementById('networkSelect').style.display = 'block';
             }
         }
-        
         function selectFromDropdown() {
             var dropdown = document.getElementById('networkDropdown');
             var selectedSSID = dropdown.value;
@@ -230,18 +328,30 @@
                 showStatus('Selected network: ' + selectedSSID, 'info');
             }
         }
-        
         function connectWifi(event) {
             event.preventDefault();
             var ssid = document.getElementById('ssid').value;
             var password = document.getElementById('password').value;
-            
             if (!ssid) {
                 showStatus('Please enter a WiFi network name', 'error');
                 return false;
             }
-            
-            showStatus('Connecting to ' + ssid + '...', 'info');
+            if (!password || password.trim() === '') {
+                var confirmConnect = confirm(
+                    'Warning: No password entered!\n\n' +
+                    'Are you sure "' + ssid + '" is an open network (no password required)?\n\n' +
+                    'Click OK to connect without password, or Cancel to add password.'
+                );
+                if (!confirmConnect) {
+                    showStatus('Please enter the WiFi password', 'info');
+                    document.getElementById('password').focus();
+                    return false;
+                } else {
+                    showStatus('Connecting to open network "' + ssid + '"...', 'info');
+                }
+            } else {
+                showStatus('Connecting to ' + ssid + '...', 'info');
+            }
             var xhr = new XMLHttpRequest();
             xhr.open('POST', '/connect', true);
             xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
@@ -252,6 +362,30 @@
                             var data = JSON.parse(xhr.responseText);
                             if (data.status === 'success' || data.status === 'connecting') {
                                 showStatus(data.message, 'success');
+                                
+                                // Handle restart scenario
+                                if (data.restart) {
+                                    showStatus('System is restarting... Please wait 10 seconds then refresh this page to access the main server.', 'info');
+                                    
+                                    // Try to redirect after device restart
+                                    setTimeout(function() {
+                                        showStatus('Attempting to connect to main server...', 'info');
+                                        // Try the redirect URL if provided
+                                        if (data.redirect) {
+                                            window.location.href = data.redirect;
+                                        } else {
+                                            // If no redirect URL, show instructions
+                                            showStatus('Device restarted successfully! Please connect to your WiFi network and browse to the device IP address.', 'success');
+                                        }
+                                    }, 10000); // Wait 10 seconds for restart
+                                    
+                                } else if (data.redirect) {
+                                    // Immediate redirect (no restart)
+                                    showStatus('Redirecting to main server in 3 seconds...', 'info');
+                                    setTimeout(function() {
+                                        window.location.href = data.redirect;
+                                    }, 3000);
+                                }
                             } else {
                                 showStatus('Connection failed: ' + data.message, 'error');
                             }
@@ -259,7 +393,6 @@
                             showStatus('Connection request failed (HTTP ' + xhr.status + ')', 'error');
                         }
                     } catch (e) {
-                        console.error('Failed to parse connection response:', e);
                         showStatus('Invalid response from server', 'error');
                     }
                 }
