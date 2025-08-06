@@ -1,7 +1,6 @@
 .pio
 .vscode
 .vscode/*
-.tools
 .cache
 .clang-format
 .direnv
