@@ -30,6 +30,10 @@ private:
     
     bool restartPending;
     unsigned long restartScheduledTime;
+
+    // New private variables
+    bool connectionSuccessDisplayed;
+    unsigned long connectionSuccessStartTime;
     
 public:
     WiFiManager(AsyncWebServer* webServer);
@@ -42,6 +46,7 @@ public:
     bool connectToWiFi(const String& ssid, const String& password);
     void handleConnect(AsyncWebServerRequest* request);
     void checkHeapHealth();
+    void checkConnectionSuccessDisplay();
     
     // Methods - KEEP AS IS
     bool initializeFromCredentials();
@@ -57,4 +62,5 @@ public:
     OperationMode getCurrentMode() const { return currentMode; }
     bool isConnectedToWiFi() const;
     String getWiFiIP() const;
+    bool isShowingConnectionSuccess() const;
 };

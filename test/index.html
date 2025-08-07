@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Billboard Controller</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
+  <style>
+    body {
+      background-color: #000000;
+      font-family: Arial, sans-serif, Verdana, Tahoma;
+    }
+
+    .flex-container,
+    .flex-container-gray,
+    .flex-container-white {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 5px;
+    }
+
+    .flex-container {
+      background-color: #000000;
+      color: white;
+      margin-top: 5px;
+    }
+
+    .flex-container-gray {
+      background-color: #292929;
+      color: white;
+    }
+
+    .flex-container-white {
+      background-color: #ffffff;
+      color: #000000;
+    }
+
+    .billboard-name {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .billboard-timezone {
+      background: #d0d0d0;
+      color: #000000;
+      padding: 5px 5px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+
+    .billboard-image {
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin: 5px 0;
+      gap: 5px;
+    }
+
+    hr.solid {
+      border-top: 1px solid #292929;
+      width: 100%;
+    }
+
+    h2 {
+      color: #ffffff;
+      text-align: center;
+      font-size: 16px;
+      font-weight: normal;
+    }
+
+    #billboard-image:hover {
+      box-shadow: 0 0 0 1px #3f3f3f;
+      border-color: #000000;
+      cursor: pointer;
+      width: 80px;
+      height: 160px;
+    }
+
+    #delete-image {
+      margin-top: 10px;
+      background-color: #dc3545;
+      color: #ffffff;
+      border: none;
+      font: 1em sans-serif;
+    }
+
+    input[type="range"]:hover {
+      opacity: 1;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      width: 20px;
+      height: 20px;
+      background: #079504;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #fff;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: #3c1987;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #fff;
+    }
+
+    input[type="range"]::-ms-thumb {
+      width: 20px;
+      height: 20px;
+      background: #3c1987;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #fff;
+    }
+
+    .toggle-switch {
+      display: inline-block;
+      width: 35px;
+      height: 15px;
+      position: relative;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 15px;
+
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 12px;
+      width: 12px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(18px);
+    }
+
+    /* Button styling for all buttons */
+    button {
+      background-color: #4fc3f7;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 2px 10px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: #039be5;
+    }
+
+    /* Responsive styles for mobile devices */
+    @media (max-width: 600px) {
+      .flex-container,
+      .flex-container-gray,
+      .flex-container-white {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 8px;
+      }
+      .billboard-name {
+        font-size: 16px;
+      }
+      h2 {
+        font-size: 14px;
+      }
+      input[type="file"], input[type="text"], input[type="number"], select, button {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 16px;
+      }
+      .form-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .gallery-row {
+        flex-direction: column;
+        align-items: center;
+      }
+      .toggle-switch {
+        margin: 8px 0;
+      }
+    }
+  </style>
+  <script>
+    function toggleImage(img, el) {
+      var enabled = el.getAttribute('data-enabled') === '1' ? 0 : 1;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/toggle", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        el.setAttribute('data-enabled', enabled);
+        if (enabled) {
+          el.parentElement.classList.add('enabled');
+        } else {
+          el.parentElement.classList.remove('enabled');
+        }
+        location.reload();
+      };
+      xhr.send("img=" + encodeURIComponent(img) + "&enabled=" + enabled);
+    }
+    function updateTime() {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/time", true);
+      xhr.onload = function () {
+        if (xhr.status == 200) {
+          document.getElementById('currentTime').innerText = xhr.responseText;
+        }
+      };
+      xhr.send();
+    }
+    setInterval(updateTime, 60000);
+    window.onload = function () {
+      updateTime();
+      document.getElementById('upload-form').onsubmit = function (e) {
+        e.preventDefault();
+        var formData = new FormData();
+        var fileInput = document.getElementById('file-input');
+        if (!fileInput.files.length) {
+          alert("Please select a file.");
+          return;
+        }
+        formData.append('file', fileInput.files[0]);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload', true);
+        xhr.onload = function () {
+          if (xhr.status == 200) {
+            alert("Upload successful!");
+            location.reload();
+          } else {
+            alert("Upload failed!");
+          }
+        };
+        xhr.send(formData);
+      };
+
+      // Initialize DCC checkbox state if server provides it
+      var dccCheckbox = document.getElementById('dccCheckbox');
+      if (dccCheckbox && typeof window.dccEnabled !== "undefined") {
+        dccCheckbox.checked = window.dccEnabled ? true : false;
+      }
+      var secondDisplayCheckbox = document.getElementById('secondDisplayCheckbox');
+      if (secondDisplayCheckbox && typeof window.secondDisplayEnabled !== "undefined") {
+        secondDisplayCheckbox.checked = window.secondDisplayEnabled ? true : false;
+      }
+    }
+    function updateBrightness(val) {
+      var percent = Math.round(val * 100 / 255);
+      document.getElementById('brightnessValue').innerText = percent + "%";
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/set_brightness", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.send("value=" + val);
+    }
+    function changeTZ() {
+      var sel = document.getElementById('tzSelect');
+      var tz = sel.value;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/set_timezone", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        if (xhr.status == 200) {
+          setTimeout(function () { location.reload(); }, 500);
+        } else {
+          alert("Failed to set time zone");
+        }
+      };
+      xhr.send("tz=" + encodeURIComponent(tz));
+    }
+    function changeLabel() {
+      var label = document.getElementById('clockLabelInput').value;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/set_clock_label", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        if (xhr.status == 200) {
+          setTimeout(function () { location.reload(); }, 500);
+        } else {
+          alert("Failed to set clock label");
+        }
+      };
+      xhr.send("label=" + encodeURIComponent(label));
+    }
+    function toggleDCC() {
+      var checked = document.getElementById('dccCheckbox').checked ? 1 : 0;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/set_dcc", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        if (xhr.status != 200) {
+          alert("Failed to set DCC interface");
+        }
+      };
+      xhr.send("dcc=" + checked);
+    }
+    function toggleSecondDisplay() {
+      var checked = document.getElementById('secondDisplayCheckbox').checked ? 1 : 0;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/set_second_display", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        if (xhr.status != 200) {
+          alert("Failed to set second display");
+        }
+      };
+      xhr.send("second_display=" + checked);
+    }
+  </script>
+</head>
+
+<body>
+
+  <div class="flex-container-gray">
+    <p class="billboard-name">BILLBOARD</p>
+    <p style="text-align: right;">IP Address: <!-- IP address inserted by server --></p>
+  </div>
+  <div class="flex-container-gray">
+    <label>Time zone:</label>
+    <select id="tzSelect" onchange="changeTZ()">
+      <!-- Time zone options inserted by server -->
+    </select>
+    <p>Local time: <span id="currentTime">--:--</span></p>
+  </div>
+  <div style="color: #ffffff; margin-top: 10px; margin-bottom: 10px; text-align: center; align-items: center;">
+    <label for="secondDisplayCheckbox" style="margin-left: 8px;">Enable second display</label>
+    <span class="mdi mdi-monitor-vertical" style="color: #ffffff; vertical-align: middle;"></span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="secondDisplayCheckbox" onchange="toggleSecondDisplay()" />
+      <span class="slider"></span>
+    </label>
+  </div>
+  <div style="color: #ffffff; margin-top: 10px; margin-bottom: 10px; text-align: center; align-items: center;">
+    <label for="dccCheckbox" style="margin-left: 8px;">Enable DCC interface</label>
+    <span class="mdi mdi-train" style="color: #ffffff; vertical-align: middle;"></span>
+    <label class="toggle-switch">
+      <input type="checkbox" id="dccCheckbox" onchange="toggleDCC()" />
+      <span class="slider"></span>
+    </label>
+  </div>
+  <div class="flex-container-white">
+    <form id="upload-form" enctype="multipart/form-data" method="post">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <input type="file" id="file-input" name="file" accept=".jpg,.jpeg" class="form-control" style="width:auto;">
+        <button type="submit" class="btn btn-primary" style="white-space:nowrap;">Upload File</button>
+      </div>
+    </form>
+  </div>
+  <h2>Billboard gallery</h2>
+  <div class='gallery-row'>
+    <!-- Gallery images inserted by server -->
+  </div>
+  <hr class="solid">
+  <div style="color: #ffffff; margin-top: 10px; margin-bottom: 10px;">
+    <label for="clockLabelInput">Clock label:</label>
+    <input type="text" id="clockLabelInput" value="<!-- clock label inserted by server -->">
+    <button onclick="changeLabel()">Set Label</button>
+  </div>
+
+  <div>
+    <label for="imgIntervalInput" style="color: #ffffff; margin-top: 10px; margin-bottom: 10px;">Display image for (s):</label>
+    <input type="number" id="imgIntervalInput" min="1" max="600" value="<!-- image interval inserted by server -->">
+    <button onclick="setImgInterval()">Set</button>
+  </div>
+  <hr class="solid">
+
+  <div class="flex-container-gray">
+    <div>
+      <label for="brightnessSlider">Display brightness:</label>
+    </div>
+    <div>
+      <input type="range" min="0" max="255" value="255" id="brightnessSlider" oninput="updateBrightness(this.value)">
+    </div>
+    <div>
+      <span id="brightnessValue" style="font-size:14px; color: #ffffff;">100%</span>
+    </div>
+  </div>
+
+  <!-- Optionally, set window.dccEnabled from server-side rendering -->
+  <!-- <script>window.dccEnabled = true;</script> -->
+  <!-- Optionally, set window.secondDisplayEnabled from server-side rendering -->
+  <script>
+    window.secondDisplayEnabled = true; // or false, set by your server
+  </script>
+
+</body>
+
+</html>

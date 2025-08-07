@@ -21,25 +21,30 @@ bool DisplayManager::begin() {
 }
 
 void DisplayManager::initializeBacklight() {
-    LOG_INFO("DISPLAY", "🔧 Setting up backlight...");
+    LOG_INFO("DISPLAY", "🔧 Setting up backlights...");
     
-    // Working project backlight setup
-    ledcAttachPin(TFT_BACKLIGHT_PIN, 1); // channel 1
-    ledcSetup(1, 5000, 8); // channel 1, 5 KHz, 8-bit
+    // Backlight 1 setup (GPIO 22)
+    ledcAttachPin(TFT_BACKLIGHT1_PIN, 1); // GPIO 22 → Channel 1
+    ledcSetup(1, 5000, 8); // Channel 1, 5 KHz, 8-bit
     ledcWrite(1, 255); // Full brightness
     
-    LOG_INFO("DISPLAY", "✅ Backlight initialized");
+    // Backlight 2 setup (GPIO 27)  
+    ledcAttachPin(TFT_BACKLIGHT2_PIN, 2); // GPIO 27 → Channel 2
+    ledcSetup(2, 5000, 8); // Channel 2, 5 KHz, 8-bit
+    ledcWrite(2, 255); // Full brightness
+    
+    LOG_INFO("DISPLAY", "✅ Both backlights initialized");
 }
 
 void DisplayManager::initializeCS() {
     LOG_INFO("DISPLAY", "🔧 Setting up CS pins...");
     
     // CS pins setup (exact copy from working project)
-    pinMode(firstScreenCS, OUTPUT);
-    digitalWrite(firstScreenCS, HIGH);
-    pinMode(secondScreenCS, OUTPUT);
-    digitalWrite(secondScreenCS, HIGH);
-    
+    pinMode(firstScreenCS, OUTPUT);     // GPIO 5 = OUTPUT
+    digitalWrite(firstScreenCS, HIGH);  // GPIO 5 = HIGH (deselected)
+    pinMode(secondScreenCS, OUTPUT);    // GPIO 15 = OUTPUT
+    digitalWrite(secondScreenCS, HIGH); // GPIO 15 = HIGH (deselected)
+
     LOG_INFO("DISPLAY", "✅ CS pins configured");
 }
 
@@ -190,3 +195,117 @@ void DisplayManager::alternateDisplays() {
         lastSwitch = millis();
     }
 }
+
+// FIXED: Fast status display method - USES DISPLAY 1 FOR MESSAGES
+void DisplayManager::showQuickStatus(const String& message, uint16_t color) {
+    if (!initialized) return;
+    
+    // Display 1: Show status messages (FIXED)
+    selectDisplay(1);  
+    tft.fillScreen(color);
+    tft.setTextColor(color == TFT_RED ? TFT_WHITE : TFT_BLACK);
+    tft.setTextSize(1);
+    tft.setTextDatum(MC_DATUM);
+    tft.drawString(message, 80, 40, 2);
+    
+    // Display 2: Always keep dark (FIXED)
+    selectDisplay(2);  
+    tft.fillScreen(TFT_BLACK);
+    setBrightness(0, 2);  
+    
+    deselectAll();
+}
+
+// Quick AP starting indicator
+void DisplayManager::showAPStarting() {
+    showQuickStatus("Starting AP...", TFT_ORANGE);
+}
+
+// Quick AP ready indicator  
+void DisplayManager::showAPReady() {
+    showQuickStatus("AP Ready!", TFT_BLUE);
+}
+
+// FIXED: Portal info method - USES DISPLAY 1 FOR PORTAL INFO
+void DisplayManager::showPortalInfo(const String& ssid, const String& ip, const String& status) {
+    if (!initialized) {
+        LOG_WARN("DISPLAY", "❌ Display not initialized - cannot show portal info");
+        return;
+    }
+    
+    LOG_INFO("DISPLAY", "📋 Showing portal information on display 1");  // FIXED
+    
+    // Display 1: Show portal info with GREEN background (FIXED)
+    selectDisplay(1);  // FIXED: Changed to 1
+    tft.fillScreen(TFT_GREEN);  // Green background
+    tft.setTextColor(TFT_BLACK, TFT_GREEN);  // Black text on green background
+    tft.setTextSize(1);  // Text size 1
+    
+    // Use LEFT alignment to prevent clipping
+    tft.setTextDatum(TL_DATUM); // Top Left alignment
+    
+    // Screen dimensions: 160x80 pixels
+    // Optimized spacing for font size 2
+    int startX = 8;      // Left margin
+    int startY = 8;      // Top margin 
+    int lineHeight = 20; // Space for font size 2
+    
+    // Line 1: SSID (Billboard-Portal)
+    tft.drawString(ssid, startX, startY, 2);  // Font size 2
+    
+    // Line 2: IP address  
+    tft.drawString(ip, startX, startY + lineHeight, 2);
+    
+    // Line 3: Status
+    tft.drawString(status, startX, startY + (lineHeight * 2), 2);
+    
+    // Display 2: Keep dark (FIXED)
+    selectDisplay(2);  
+    tft.fillScreen(TFT_BLACK);
+    setBrightness(0, 2);  
+    
+    deselectAll();
+    
+    LOG_INFO("DISPLAY", "✅ Portal info displayed - Screen 1: GREEN with text, Screen 2: dark");
+}
+
+// NEW: Show WiFi connection success message
+void DisplayManager::showConnectionSuccess(const String& ip) {
+    if (!initialized) {
+        LOG_WARN("DISPLAY", "❌ Display not initialized - cannot show connection success");
+        return;
+    }
+    
+    LOG_INFO("DISPLAY", "📶 Showing WiFi connection success on display 1");
+    
+    // Display 1: Show connection success with BLUE background
+    selectDisplay(1);
+    tft.fillScreen(TFT_BLUE);  // Blue background
+    tft.setTextColor(TFT_WHITE, TFT_BLUE);  // White text on blue background
+    tft.setTextSize(1);  // Text size 1
+    
+    // Use LEFT alignment (same as portal info)
+    tft.setTextDatum(TL_DATUM); // Top Left alignment
+    
+    // Screen dimensions: 80x160 pixels (rotated)
+    int startX = 8;      // Left margin
+    int startY = 20;     // Top margin (centered vertically)
+    int lineHeight = 20; // Space between lines
+    
+    // Line 1: "Connected to Wi-Fi"
+    tft.drawString("Connected to Wi-Fi", startX, startY, 2);  // Font size 2
+    
+    // Line 2: "IP: XX.XX.XX.XX"
+    String ipText = "IP: " + ip;
+    tft.drawString(ipText, startX, startY + lineHeight, 2);  // Font size 2
+    
+    // Display 2: Keep dark
+    selectDisplay(2);
+    tft.fillScreen(TFT_BLACK);
+    setBrightness(0, 2);
+    
+    deselectAll();
+    
+    LOG_INFOF("DISPLAY", "✅ Connection success displayed - IP: %s", ip.c_str());
+}
+

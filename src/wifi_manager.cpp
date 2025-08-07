@@ -1,6 +1,8 @@
 #include "wifi_manager.h"
 #include "logger.h"
+#include "config.h"
 #include "webcontent.h"
+#include "display_manager.h"
 
 static const String TAG = "WIFI";
 
@@ -19,6 +21,10 @@ WiFiManager::WiFiManager(AsyncWebServer* webServer) : server(webServer) {
     restartPending = false;
     restartScheduledTime = 0;
     
+    // NEW: Add these lines for connection success display
+    //connectionSuccessDisplayed = false;
+    //connectionSuccessStartTime = 0;
+    
     // Initialize GPIO0 pin for factory reset
     pinMode(GPIO0_PIN, INPUT_PULLUP);
 }
@@ -31,7 +37,11 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     LOG_INFOF(TAG, "SSID: '%s'", ssid.c_str());
     LOG_INFOF(TAG, "Password: '%s'", password.c_str());
     
-    // Stop any existing WiFi connections
+    // OPTIMIZATION: Show quick starting indicator (non-blocking)
+    extern DisplayManager displayManager;
+    displayManager.showAPStarting();  // Fast "Starting AP..." message
+    
+    // FAST PATH: Do critical WiFi setup without display delays
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
     
@@ -44,39 +54,42 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     
     LOG_DEBUGF(TAG, "Setting AP IP to: %s", local_IP.toString().c_str());
     
-    // Set AP mode
+    // Set AP mode and configure IP (fastest path)
     WiFi.mode(WIFI_AP);
-    
-    // Configure AP with custom IP
     if (!WiFi.softAPConfig(local_IP, gateway, subnet)) {
         LOG_ERROR(TAG, "❌ Failed to configure AP IP");
+        displayManager.showQuickStatus("AP Config Failed", TFT_RED);
         return;
     }
     
     LOG_DEBUG(TAG, "AP IP configured, starting access point...");
     
-    // Start the Access Point
+    // Start the Access Point (critical path)
     bool apStarted = WiFi.softAP(apSSID.c_str(), apPassword.c_str(), 1, 0, 4);
     
     if (apStarted) {
-        LOG_INFO(TAG, "✅ Access Point started successfully!");
+        // Quick success feedback
+        displayManager.showAPReady();  // Fast "AP Ready!" message
         
-        // Verify AP configuration immediately
-        LOG_INFOF(TAG, "✅ AP SSID: %s", WiFi.softAPSSID().c_str());
-        LOG_INFOF(TAG, "✅ AP IP: %s", WiFi.softAPIP().toString().c_str());
-        LOG_INFOF(TAG, "✅ AP MAC: %s", WiFi.softAPmacAddress().c_str());
-        LOG_INFOF(TAG, "✅ WiFi Mode: %d", WiFi.getMode());
+        IPAddress IP = WiFi.softAPIP();
+        LOG_INFOF(TAG, "✅ Access Point started successfully! SSID: %s, IP: %s", 
+                  apSSID.c_str(), IP.toString().c_str());
         
-        // Test if we can ping ourselves
-        if (WiFi.softAPIP() == IPAddress(4, 3, 2, 1)) {
-            LOG_INFO(TAG, "✅ AP IP confirmed as 4.3.2.1");
-        } else {
-            LOG_ERRORF(TAG, "❌ AP IP mismatch! Expected 4.3.2.1, got %s", WiFi.softAPIP().toString().c_str());
-        }
+        currentMode = MODE_SETUP;
+        
+        // AFTER AP IS READY: Show detailed portal info (non-critical timing)
+        displayManager.showPortalInfo(
+            PORTAL_SSID,           
+            "IP: 4.3.2.1",        
+            "Ready to connect"     
+        );
         
     } else {
         LOG_ERROR(TAG, "❌ Failed to start Access Point!");
         LOG_ERROR(TAG, "Check if another AP is running or SSID is too long");
+        
+        // Show error status
+        displayManager.showQuickStatus("AP Start Failed", TFT_RED);
     }
 }
 
@@ -88,40 +101,39 @@ void WiFiManager::setupRoutes() {
         LOG_INFO(TAG, "🌐 Test route accessed!");
         request->send(200, "text/plain", "Billboard server is working!\nTime: " + String(millis()));
     });
-    // // Serve CSS files
-    // server->on("/css/bootstrap.min.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    //     LOG_DEBUG(TAG, "🎨 Serving Bootstrap CSS");
 
-    //     const EmbeddedAsset* asset = getAsset("bootstrap.min.css");
-    //     if (asset) {
-    //         request->send_P(200, "text/css", asset->data, asset->length);  // Remove the cast
-    //     } else {
-    //         request->send(404, "text/plain", "CSS file not found");
-    //     }
-    // });
-    // // Serve Bootstrap Icons CSS
-    // server->on("/css/bootstrap-icons.css", HTTP_GET, [](AsyncWebServerRequest *request){
-    //     LOG_DEBUG(TAG, "🎨 Serving Bootstrap Icons CSS");
-        
-    //     const EmbeddedAsset* asset = getAsset("bootstrap-icons.css");
-    //     if (asset) {
-    //         request->send_P(200, "text/css", asset->data, asset->length);  // Remove the cast
-    //     } else {
-    //         request->send(404, "text/plain", "Bootstrap Icons CSS not found");
-    //     }
-    // });
     // Main portal route
     server->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
         LOG_INFO(TAG, "🌐 Portal page requested");
         
-        String html = getPortalHTML();
-        if (html.length() > 0) {
-            LOG_INFOF(TAG, "✅ Serving portal HTML (%d bytes)", html.length());
-            request->send(200, "text/html", html);
-        } else {
-            LOG_ERROR(TAG, "❌ Portal HTML not available!");
-            request->send(500, "text/plain", "Portal HTML not found. Check webcontent.h file.");
+        // Check available memory before serving large content
+        size_t freeHeap = ESP.getFreeHeap();
+        if (freeHeap < 50000) {  // Less than 50KB free
+            LOG_WARNF(TAG, "⚠️ Low memory (%d bytes), serving minimal page", freeHeap);
+            request->send(200, "text/html", 
+                "<html><body style='font-family:Arial;padding:2rem;'>"
+                "<h1>Billboard Portal</h1>"
+                "<p>Low memory - please restart device</p>"
+                "<p><a href='/status'>Check Status</a></p>"
+                "</body></html>");
+            return;
         }
+        
+        // Get portal HTML with error checking
+        String html = getPortalHTML();
+        if (html.length() == 0) {
+            LOG_ERROR(TAG, "❌ Portal HTML not available!");
+            request->send(500, "text/plain", "Portal HTML generation failed");
+            return;
+        }
+        
+        LOG_INFOF(TAG, "✅ Serving portal HTML (%d bytes), Free heap: %d", 
+                  html.length(), freeHeap);
+        
+        // Use chunked response for large content
+        AsyncWebServerResponse *response = request->beginResponse(200, "text/html", html);
+        response->addHeader("Connection", "close");  // Force close to free memory
+        request->send(response);
     });
     
     // WiFi scan route
@@ -277,12 +289,10 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
             // Get the IP address for user instructions
             String deviceIP = WiFi.localIP().toString();
             
-            // Send success response with detailed instructions
+            // Send success response
             String response = "{";
             response += "\"status\":\"success\",";
-            response += "\"message\":\"Successfully connected to " + ssid + "! ";
-            response += "Device will restart and be available at " + deviceIP + ". ";
-            response += "After restart, connect your device to '" + ssid + "' network and browse to " + deviceIP + "\",";
+            response += "\"message\":\"Successfully connected to " + ssid + "! Device will restart and be available at " + deviceIP + "\",";
             response += "\"restart\":true,";
             response += "\"ip\":\"" + deviceIP + "\",";
             response += "\"ssid\":\"" + ssid + "\"";
@@ -291,10 +301,10 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
             request->send(200, "application/json", response);
             LOG_INFOF(TAG, "✅ Connection successful - device will be available at %s", deviceIP.c_str());
             
-            // Force immediate restart
-            delay(3000); // Allow response to be sent
-            LOG_INFO(TAG, "🔄 Restarting now...");
-            ESP.restart();
+            // NON-BLOCKING RESTART: Schedule restart instead of immediate delay
+            restartPending = true;
+            restartScheduledTime = millis() + 3000;  // 3 seconds from now
+            LOG_INFO(TAG, "🔄 Restart scheduled in 3 seconds...");
             
         } else {
             String response = "{\"status\":\"error\",\"message\":\"Failed to connect to " + ssid + ". Check password and signal strength.\"}";
@@ -371,6 +381,13 @@ bool WiFiManager::connectToSavedNetwork() {
     if (connected) {
         LOG_INFOF(TAG, "✅ Auto-connected successfully! IP: %s", WiFi.localIP().toString().c_str());
         connectionRetryCount = 0; // Reset retry counter
+        
+        // NEW: Show connection success message
+        extern DisplayManager displayManager;
+        displayManager.showConnectionSuccess(WiFi.localIP().toString());
+        connectionSuccessDisplayed = true;
+        connectionSuccessStartTime = millis();
+        
         return true;
     } else {
         LOG_ERROR(TAG, "❌ Auto-connect failed");
@@ -410,7 +427,7 @@ void WiFiManager::switchToSetupMode() {
     WiFi.disconnect(true);
     
     LOG_INFO(TAG, "🏗️ Starting Access Point...");
-    initializeAP();
+    initializeAP(PORTAL_SSID, PORTAL_PASSWORD);
     
     // Setup portal routes
     LOG_INFO(TAG, "🛣️ Setting up portal routes...");
@@ -462,8 +479,8 @@ void WiFiManager::setupNormalModeRoutes() {
         LOG_WARN(TAG, "🏭 Factory reset requested via web interface");
         CredentialManager::clearCredentials();
         request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Credentials cleared. Restarting...\"}");
-        delay(1000);
-        ESP.restart();
+        restartPending = true;
+        restartScheduledTime = millis() + 1000;  // 1 second restart
     });
     
     LOG_INFO(TAG, "✅ Normal mode routes configured");
@@ -539,8 +556,8 @@ void WiFiManager::checkGpio0FactoryReset() {
             
             // Restart the system
             LOG_INFO(TAG, "🔄 Restarting system...");
-            delay(1000);
-            ESP.restart();
+            restartPending = true;
+            restartScheduledTime = millis() + 1000;  // 1 second restart
         }
     }
 }
@@ -562,3 +579,24 @@ void WiFiManager::checkScheduledRestart() {
         ESP.restart();
     }
 }
+
+void WiFiManager::checkConnectionSuccessDisplay() {
+    // Only check if we're displaying the connection success message
+    if (!connectionSuccessDisplayed) return;
+    
+    // Check if 5 seconds have passed
+    if (millis() - connectionSuccessStartTime >= 5000) {
+        LOG_INFO(TAG, "🕐 5 seconds passed, switching to normal mode display");
+        
+        // Mark as no longer displaying
+        connectionSuccessDisplayed = false;
+        
+        LOG_INFO(TAG, "✅ Switched to normal mode display");
+    }
+}
+
+// NEW: Getter method for connection success display state
+bool WiFiManager::isShowingConnectionSuccess() const {
+    return connectionSuccessDisplayed;
+}
+

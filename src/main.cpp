@@ -148,69 +148,121 @@ void loop() {
 }
 
 #else
-// Full Billboard System
+// Full Billboard System with WiFi + Display Integration
 #include "logger.h"
 #include "display_manager.h"
-#include "config.h"     // Use timing constants from config.h
+#include "wifi_manager.h"           // ADD: WiFi management
+#include "credential_manager.h"     // ADD: Credential storage
+#include "config.h"
 
+// Create instances
 DisplayManager displayManager;
+AsyncWebServer server(80);          // ADD: Web server
+WiFiManager wifiManager(&server);   // ADD: WiFi manager
+CredentialManager credentialManager; // ADD: Credential manager
 
-// Use constants from config.h instead of hardcoded values
+// Timing variables using config.h constants
 unsigned long lastHeartbeat = 0;
 unsigned long lastDisplayTest = 0;
 unsigned long startupTime = 0;
 
+// State management
 bool systemInitialized = false;
+bool wifiInitialized = false;
+bool displayInitialized = false;
 
 void setup() {
+    // Initialize logging first
     Logger::init();
     
     startupTime = millis();
     
-    LOG_INFO("MAIN", "🚀 DUAL DISPLAY BILLBOARD SYSTEM");
+    LOG_INFO("MAIN", "🚀 DUAL DISPLAY BILLBOARD SYSTEM v2.0");
     LOG_SYSTEM_INFO();
     
     LOG_INFO("MAIN", "🎯 System startup initiated");
+    
+    // CRITICAL: Initialize server routes early
+    LOG_INFO("MAIN", "🌐 Setting up web server routes...");
+    wifiManager.setupRoutes();
+    LOG_INFO("MAIN", "✅ Web server routes configured");
 }
 
 void loop() {
     unsigned long currentTime = millis();
     
-    // Use STARTUP_DELAY from config.h
+    // Non-blocking startup sequence
     if (!systemInitialized && (currentTime - startupTime >= STARTUP_DELAY)) {
-        LOG_INFO("MAIN", "🔧 Initializing billboard system...");
+        LOG_INFO("MAIN", "🔧 Initializing integrated billboard system...");
         
         LOG_MEMORY_INFO();
         
-        if (displayManager.begin()) {
-            LOG_INFO("MAIN", "✅ Display manager initialized");
-            displayManager.showSystemInfo();
+        // Step 1: Initialize display system
+        if (!displayInitialized) {
+            LOG_INFO("MAIN", "📺 Initializing display subsystem...");
+            if (displayManager.begin()) {
+                LOG_INFO("MAIN", "✅ Display manager initialized");
+                displayManager.showSystemInfo();
+                displayInitialized = true;
+            } else {
+                LOG_ERROR("MAIN", "❌ Display manager failed");
+                return; // Don't continue if displays fail
+            }
+        }
+        
+        // Step 2: Initialize WiFi system
+        if (!wifiInitialized && displayInitialized) {
+            LOG_INFO("MAIN", "🌐 Initializing WiFi subsystem...");
+            
+            // Initialize credential manager
+            if (credentialManager.begin()) {
+                LOG_INFO("MAIN", "✅ Credential manager initialized");
+            } else {
+                LOG_ERROR("MAIN", "❌ Credential manager failed");
+            }
+            
+            // Initialize WiFi manager from credentials
+            if (wifiManager.initializeFromCredentials()) {
+                LOG_INFO("MAIN", "✅ WiFi manager initialized");
+                wifiInitialized = true;
+            } else {
+                LOG_INFO("MAIN", "ℹ️  WiFi starting in setup mode");
+                wifiInitialized = true; // Still continue in AP mode
+            }
+        }
+        
+        // Step 3: System ready
+        if (displayInitialized && wifiInitialized) {
             displayManager.enableSecondDisplay(true);
-        } else {
-            LOG_ERROR("MAIN", "❌ Display manager failed");
-        }
-        
-        systemInitialized = true;
-        lastHeartbeat = currentTime;
-        lastDisplayTest = currentTime;
-        
-        LOG_INFO("MAIN", "🎉 Billboard system ready!");
-    }
-    
-    if (systemInitialized) {
-        // Use HEARTBEAT_INTERVAL from config.h
-        if (currentTime - lastHeartbeat >= HEARTBEAT_INTERVAL) {
-            LOG_INFOF("MAIN", "💓 System heartbeat - Heap: %d bytes", ESP.getFreeHeap());
+            systemInitialized = true;
             lastHeartbeat = currentTime;
-        }
-        
-        // Use DISPLAY_TEST_INTERVAL from config.h
-        if (currentTime - lastDisplayTest >= DISPLAY_TEST_INTERVAL) {
-            displayManager.alternateDisplays();
             lastDisplayTest = currentTime;
+            
+            LOG_INFO("MAIN", "🎉 Integrated billboard system ready!");
+            LOG_INFOF("MAIN", "📱 WiFi Mode: %s", 
+                     wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL ? "Normal" : "Setup");
         }
     }
     
+    // Main operation loop - only run if fully initialized
+    if (systemInitialized) {
+        // WiFi management (non-blocking)
+        wifiManager.checkConnectionStatus();
+        wifiManager.checkGpio0FactoryReset();
+        wifiManager.checkScheduledRestart();
+        wifiManager.checkConnectionSuccessDisplay();  // NEW: Add this line
+        
+        // FIXED: Only alternate displays when not in setup mode AND not showing connection success
+        if (wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL && 
+            !wifiManager.isShowingConnectionSuccess()) {
+            displayManager.alternateDisplays();
+        }
+        // In SETUP mode OR showing connection success, keep current display
+        
+        yield();
+    }
+    
+    // Essential yield for ESP32
     yield();
 }
 #endif
