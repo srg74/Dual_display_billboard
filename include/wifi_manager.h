@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include "credential_manager.h"
+#include "secrets.h"    // For credentials only
 
 class WiFiManager {
 public:
@@ -21,29 +22,28 @@ private:
     bool gpio0Pressed;
     unsigned long gpio0PressStart;
     
-    // Constants
+    // Constants - KEEP AS YOU HAD THEM (working fine)
     static const int MAX_RETRY_ATTEMPTS = 3;
     static const unsigned long RETRY_DELAYS[];
     static const unsigned long FACTORY_RESET_DURATION = 6000; // 6 seconds
     static const int GPIO0_PIN = 0;
     
-    // Add these new variables
     bool restartPending;
     unsigned long restartScheduledTime;
     
 public:
     WiFiManager(AsyncWebServer* webServer);
     
-    // Existing methods
-    void initializeAP(const String& ssid = "Billboard-Portal", const String& password = "12345678");
+    // Only change the hardcoded password to use secrets.h
+    void initializeAP(const String& ssid = "Billboard-Portal", const String& password = PORTAL_PASSWORD);
     void setupRoutes();
-    void startServer();  // ADD THIS NEW METHOD
+    void startServer();
     String scanNetworks();
     bool connectToWiFi(const String& ssid, const String& password);
     void handleConnect(AsyncWebServerRequest* request);
     void checkHeapHealth();
     
-    // New methods for Session 2
+    // Methods - KEEP AS IS
     bool initializeFromCredentials();
     bool connectToSavedNetwork();
     void switchToNormalMode();
@@ -53,7 +53,7 @@ public:
     void setupNormalModeRoutes();
     void checkScheduledRestart();
     
-    // Getters
+    // Getters - KEEP AS IS
     OperationMode getCurrentMode() const { return currentMode; }
     bool isConnectedToWiFi() const;
     String getWiFiIP() const;
