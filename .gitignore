@@ -12,7 +12,8 @@
 *.code-workspace
 *.checksum
 include/webcontent.h
-include/serets.h
+include/secrets.h
 
 # Project specific folders
 docs/
+test/
