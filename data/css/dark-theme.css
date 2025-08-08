@@ -1,0 +1,131 @@
+/* Billboard Dark Theme - Consistent across all pages */
+
+/* Base styles */
+body { 
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+    margin: 0; 
+    padding: 1rem; 
+    background: #0d1117; 
+    color: #f0f6fc; 
+    line-height: 1.5; 
+}
+
+.container { 
+    max-width: 900px; 
+    margin: 0 auto; 
+}
+
+/* Sections and cards */
+.section, .card { 
+    background: #21262d; 
+    padding: 1.5rem; 
+    margin: 1rem 0; 
+    border-radius: 8px; 
+    border: 1px solid #30363d; 
+}
+
+/* Buttons */
+.btn { 
+    padding: 8px 16px; 
+    margin: 5px; 
+    border: none; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.btn-primary { background: #238636; color: white; }
+.btn-primary:hover { background: #2ea043; }
+.btn-success { background: #1f6feb; color: white; }
+.btn-success:hover { background: #388bfd; }
+.btn-danger { background: #da3633; color: white; }
+.btn-danger:hover { background: #f85149; }
+.btn-warning { background: #d29922; color: white; }
+.btn-warning:hover { background: #e3b341; }
+.btn-secondary { background: #21262d; color: #f0f6fc; border: 1px solid #30363d; }
+.btn-secondary:hover { background: #30363d; }
+
+/* Forms */
+input, select { 
+    padding: 0.5rem; 
+    margin: 0.25rem; 
+    border: 1px solid #30363d; 
+    border-radius: 6px; 
+    background: #0d1117;
+    color: #f0f6fc;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #1f6feb;
+    box-shadow: 0 0 0 3px rgba(31, 111, 235, 0.3);
+}
+
+/* Typography */
+h1 { 
+    color: #58a6ff; 
+    margin-bottom: 2rem;
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+h3 { 
+    color: #f0f6fc; 
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+h4 { 
+    color: #8b949e; 
+    margin: 1.5rem 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+strong { color: #f0f6fc; }
+
+/* Status indicators */
+.status-value {
+    color: #58a6ff;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+}
+
+.loading {
+    color: #8b949e;
+    font-style: italic;
+}
+
+/* Response messages */
+.response { 
+    margin: 1rem 0; 
+    padding: 1rem; 
+    border-radius: 6px; 
+}
+
+.success { 
+    background: #0f5132; 
+    color: #75b798; 
+    border: 1px solid #2ea043; 
+}
+
+.error { 
+    background: #58151c; 
+    color: #f85149; 
+    border: 1px solid #da3633; 
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .container {
+        padding: 0.5rem;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}

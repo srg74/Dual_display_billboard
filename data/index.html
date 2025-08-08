@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Billboard Controller</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background-color: #0d1117;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 10px; /* Increased from 5px */
+      color: #f0f6fc;
+    }
+
+    /* Add a main container to ensure proper spacing */
+    .main-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 5px;
+    }
+
+    .flex-container,
+    .flex-container-gray,
+    .flex-container-white {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 12px 15px; /* Better padding */
+      box-sizing: border-box;
+    }
+
+    .flex-container {
+      background-color: #0d1117;
+      color: #f0f6fc;
+      margin-top: 5px;
+    }
+
+    .flex-container-gray {
+      background-color: #21262d;
+      color: #f0f6fc;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      margin: 8px 0;
+      gap: 15px; /* Add gap between elements */
+    }
+
+    .flex-container-white {
+      background-color: #21262d;
+      color: #f0f6fc;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      margin: 8px 0;
+      gap: 15px; /* Add gap between elements */
+    }
+
+    .billboard-name {
+      font-size: 20px;
+      font-weight: bold;
+      color: #58a6ff;
+      margin: 0; /* Remove default margin */
+    }
+
+    /* Header block styling - RESTORE the green gradient to match portal.html */
+    .flex-container-gray:first-child {
+      background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
+      border: 1px solid #238636;
+      color: #fff;
+    }
+
+    /* Ensure header text is white on green background */
+    .flex-container-gray:first-child .billboard-name {
+      color: #fff !important;
+    }
+
+    .flex-container-gray:first-child .header-right p {
+      color: #fff !important;
+    }
+
+    .flex-container-gray:first-child .status-value {
+      color: #e6ffed !important; /* Light green for IP address */
+    }
+
+    .header-block {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+    }
+
+    .header-left {
+      flex: 0 0 auto;
+    }
+
+    .header-right {
+      flex: 0 0 auto;
+      text-align: right;
+    }
+
+    .header-right p {
+      margin: 0;
+      font-size: 14px;
+      color: #f0f6fc;
+    }
+
+    .billboard-timezone {
+      background: #30363d;
+      color: #f0f6fc;
+      padding: 5px 5px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+
+    .billboard-image {
+      transition: box-shadow 0.2s, border-color 0.2s;
+      border-radius: 6px;
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin: 5px 0;
+      gap: 8px;
+    }
+
+    hr.solid {
+      border-top: 1px solid #30363d;
+      width: 100%;
+      margin: 15px 0;
+    }
+
+    h2 {
+      color: #f0f6fc;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 20px 0 15px 0;
+    }
+
+    .billboard-image:hover {
+      box-shadow: 0 0 0 2px #58a6ff;
+      cursor: pointer;
+    }
+
+    .gallery-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin: 10px 0;
+    }
+
+    .gallery-item {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 8px;
+      text-align: center;
+      transition: box-shadow 0.2s, border-color 0.2s;
+    }
+
+    .gallery-item:hover {
+      box-shadow: 0 0 0 1px #58a6ff;
+      cursor: pointer;
+    }
+
+    .gallery-item.enabled {
+      border-color: #238636;
+      box-shadow: 0 0 0 1px #238636;
+    }
+
+    .gallery-item img {
+      max-width: 80px;
+      max-height: 80px;
+      border-radius: 4px;
+    }
+
+    /* Form elements */
+    input, select {
+      padding: 6px 8px;
+      margin: 2px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      background: #0d1117;
+      color: #f0f6fc;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #58a6ff;
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+    }
+
+    input[type="file"] {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      padding: 6px;
+    }
+
+    /* Range slider - Modern elegant version */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 180px;
+      height: 6px;
+      border-radius: 3px;
+      background: #30363d;
+      outline: none;
+      margin: 0 15px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    input[type="range"]::-webkit-slider-track {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      border-radius: 3px;
+      background: #30363d;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: #58a6ff;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: all 0.15s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      background: #7c3aed;
+      transform: scale(1.15);
+      box-shadow: 0 4px 8px rgba(124, 58, 237, 0.3);
+    }
+
+    input[type="range"]::-webkit-slider-thumb:active {
+      background: #a855f7;
+      transform: scale(1.05);
+    }
+
+    /* Firefox */
+    input[type="range"]::-moz-range-track {
+      height: 6px;
+      border-radius: 3px;
+      background: #30363d;
+      border: none;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      height: 18px;
+      width: 18px;
+      border-radius: 50%;
+      background: #58a6ff;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: all 0.15s ease;
+    }
+
+    input[type="range"]::-moz-range-thumb:hover {
+      background: #7c3aed;
+      transform: scale(1.15);
+      box-shadow: 0 4px 8px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Enhanced brightness control section */
+    .brightness-control {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      width: 100%;
+    }
+
+    .brightness-label {
+      flex: 0 0 auto;
+      font-weight: 600;
+      color: #f0f6fc;
+    }
+
+    .brightness-slider-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .brightness-value {
+      flex: 0 0 auto;
+      text-align: center;
+      font-weight: 600;
+      font-size: 15px;
+      min-width: 45px;
+      color: #58a6ff;
+    }
+
+    /* Progress indicator */
+    .brightness-slider-container::before {
+      content: '';
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      height: 6px;
+      background: linear-gradient(90deg, #58a6ff, #7c3aed);
+      border-radius: 3px;
+      transform: translateY(-50%);
+      width: calc(var(--progress, 78%) * 150px / 100);
+      transition: width 0.2s ease;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Toggle switches */
+    .toggle-switch {
+      display: inline-block;
+      width: 35px;
+      height: 15px;
+      position: relative;
+      margin: 0 8px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #30363d;
+      transition: .4s;
+      border-radius: 15px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 12px;
+      width: 12px;
+      left: 2px;
+      bottom: 2px;
+      background-color: #f0f6fc;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #238636;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(18px);
+    }
+
+    /* Button styling - Updated to match portal.html colors */
+    button {
+      background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 0.75rem 1.5rem;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 600;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(31, 111, 235, 0.3);
+    }
+
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 4px 8px rgba(31, 111, 235, 0.2);
+    }
+
+    /* Success buttons (Upload File) */
+    button.btn-success {
+      background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+      border: none;
+      color: #fff;
+    }
+
+    button.btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(35, 134, 54, 0.3);
+    }
+
+    /* Danger buttons (if any) */
+    button.btn-danger {
+      background: linear-gradient(135deg, #da3633 0%, #f85149 100%);
+      border: none;
+      color: #fff;
+    }
+
+    button.btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(218, 54, 51, 0.3);
+    }
+
+    /* Warning buttons (if any) */
+    button.btn-warning {
+      background: linear-gradient(135deg, #d29922 0%, #e3b341 100%);
+      border: none;
+      color: #fff;
+    }
+
+    button.btn-warning:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(210, 153, 34, 0.3);
+    }
+
+    /* Secondary/outline buttons */
+    button.btn-outline-secondary {
+      color: #8b949e;
+      border: 1px solid #30363d;
+      background-color: transparent;
+    }
+
+    button.btn-outline-secondary:hover {
+      background-color: #21262d;
+      border-color: #8b949e;
+      color: #f0f6fc;
+    }
+
+    button.btn-outline-info {
+      color: #58a6ff;
+      border: 1px solid #1f6feb;
+      background-color: transparent;
+    }
+
+    button.btn-outline-info:hover {
+      background-color: #1f6feb;
+      border-color: #1f6feb;
+      color: #fff;
+    }
+    /* Responsive styles for mobile devices */
+    @media (max-width: 600px) {
+      body {
+        padding: 5px; /* Reduce padding on mobile */
+      }
+      
+      .main-container {
+        padding: 0 2px;
+      }
+      
+      .flex-container,
+      .flex-container-gray,
+      .flex-container-white {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 8px;
+        margin: 5px 0;
+      }
+      
+      .billboard-name {
+        font-size: 16px;
+      }
+      
+      h2 {
+        font-size: 16px;
+      }
+      
+      input[type="file"], input[type="text"], input[type="number"], select, button {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 16px;
+        margin: 5px 0;
+      }
+      
+      .form-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .gallery-row {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .toggle-switch {
+        margin: 8px 0;
+      }
+
+      .control-section {
+        flex-direction: column;
+        text-align: left;
+      }
+    }
+  </style>
+  <script>
+    function toggleImage(img, el) {
+      var enabled = el.getAttribute('data-enabled') === '1' ? 0 : 1;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/toggle", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        if (xhr.status == 200) {
+          el.setAttribute('data-enabled', enabled);
+          if (enabled) {
+            el.parentElement.classList.add('enabled');
+          } else {
+            el.parentElement.classList.remove('enabled');
+          }
+          location.reload();
+        }
+      };
+      xhr.send("img=" + encodeURIComponent(img) + "&enabled=" + enabled);
+    }
+
+    function updateTime() {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", "/time", true);
+      xhr.onload = function () {
+        if (xhr.status == 200) {
+          document.getElementById('currentTime').innerText = xhr.responseText;
+        }
+      };
+      xhr.send();
+    }
+
+    function updateBrightness(val) {
+      var percent = Math.round(val * 100 / 255);
+      document.getElementById('brightnessValue').innerText = percent + "%";
+      
+      // Update progress indicator
+      var container = document.querySelector('.brightness-slider-container');
+      container.style.setProperty('--progress', percent);
+      
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/set_brightness", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.send("value=" + val);
+    }
+
+    function changeTZ() {
+      var sel = document.getElementById('tzSelect');
+      var tz = sel.value;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/set_timezone", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        if (xhr.status == 200) {
+          setTimeout(function () { location.reload(); }, 500);
+        } else {
+          alert("Failed to set time zone");
+        }
+      };
+      xhr.send("tz=" + encodeURIComponent(tz));
+    }
+
+    function changeLabel() {
+      var label = document.getElementById('clockLabelInput').value;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/set_clock_label", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        if (xhr.status == 200) {
+          setTimeout(function () { location.reload(); }, 500);
+        } else {
+          alert("Failed to set clock label");
+        }
+      };
+      xhr.send("label=" + encodeURIComponent(label));
+    }
+
+    function setImgInterval() {
+      var interval = document.getElementById('imgIntervalInput').value;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/set_img_interval", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        if (xhr.status == 200) {
+          alert("Image interval set successfully");
+        } else {
+          alert("Failed to set image interval");
+        }
+      };
+      xhr.send("interval=" + interval);
+    }
+
+    function toggleDCC() {
+      var checked = document.getElementById('dccCheckbox').checked ? 1 : 0;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/set_dcc", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        if (xhr.status != 200) {
+          alert("Failed to set DCC interface");
+        }
+      };
+      xhr.send("dcc=" + checked);
+    }
+
+    function toggleSecondDisplay() {
+      var checked = document.getElementById('secondDisplayCheckbox').checked ? 1 : 0;
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "/set_second_display", true);
+      xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+      xhr.onload = function () {
+        if (xhr.status != 200) {
+          alert("Failed to set second display");
+        }
+      };
+      xhr.send("second_display=" + checked);
+    }
+
+    // Initialize page
+    setInterval(updateTime, 60000);
+    window.onload = function () {
+      updateTime();
+      
+      // Initialize brightness slider progress
+      var slider = document.getElementById('brightnessSlider');
+      if (slider) {
+        var percent = Math.round(slider.value * 100 / 255);
+        var container = document.querySelector('.brightness-slider-container');
+        container.style.setProperty('--progress', percent);
+      }
+      
+      // File upload form handler
+      document.getElementById('upload-form').onsubmit = function (e) {
+        e.preventDefault();
+        var formData = new FormData();
+        var fileInput = document.getElementById('file-input');
+        if (!fileInput.files.length) {
+          alert("Please select a file.");
+          return;
+        }
+        formData.append('file', fileInput.files[0]);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload', true);
+        xhr.onload = function () {
+          if (xhr.status == 200) {
+            alert("Upload successful!");
+            location.reload();
+          } else {
+            alert("Upload failed!");
+          }
+        };
+        xhr.send(formData);
+      };
+
+      // Initialize checkbox states from server
+      var dccCheckbox = document.getElementById('dccCheckbox');
+      if (dccCheckbox && typeof window.dccEnabled !== "undefined") {
+        dccCheckbox.checked = window.dccEnabled ? true : false;
+      }
+      var secondDisplayCheckbox = document.getElementById('secondDisplayCheckbox');
+      if (secondDisplayCheckbox && typeof window.secondDisplayEnabled !== "undefined") {
+        secondDisplayCheckbox.checked = window.secondDisplayEnabled ? true : false;
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <div class="main-container">
+    <!-- Header with Billboard name and IP -->
+    <div class="flex-container-gray">
+      <div class="header-block">
+        <div class="header-left">
+          <p class="billboard-name">BILLBOARD</p>
+        </div>
+        <div class="header-right">
+          <p>IP Address: <span class="status-value">{{IP_ADDRESS}}</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Time zone and local time -->
+    <div class="flex-container-gray">
+      <label><strong>Time zone:</strong></label>
+      <select id="tzSelect" onchange="changeTZ()">
+        {{TIMEZONE_OPTIONS}}
+        <!-- Time zone options inserted by server -->
+      </select>
+      <p><strong>Local time:</strong> <span id="currentTime" class="status-value">--:--</span></p>
+    </div>
+
+    <!-- Second display toggle -->
+    <div class="control-section">
+      <label for="secondDisplayCheckbox"><strong>Enable second display</strong></label>
+      <label class="toggle-switch">
+        <input type="checkbox" id="secondDisplayCheckbox" onchange="toggleSecondDisplay()" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- DCC interface toggle -->
+    <div class="control-section">
+      <label for="dccCheckbox"><strong>Enable DCC interface</strong></label>
+      <label class="toggle-switch">
+        <input type="checkbox" id="dccCheckbox" onchange="toggleDCC()" />
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <!-- File upload section -->
+    <div class="flex-container-white">
+      <form id="upload-form" enctype="multipart/form-data" method="post">
+        <div class="form-row">
+          <input type="file" id="file-input" name="file" accept=".jpg,.jpeg" style="flex: 1;">
+          <button type="submit" style="white-space: nowrap;">Upload File</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Gallery section -->
+    <h2>Billboard Gallery</h2>
+    <div class='gallery-row'>
+      {{GALLERY_IMAGES}}
+      <!-- Gallery images inserted by server -->
+    </div>
+
+    <hr class="solid">
+
+    <!-- Clock label configuration -->
+    <div class="flex-container-gray">
+      <label for="clockLabelInput"><strong>Clock label:</strong></label>
+      <input type="text" id="clockLabelInput" value="{{CLOCK_LABEL}}" placeholder="Enter clock label">
+      <button onclick="changeLabel()">Set Label</button>
+    </div>
+
+    <!-- Image interval configuration -->
+    <div class="flex-container-gray">
+      <label for="imgIntervalInput"><strong>Display image for (s):</strong></label>
+      <input type="number" id="imgIntervalInput" min="1" max="600" value="{{IMAGE_INTERVAL}}" placeholder="5">
+      <button onclick="setImgInterval()">Set Interval</button>
+    </div>
+
+    <hr class="solid">
+
+    <!-- Brightness control - Clean modern version -->
+    <div class="flex-container-gray">
+      <div class="brightness-control">
+        <div class="brightness-label">
+          <strong>Display brightness:</strong>
+        </div>
+        <div class="brightness-slider-container">
+          <input type="range" min="0" max="255" value="{{BRIGHTNESS_VALUE}}" id="brightnessSlider" oninput="updateBrightness(this.value)">
+        </div>
+        <div class="brightness-value">
+          <span id="brightnessValue">{{BRIGHTNESS_PERCENT}}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Server-side state initialization -->
+  <script>
+    // Set by server-side rendering
+    window.dccEnabled = {{DCC_ENABLED}}; // true or false
+    window.secondDisplayEnabled = {{SECOND_DISPLAY_ENABLED}}; // true or false
+  </script>
+</body>
+</html>

@@ -21,9 +21,9 @@ WiFiManager::WiFiManager(AsyncWebServer* webServer) : server(webServer) {
     restartPending = false;
     restartScheduledTime = 0;
     
-    // NEW: Add these lines for connection success display
-    //connectionSuccessDisplayed = false;
-    //connectionSuccessStartTime = 0;
+    // FIX: Uncomment these lines
+    connectionSuccessDisplayed = false;
+    connectionSuccessStartTime = 0;
     
     // Initialize GPIO0 pin for factory reset
     pinMode(GPIO0_PIN, INPUT_PULLUP);
@@ -214,24 +214,54 @@ String WiFiManager::scanNetworks() {
     }
     
     String networks = "[";
-    // Limit to first 10 networks to prevent memory issues
-    int maxNetworks = min(n, 10);
+    int validNetworkCount = 0;
     
-    for (int i = 0; i < maxNetworks; i++) {
-        if (i > 0) networks += ",";
+    // Process all found networks, but only include valid ones
+    for (int i = 0; i < n; i++) {
+        String ssid = WiFi.SSID(i);
+        
+        // FILTER: Skip networks with empty or blank SSIDs
+        if (ssid.length() == 0) {
+            LOG_DEBUGF(TAG, "Skipping network %d with empty SSID", i);
+            continue;
+        }
+        
+        // FILTER: Skip whitespace-only SSIDs
+        ssid.trim(); // Trim in place (modifies the string)
+        if (ssid.length() == 0) {
+            LOG_DEBUGF(TAG, "Skipping network %d with whitespace-only SSID", i);
+            continue;
+        }
+        
+        // FILTER: Skip very weak signals (optional - less than -90 dBm)
+        if (WiFi.RSSI(i) < -90) {
+            LOG_DEBUGF(TAG, "Skipping weak network: %s (%d dBm)", ssid.c_str(), WiFi.RSSI(i));
+            continue;
+        }
+        
+        // Add comma separator for valid networks (not first one)
+        if (validNetworkCount > 0) networks += ",";
         
         // Escape quotes in SSID
-        String ssid = WiFi.SSID(i);
         ssid.replace("\"", "\\\"");
         
+        // Add valid network to JSON
         networks += "{\"ssid\":\"" + ssid + "\",\"rssi\":" + String(WiFi.RSSI(i)) + "}";
+        validNetworkCount++;
+        
+        // Limit to 10 valid networks to prevent memory issues
+        if (validNetworkCount >= 10) {
+            LOG_DEBUGF(TAG, "Reached maximum of 10 networks, stopping scan");
+            break;
+        }
     }
+    
     networks += "]";
     
     // Clean up scan results to free memory
     WiFi.scanDelete();
     
-    LOG_INFOF(TAG, "Found %d networks (showing %d)", n, maxNetworks);
+    LOG_INFOF(TAG, "Found %d total networks, showing %d valid networks", n, validNetworkCount);
     return networks;
 }
 
