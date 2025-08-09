@@ -8,7 +8,8 @@ static const String TAG = "WIFI";
 
 const unsigned long WiFiManager::RETRY_DELAYS[] = {5000, 10000, 30000}; // 5s, 10s, 30s
 
-WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager) : server(webServer), timeManager(timeManager) {
+WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager) 
+    : server(webServer), timeManager(timeManager), settingsManager(settingsManager), displayManager(displayManager) {
     LOG_DEBUG(TAG, "WiFiManager constructor called");
     
     // Initialize new Step 2 variables
@@ -78,8 +79,8 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
         
         currentMode = MODE_SETUP;
         
-        // AFTER AP IS READY: Show detailed portal info (non-critical timing)
-        displayManager.showPortalInfo(
+        // AFTER AP IS READY: Show splash screen (5s) then portal info
+        displayManager.showPortalSequence(
             PORTAL_SSID,           
             "IP: 4.3.2.1",        
             "Ready to connect"     
@@ -491,11 +492,9 @@ void WiFiManager::setupNormalModeRoutes() {
         // Template replacements
         html.replace("{{WIFI_SSID}}", WiFi.SSID());
         html.replace("{{IP_ADDRESS}}", WiFi.localIP().toString());
-        html.replace("{{BRIGHTNESS_VALUE}}", "200");
-        html.replace("{{BRIGHTNESS_PERCENT}}", "78");
         html.replace("{{TIMEZONE_OPTIONS}}", timeManager ? timeManager->getTimezoneOptions() : "<option value=\"UTC\">UTC</option>");
         html.replace("{{CLOCK_LABEL}}", timeManager ? timeManager->getClockLabel() : "Clock");
-        html.replace("{{IMAGE_INTERVAL}}", "5");
+        html.replace("{{IMAGE_INTERVAL}}", String(settingsManager->getImageInterval()));
         html.replace("{{GALLERY_IMAGES}}", "No images");
         
         request->send(200, "text/html", html);
@@ -533,6 +532,7 @@ void WiFiManager::setupNormalModeRoutes() {
         html.replace("{{UPTIME}}", String(millis() / 1000));
         html.replace("{{FREE_MEMORY}}", String(ESP.getFreeHeap()));
         html.replace("{{TIMEZONE_OPTIONS}}", timeManager ? timeManager->getTimezoneOptions() : "<option value=\"UTC\">UTC</option>");
+        html.replace("{{CURRENT_NTP_SERVER}}", timeManager ? timeManager->getNTPServer1() : "pool.ntp.org");
         
         request->send(200, "text/html", html);
     });
@@ -571,57 +571,129 @@ void WiFiManager::setupNormalModeRoutes() {
     });
     
     // Image interval setting
-    server->on("/image-interval", HTTP_POST, [](AsyncWebServerRequest *request){
+    server->on("/image-interval", HTTP_POST, [this](AsyncWebServerRequest *request){
         if (request->hasParam("interval", true)) {
             String interval = request->getParam("interval", true)->value();
-            LOG_INFOF(TAG, "⏱️ Image interval set to: %s seconds", interval.c_str());
-            // TODO: Implement image interval setting logic
+            int intervalValue = interval.toInt();
+            LOG_INFOF(TAG, "⏱️ Image interval set to: %d seconds", intervalValue);
+            
+            // Send response immediately to prevent timeout
+            request->send(200, "text/plain", "OK");
+            
+            // Save to persistent settings after response sent
+            settingsManager->setImageInterval(intervalValue);
+            LOG_DEBUG(TAG, "Image interval saved to persistent storage");
+        } else {
+            request->send(400, "text/plain", "Missing parameter");
         }
-        request->send(200, "text/plain", "OK");
     });
     
     // Second display toggle
-    server->on("/second-display", HTTP_POST, [](AsyncWebServerRequest *request){
+    server->on("/second-display", HTTP_POST, [this](AsyncWebServerRequest *request){
+        LOG_DEBUG(TAG, "📺 Second display endpoint called");
+        
         if (request->hasParam("second_display", true)) {
             String enabled = request->getParam("second_display", true)->value();
             bool isEnabled = (enabled == "true");
-            LOG_INFOF(TAG, "📺 Second display: %s", isEnabled ? "enabled" : "disabled");
-            // TODO: Implement second display toggle logic
+            LOG_INFOF(TAG, "📺 Second display request: param='%s', parsed=%s", enabled.c_str(), isEnabled ? "true" : "false");
+            
+            // Send response immediately to prevent timeout
+            request->send(200, "text/plain", "OK");
+            
+            // Save to persistent settings after response sent
+            settingsManager->setSecondDisplayEnabled(isEnabled);
+            LOG_INFOF(TAG, "📺 Second display setting saved, current value: %s", settingsManager->isSecondDisplayEnabled() ? "true" : "false");
+            
+            // Apply current brightness to appropriate display(s)
+            if (displayManager) {
+                uint8_t currentBrightness = settingsManager->getBrightness();
+                if (isEnabled) {
+                    // Second display enabled - apply brightness to both displays
+                    displayManager->setBrightness(currentBrightness, 0); // 0 = both displays
+                    LOG_DEBUG(TAG, "Applied current brightness to both displays");
+                } else {
+                    // Second display disabled - only first display gets brightness, turn off second
+                    displayManager->setBrightness(currentBrightness, 1); // 1 = first display only
+                    displayManager->setBrightness(0, 2); // Turn off second display
+                    LOG_DEBUG(TAG, "Applied brightness to first display only, turned off second");
+                }
+            }
+        } else {
+            LOG_WARN(TAG, "⚠️ Missing second_display parameter");
+            request->send(400, "text/plain", "Missing parameter");
         }
-        request->send(200, "text/plain", "OK");
     });
     
     // DCC interface toggle
-    server->on("/dcc", HTTP_POST, [](AsyncWebServerRequest *request){
+    server->on("/dcc", HTTP_POST, [this](AsyncWebServerRequest *request){
+        LOG_DEBUG(TAG, "🚂 DCC endpoint called");
+        
         if (request->hasParam("dcc", true)) {
             String enabled = request->getParam("dcc", true)->value();
             bool isEnabled = (enabled == "true");
-            LOG_INFOF(TAG, "🚂 DCC interface: %s", isEnabled ? "enabled" : "disabled");
-            // TODO: Implement DCC interface toggle logic
+            LOG_INFOF(TAG, "🚂 DCC interface request: param='%s', parsed=%s", enabled.c_str(), isEnabled ? "true" : "false");
+            
+            // Send response immediately to prevent timeout
+            request->send(200, "text/plain", "OK");
+            
+            // Save to persistent settings after response sent
+            settingsManager->setDCCEnabled(isEnabled);
+            LOG_INFOF(TAG, "🚂 DCC setting saved, current value: %s", settingsManager->isDCCEnabled() ? "true" : "false");
+        } else {
+            LOG_WARN(TAG, "⚠️ Missing dcc parameter");
+            request->send(400, "text/plain", "Missing parameter");
         }
-        request->send(200, "text/plain", "OK");
     });
     
     // Image enable toggle
-    server->on("/image-enable", HTTP_POST, [](AsyncWebServerRequest *request){
+    server->on("/image-enable", HTTP_POST, [this](AsyncWebServerRequest *request){
         if (request->hasParam("image_enable", true)) {
             String enabled = request->getParam("image_enable", true)->value();
             bool isEnabled = (enabled == "true");
             LOG_INFOF(TAG, "🖼️ Image display: %s", isEnabled ? "enabled" : "disabled");
-            // TODO: Implement image display toggle logic
+            
+            // Send response immediately to prevent timeout
+            request->send(200, "text/plain", "OK");
+            
+            // Save to persistent settings after response sent
+            settingsManager->setImageEnabled(isEnabled);
+            LOG_DEBUG(TAG, "Image display setting saved to persistent storage");
+        } else {
+            request->send(400, "text/plain", "Missing parameter");
         }
-        request->send(200, "text/plain", "OK");
     });
     
     // Brightness control
-    server->on("/brightness", HTTP_POST, [](AsyncWebServerRequest *request){
+    server->on("/brightness", HTTP_POST, [this](AsyncWebServerRequest *request){
         if (request->hasParam("brightness", true)) {
             String brightness = request->getParam("brightness", true)->value();
             int brightnessValue = brightness.toInt();
             LOG_INFOF(TAG, "🔆 Brightness set to: %d", brightnessValue);
-            // TODO: Implement brightness control logic
+            
+            // Send response immediately to prevent timeout
+            request->send(200, "text/plain", "OK");
+            
+            // Save to persistent settings after response sent
+            settingsManager->setBrightness(brightnessValue);
+            LOG_DEBUG(TAG, "Brightness setting saved to persistent storage");
+            
+            // Apply brightness to display(s) based on second display setting
+            if (displayManager) {
+                bool secondDisplayEnabled = settingsManager->isSecondDisplayEnabled();
+                if (secondDisplayEnabled) {
+                    // Both displays enabled - set brightness for both
+                    displayManager->setBrightness(brightnessValue, 0); // 0 = both displays
+                    LOG_DEBUG(TAG, "Applied brightness to both displays");
+                } else {
+                    // Only main display enabled - Display 1 (BLUE) should stay on, Display 2 (YELLOW) should turn off
+                    displayManager->setBrightness(brightnessValue, 1); // Keep Display 1 (BLUE) on with brightness
+                    displayManager->setBrightness(0, 2); // Turn off Display 2 (YELLOW)
+                    LOG_DEBUG(TAG, "Applied brightness to main display only, turned off second display");
+                }
+            }
+        } else {
+            request->send(400, "text/plain", "Missing parameter");
         }
-        request->send(200, "text/plain", "OK");
     });
     
     // File upload endpoint
@@ -633,6 +705,18 @@ void WiFiManager::setupNormalModeRoutes() {
         // TODO: Implement file upload logic
     });
     
+    // API endpoint for current settings
+    server->on("/api/settings", HTTP_GET, [this](AsyncWebServerRequest *request){
+        String response = "{";
+        response += "\"secondDisplay\":" + String(settingsManager->isSecondDisplayEnabled() ? "true" : "false") + ",";
+        response += "\"dcc\":" + String(settingsManager->isDCCEnabled() ? "true" : "false") + ",";
+        response += "\"brightness\":" + String(settingsManager->getBrightness()) + ",";
+        response += "\"imageInterval\":" + String(settingsManager->getImageInterval()) + ",";
+        response += "\"imageEnabled\":" + String(settingsManager->isImageEnabled() ? "true" : "false");
+        response += "}";
+        request->send(200, "application/json", response);
+    });
+
     // API endpoints for settings page
     server->on("/api/wifi-status", HTTP_GET, [](AsyncWebServerRequest *request){
         String response = "{";
@@ -662,11 +746,22 @@ void WiFiManager::setupNormalModeRoutes() {
     server->on("/api/ntp-settings", HTTP_POST, [this](AsyncWebServerRequest *request){
         if (request->hasParam("server", true)) {
             String ntpServer = request->getParam("server", true)->value();
-            LOG_INFOF(TAG, "🕐 NTP server change requested: %s (Note: NTP servers are configured at compile time)", ntpServer.c_str());
+            LOG_INFOF(TAG, "🕐 NTP server change requested: %s", ntpServer.c_str());
             
-            // Note: This implementation uses compile-time NTP server configuration
-            // To change NTP servers, they must be modified in config.h and the firmware recompiled
-            request->send(200, "application/json", "{\"status\":\"info\",\"message\":\"NTP servers are configured at compile time. Current servers: pool.ntp.org, time.nist.gov, time.google.com\"}");
+            if (ntpServer.length() == 0) {
+                request->send(400, "application/json", "{\"status\":\"error\",\"message\":\"NTP server cannot be empty\"}");
+                return;
+            }
+            
+            // Update NTP server using TimeManager
+            if (timeManager) {
+                timeManager->setNTPServer(ntpServer);
+                LOG_INFOF(TAG, "✅ NTP server updated to: %s", ntpServer.c_str());
+                request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"NTP server updated successfully\"}");
+            } else {
+                LOG_ERROR(TAG, "❌ TimeManager not available");
+                request->send(500, "application/json", "{\"status\":\"error\",\"message\":\"TimeManager not available\"}");
+            }
         } else {
             request->send(400, "application/json", "{\"status\":\"error\",\"message\":\"Missing server parameter\"}");
         }
@@ -679,6 +774,57 @@ void WiFiManager::setupNormalModeRoutes() {
         request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Credentials cleared. Restarting...\"}");
         restartPending = true;
         restartScheduledTime = millis() + 1000;  // 1 second restart
+    });
+    
+    // DEBUG: Test endpoints for display debugging
+    server->on("/debug/display1", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "🔬 Debug: Testing Display 1 brightness");
+        if (displayManager) {
+            displayManager->setBrightness(255, 1); // Max brightness on Display 1 only
+            request->send(200, "text/plain", "Display 1 set to max brightness");
+        } else {
+            request->send(500, "text/plain", "DisplayManager not available");
+        }
+    });
+    
+    server->on("/debug/display2", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "🔬 Debug: Testing Display 2 brightness");
+        if (displayManager) {
+            displayManager->setBrightness(255, 2); // Max brightness on Display 2 only
+            request->send(200, "text/plain", "Display 2 set to max brightness");
+        } else {
+            request->send(500, "text/plain", "DisplayManager not available");
+        }
+    });
+    
+    server->on("/debug/display1-off", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "🔬 Debug: Turning off Display 1");
+        if (displayManager) {
+            displayManager->setBrightness(0, 1); // Turn off Display 1
+            request->send(200, "text/plain", "Display 1 turned off");
+        } else {
+            request->send(500, "text/plain", "DisplayManager not available");
+        }
+    });
+    
+    server->on("/debug/display2-off", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "🔬 Debug: Turning off Display 2");
+        if (displayManager) {
+            displayManager->setBrightness(0, 2); // Turn off Display 2
+            request->send(200, "text/plain", "Display 2 turned off");
+        } else {
+            request->send(500, "text/plain", "DisplayManager not available");
+        }
+    });
+    
+    server->on("/debug/both-on", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "🔬 Debug: Turning on both displays");
+        if (displayManager) {
+            displayManager->setBrightness(255, 0); // Turn on both displays
+            request->send(200, "text/plain", "Both displays turned on");
+        } else {
+            request->send(500, "text/plain", "DisplayManager not available");
+        }
     });
     
     LOG_INFO(TAG, "✅ Normal mode routes configured");

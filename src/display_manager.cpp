@@ -1,8 +1,11 @@
 #include "display_manager.h"
 #include "secrets.h"
 #include "logger.h"
+#include "splash_screen.h"
 
-DisplayManager::DisplayManager() : initialized(false), brightness1(255), brightness2(255) {
+DisplayManager::DisplayManager() : initialized(false), brightness1(255), brightness2(255), 
+                                   splashStartTime(0), splashActive(false), splashTimeoutMs(2000),
+                                   portalSequenceActive(false) {
 }
 
 bool DisplayManager::begin() {
@@ -78,16 +81,14 @@ void DisplayManager::deselectAll() {
 void DisplayManager::setBrightness(uint8_t brightness, int displayNum) {
     if (displayNum == 1 || displayNum == 0) {
         brightness1 = brightness;
+        ledcWrite(2, brightness); // Apply to backlight 1 (GPIO 27, Channel 2) - SWAPPED: Blue display is on Channel 2
+        LOG_INFOF("DISPLAY", "🔆 Brightness set - Display 1: %d", brightness);
     }
     if (displayNum == 2 || displayNum == 0) {
         brightness2 = brightness;
+        ledcWrite(1, brightness); // Apply to backlight 2 (GPIO 22, Channel 1) - SWAPPED: Yellow display is on Channel 1
+        LOG_INFOF("DISPLAY", "🔆 Brightness set - Display 2: %d", brightness);
     }
-    
-    // Apply brightness (using working project's channel 1)
-    uint8_t avgBrightness = (brightness1 + brightness2) / 2;
-    ledcWrite(1, avgBrightness);
-    
-    LOG_INFOF("DISPLAY", "🔆 Brightness set - Display %d: %d", displayNum, brightness);
 }
 
 void DisplayManager::fillScreen(uint16_t color, int displayNum) {
@@ -165,6 +166,10 @@ void DisplayManager::showQuickStatus(const String& message, uint16_t color) {
     setBrightness(0, 2);  
     
     deselectAll();
+}
+
+bool DisplayManager::isSplashActive() {
+    return splashActive;
 }
 
 // Quick AP starting indicator
@@ -258,5 +263,110 @@ void DisplayManager::showConnectionSuccess(const String& ip) {
     deselectAll();
     
     LOG_INFOF("DISPLAY", "✅ Connection success displayed - IP: %s", ip.c_str());
+}
+
+void DisplayManager::drawMonochromeBitmap(int16_t x, int16_t y, const uint8_t *bitmap, 
+                                         int16_t w, int16_t h, uint16_t color, uint16_t bg, int displayNum) {
+    selectDisplay(displayNum);
+    
+    for (int16_t j = 0; j < h; j++) {
+        for (int16_t i = 0; i < w; i++) {
+            int16_t byteIndex = j * ((w + 7) / 8) + i / 8;
+            int16_t bitIndex = 7 - (i % 8);
+            
+            if (bitmap[byteIndex] & (1 << bitIndex)) {
+                tft.drawPixel(x + i, y + j, color);
+            } else {
+                tft.drawPixel(x + i, y + j, bg);
+            }
+        }
+    }
+    
+    deselectAll();
+}
+
+void DisplayManager::drawMonochromeBitmapRotated(int16_t x, int16_t y, const uint8_t *bitmap, 
+                                               int16_t w, int16_t h, uint16_t color, uint16_t bg, int displayNum) {
+    selectDisplay(displayNum);
+    
+    // Rotate 270 degrees CW (or 90 degrees CCW) to fix upside down issue
+    // For each pixel at (i,j) in original, draw at (h-1-j, i) in rotated
+    for (int16_t j = 0; j < h; j++) {
+        for (int16_t i = 0; i < w; i++) {
+            int16_t byteIndex = j * ((w + 7) / 8) + i / 8;
+            int16_t bitIndex = 7 - (i % 8);
+            
+            // Calculate rotated position: 270 degrees CW (fixes upside down)
+            int16_t rotatedX = x + (h - 1 - j);
+            int16_t rotatedY = y + i;
+            
+            if (bitmap[byteIndex] & (1 << bitIndex)) {
+                tft.drawPixel(rotatedX, rotatedY, color);
+            } else {
+                tft.drawPixel(rotatedX, rotatedY, bg);
+            }
+        }
+    }
+    
+    deselectAll();
+}
+
+void DisplayManager::showSplashScreen(int displayNum, unsigned long timeoutMs) {
+    if (displayNum == 0) {
+        // Show on both displays
+        showSplashScreen(1, timeoutMs);
+        showSplashScreen(2, timeoutMs);
+        return;
+    }
+    
+    selectDisplay(displayNum);
+    
+    // Clear screen with black background
+    fillScreen(TFT_BLACK, displayNum);
+    
+    // Calculate center position for rotated bitmap (80x160 becomes 160x80 after rotation)
+    // The rotated bitmap will be 160x80, which perfectly fits the 160x80 display
+    int16_t centerX = 0;  // Start at left edge
+    int16_t centerY = 0;  // Start at top edge
+    
+    // Draw the rotated bitmap (white pixels on black background)
+    drawMonochromeBitmapRotated(centerX, centerY, epd_bitmap_, 80, 160, TFT_WHITE, TFT_BLACK, displayNum);
+    
+    // Set splash timing
+    splashStartTime = millis();
+    splashActive = true;
+    splashTimeoutMs = timeoutMs;
+    
+    LOG_INFOF("DISPLAY", "🖼️ Rotated splash screen displayed on display %d (timeout: %lums)", displayNum, timeoutMs);
+}
+
+void DisplayManager::updateSplashScreen() {
+    if (splashActive && (millis() - splashStartTime >= splashTimeoutMs)) {
+        splashActive = false;
+        
+        // Check if we need to show portal info after splash
+        if (portalSequenceActive) {
+            portalSequenceActive = false;
+            showPortalInfo(pendingSSID, pendingIP, pendingStatus);
+            LOG_INFO("DISPLAY", "✅ Splash completed, showing portal info");
+        } else {
+            // Just clear screen
+            fillScreen(TFT_BLACK);
+            LOG_INFO("DISPLAY", "✅ Splash screen auto-cleared");
+        }
+    }
+}
+
+void DisplayManager::showPortalSequence(const String& ssid, const String& ip, const String& status) {
+    // Store portal info for later display
+    pendingSSID = ssid;
+    pendingIP = ip;
+    pendingStatus = status;
+    portalSequenceActive = true;
+    
+    // Show splash screen for 5 seconds, then portal info will auto-display
+    showSplashScreen(0, 5000);  // 5 seconds on both displays
+    
+    LOG_INFO("DISPLAY", "🚀 Portal sequence started: 5s splash → portal info");
 }
 

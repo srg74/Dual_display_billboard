@@ -154,13 +154,28 @@ void loop() {
 #include "wifi_manager.h"           // ADD: WiFi management
 #include "credential_manager.h"     // ADD: Credential storage
 #include "time_manager.h"           // ADD: Time management
+#include "settings_manager.h"       // ADD: Settings management
 #include "config.h"
 
 // Create instances
 DisplayManager displayManager;
 AsyncWebServer server(80);          // ADD: Web server
+
+// Configure TCP settings to reduce timeout errors
+void configureTCPSettings() {
+    // Set TCP keepalive settings to reduce timeout errors
+    int keepalive = 1;
+    int keepidle = 10;  // seconds before starting keepalive probes
+    int keepintvl = 5;  // interval between keepalive probes
+    int keepcnt = 3;    // number of keepalive probes before timeout
+    
+    // These settings help prevent AsyncTCP timeout errors
+    WiFi.setTxPower(WIFI_POWER_19_5dBm);  // Reduce power to prevent interference
+}
+
 TimeManager timeManager;            // ADD: Time manager
-WiFiManager wifiManager(&server, &timeManager);   // ADD: WiFi manager
+SettingsManager settingsManager;    // ADD: Settings manager
+WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager);   // ADD: WiFi manager with display manager
 CredentialManager credentialManager; // ADD: Credential manager
 
 // Timing variables using config.h constants
@@ -221,13 +236,26 @@ void loop() {
                 LOG_ERROR("MAIN", "❌ Credential manager failed");
             }
             
+            // Initialize settings manager
+            if (settingsManager.begin()) {
+                LOG_INFO("MAIN", "✅ Settings manager initialized");
+            } else {
+                LOG_ERROR("MAIN", "❌ Settings manager failed");
+            }
+            
             // Initialize WiFi manager from credentials
             if (wifiManager.initializeFromCredentials()) {
                 LOG_INFO("MAIN", "✅ WiFi manager initialized");
                 wifiInitialized = true;
+                // Configure TCP settings to reduce timeout errors
+                configureTCPSettings();
+                LOG_INFO("MAIN", "🔧 TCP settings configured");
             } else {
                 LOG_INFO("MAIN", "ℹ️  WiFi starting in setup mode");
                 wifiInitialized = true; // Still continue in AP mode
+                // Configure TCP settings to reduce timeout errors
+                configureTCPSettings();
+                LOG_INFO("MAIN", "🔧 TCP settings configured");
             }
         }
         
@@ -247,7 +275,23 @@ void loop() {
         
         // Step 4: System ready
         if (displayInitialized && wifiInitialized) {
-            displayManager.enableSecondDisplay(true);
+            // Enable second display based on saved setting
+            displayManager.enableSecondDisplay(settingsManager.isSecondDisplayEnabled());
+            
+            // Set initial brightness based on saved setting
+            uint8_t savedBrightness = settingsManager.getBrightness();
+            bool secondDisplayEnabled = settingsManager.isSecondDisplayEnabled();
+            if (secondDisplayEnabled) {
+                // Both displays enabled
+                displayManager.setBrightness(savedBrightness, 0); // 0 = both displays
+                LOG_INFOF("MAIN", "🔆 Initial brightness set to %d for both displays", savedBrightness);
+            } else {
+                // Only first display enabled
+                displayManager.setBrightness(savedBrightness, 1); // 1 = first display only
+                displayManager.setBrightness(0, 2); // Turn off second display backlight
+                LOG_INFOF("MAIN", "🔆 Initial brightness set to %d for first display only", savedBrightness);
+            }
+            
             systemInitialized = true;
             lastHeartbeat = currentTime;
             
@@ -259,6 +303,9 @@ void loop() {
     
     // Main operation loop - only run if fully initialized
     if (systemInitialized) {
+        // Handle splash screen transitions (non-blocking)
+        displayManager.updateSplashScreen();
+        
         // WiFi management (non-blocking)
         wifiManager.checkConnectionStatus();
         wifiManager.checkGpio0FactoryReset();

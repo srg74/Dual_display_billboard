@@ -75,6 +75,28 @@
             flex: 0 0 auto;
         }
 
+        .header-center {
+            flex: 1;
+            text-align: center;
+        }
+
+        .header-center a {
+            color: #f0f6fc;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 600;
+            padding: 8px 16px;
+            border: 2px solid #f0f6fc;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            display: inline-block;
+        }
+
+        .header-center a:hover {
+            background-color: #f0f6fc;
+            color: #238636;
+        }
+
         .header-right {
             flex: 0 0 auto;
             text-align: right;
@@ -355,6 +377,9 @@
                 <div class="header-left">
                     <h1 class="billboard-name">BILLBOARD</h1>
                 </div>
+                <div class="header-center">
+                    <a href="settings">Settings</a>
+                </div>
                 <div class="header-right">
                     <p><strong>Wi-Fi:</strong> <span class="status-value">{{WIFI_SSID}}</span></p>
                     <p><strong>IP:</strong> <span class="status-value">{{IP_ADDRESS}}</span></p>
@@ -428,9 +453,9 @@
                        id="brightnessSlider" 
                        min="1" 
                        max="255" 
-                       value="{{BRIGHTNESS_VALUE}}" 
+                       value="200" 
                        class="brightness-slider">
-                <span id="brightnessPercent" class="brightness-value">{{BRIGHTNESS_PERCENT}}%</span>
+                <span id="brightnessPercent" class="brightness-value">78%</span>
             </div>
         </div>
     </div>
@@ -517,12 +542,50 @@
 
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
+            // Load current settings from server
+            fetch('/api/settings')
+                .then(response => response.json())
+                .then(settings => {
+                    console.log('Loaded settings:', settings);
+                    
+                    // Set checkbox states
+                    const secondDisplayCheckbox = document.getElementById('secondDisplayCheckbox');
+                    const dccCheckbox = document.getElementById('dccCheckbox');
+                    const brightnessSlider = document.getElementById('brightnessSlider');
+                    
+                    if (secondDisplayCheckbox) {
+                        secondDisplayCheckbox.checked = settings.secondDisplay;
+                        console.log('Second Display checkbox set to:', settings.secondDisplay);
+                    }
+                    
+                    if (dccCheckbox) {
+                        dccCheckbox.checked = settings.dcc;
+                        console.log('DCC checkbox set to:', settings.dcc);
+                    }
+                    
+                    if (brightnessSlider) {
+                        brightnessSlider.value = settings.brightness;
+                        const percent = Math.round(settings.brightness * 100 / 255);
+                        document.getElementById('brightnessPercent').textContent = percent + '%';
+                        console.log('Brightness set to:', settings.brightness, '(' + percent + '%)');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading settings:', error);
+                });
+            
             // Brightness slider real-time updates
             const slider = document.getElementById('brightnessSlider');
             if (slider) {
+                // Update percentage display in real-time as user moves slider
                 slider.addEventListener('input', function() {
                     const percent = Math.round(this.value * 100 / 255);
                     document.getElementById('brightnessPercent').textContent = percent + '%';
+                });
+                
+                // Save value when user finishes moving slider
+                slider.addEventListener('change', function() {
+                    setBrightness();
                 });
                 
                 // Initialize brightness display

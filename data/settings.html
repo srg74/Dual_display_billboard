@@ -146,12 +146,19 @@
         <h2>NTP Server Configuration</h2>
         <div class="flex-container-gray">
             <label><strong>Primary Server:</strong></label>
-            <select id="ntp-server1">
-                <option value="pool.ntp.org">pool.ntp.org</option>
-                <option value="time.nist.gov">time.nist.gov</option>
-                <option value="time.google.com">time.google.com</option>
-                <option value="time.cloudflare.com">time.cloudflare.com</option>
-            </select>
+            <div style="display: flex; gap: 8px; align-items: center; flex: 1;">
+                                <input type="text" id="ntp-server1" value="{{CURRENT_NTP_SERVER}}" 
+                       style="flex: 1; padding: 6px; border: 1px solid #30363d; border-radius: 4px; background-color: #0d1117; color: #f0f6fc; font-size: 14px;"
+                       placeholder="Enter NTP server URL">
+                <select onchange="setNTPFromDropdown()" 
+                        style="padding: 6px; border: 1px solid #30363d; border-radius: 4px; background-color: #0d1117; color: #f0f6fc; font-size: 14px;">
+                    <option value="">Quick Select...</option>
+                    <option value="pool.ntp.org">pool.ntp.org</option>
+                    <option value="time.nist.gov">time.nist.gov</option>
+                    <option value="time.google.com">time.google.com</option>
+                    <option value="time.cloudflare.com">time.cloudflare.com</option>
+                </select>
+            </div>
             <button onclick="updateNTPServer()">Update NTP</button>
         </div>
 
@@ -248,6 +255,15 @@
                 console.error('Error updating NTP server:', error);
                 alert('Network error updating NTP server');
             });
+        }
+
+        function setNTPFromDropdown() {
+            const dropdown = event.target;
+            const inputField = document.getElementById('ntp-server1');
+            if (dropdown.value) {
+                inputField.value = dropdown.value;
+                dropdown.selectedIndex = 0; // Reset dropdown to "Quick Select..."
+            }
         }
     </script>
 </body>
