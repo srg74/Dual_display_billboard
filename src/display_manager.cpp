@@ -370,3 +370,38 @@ void DisplayManager::showPortalSequence(const String& ssid, const String& ip, co
     LOG_INFO("DISPLAY", "🚀 Portal sequence started: 5s splash → portal info");
 }
 
+// TFT access for ImageManager
+TFT_eSPI* DisplayManager::getTFT(int displayNum) {
+    // Note: This returns the shared TFT instance
+    // The display selection is handled by selectDisplay()
+    if (displayNum >= 1 && displayNum <= 2) {
+        return &tft;
+    }
+    return nullptr;
+}
+
+// Display type detection
+String DisplayManager::getDisplayType() const {
+    #ifdef DISPLAY_TYPE_ST7789
+        return "ST7789";
+    #else
+        return "ST7735";
+    #endif
+}
+
+uint16_t DisplayManager::getDisplayWidth() const {
+    #ifdef DISPLAY_TYPE_ST7789
+        return 240;
+    #else
+        return 160;
+    #endif
+}
+
+uint16_t DisplayManager::getDisplayHeight() const {
+    #ifdef DISPLAY_TYPE_ST7789
+        return 240;
+    #else
+        return 80;
+    #endif
+}
+

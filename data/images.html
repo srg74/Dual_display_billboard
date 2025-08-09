@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Manager - Dual Display Billboard</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/bootstrap-icons.css" rel="stylesheet">
+    <link href="css/dark-theme.css" rel="stylesheet">
+    <style>
+        .drop-zone {
+            border: 3px dashed #adb5bd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .drop-zone.dragover {
+            border-color: #0d6efd;
+            background-color: #e7f3ff;
+        }
+        
+        .drop-zone:hover {
+            border-color: #0d6efd;
+            background-color: #f0f8ff;
+        }
+        
+        .image-card {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: white;
+        }
+        
+        .image-preview {
+            max-width: 100px;
+            max-height: 100px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .upload-progress {
+            display: none;
+        }
+        
+        .file-info {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        
+        .requirements {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .requirements h6 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+        
+        .requirements ul {
+            margin-bottom: 0;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-image"></i> Image Manager
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/">
+                    <i class="bi bi-house-door"></i> Home
+                </a>
+                <a class="nav-link" href="/settings.html">
+                    <i class="bi bi-gear"></i> Settings
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- System Info Card -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-info-circle"></i> Display Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Display Type:</strong>
+                                <span id="displayType" class="badge bg-info">Loading...</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Resolution:</strong>
+                                <span id="displayResolution" class="badge bg-secondary">Loading...</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Images:</strong>
+                                <span id="imageCount" class="badge bg-success">0</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Storage:</strong>
+                                <span id="storageInfo" class="badge bg-warning">Loading...</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Requirements -->
+        <div class="requirements">
+            <h6><i class="bi bi-exclamation-triangle"></i> Image Requirements</h6>
+            <ul>
+                <li id="resolutionReq">Resolution: Loading...</li>
+                <li>Format: JPEG only (.jpg or .jpeg)</li>
+                <li>Maximum file size: 50KB</li>
+                <li>Images must be exact size - no scaling is performed</li>
+            </ul>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-cloud-upload"></i> Upload New Image
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="drop-zone" id="dropZone">
+                    <i class="bi bi-cloud-upload display-1 text-muted"></i>
+                    <h4 class="mt-3">Drag & Drop Image Here</h4>
+                    <p class="text-muted">or click to select file</p>
+                    <input type="file" id="fileInput" accept=".jpg,.jpeg,image/jpeg" style="display: none;">
+                    <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                        <i class="bi bi-folder2-open"></i> Select File
+                    </button>
+                </div>
+                
+                <div class="upload-progress mt-3" id="uploadProgress">
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="text-center mt-2">
+                        <span id="uploadStatus">Uploading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Gallery -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-images"></i> Image Gallery
+                </h5>
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="refreshImages()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+            <div class="card-body">
+                <div id="imageGallery">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading images...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/bootstrap.min.js"></script>
+    <script>
+        let systemInfo = {};
+        
+        // Load system information
+        async function loadSystemInfo() {
+            try {
+                const response = await fetch('/api/images/info');
+                systemInfo = await response.json();
+                
+                document.getElementById('displayType').textContent = systemInfo.displayType;
+                document.getElementById('displayResolution').textContent = systemInfo.resolution;
+                document.getElementById('imageCount').textContent = systemInfo.imageCount;
+                
+                const storagePercent = Math.round((systemInfo.storageUsed / systemInfo.storageTotal) * 100);
+                document.getElementById('storageInfo').textContent = `${storagePercent}% used`;
+                
+                document.getElementById('resolutionReq').textContent = `Resolution: ${systemInfo.resolution} pixels`;
+                
+            } catch (error) {
+                console.error('Failed to load system info:', error);
+                showAlert('Failed to load system information', 'danger');
+            }
+        }
+        
+        // Load and display images
+        async function loadImages() {
+            try {
+                const response = await fetch('/api/images/list');
+                const data = await response.json();
+                
+                const gallery = document.getElementById('imageGallery');
+                
+                if (data.images.length === 0) {
+                    gallery.innerHTML = `
+                        <div class="text-center text-muted">
+                            <i class="bi bi-image display-1"></i>
+                            <h5 class="mt-3">No Images Uploaded</h5>
+                            <p>Upload your first image using the form above</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '<div class="row">';
+                data.images.forEach(image => {
+                    html += `
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="image-card">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h6 class="mb-0">${image.filename}</h6>
+                                    <div class="btn-group btn-group-sm">
+                                        <button class="btn btn-outline-primary" onclick="displayImage('${image.filename}', 1)" title="Display on Screen 1">
+                                            <i class="bi bi-1-square"></i>
+                                        </button>
+                                        <button class="btn btn-outline-primary" onclick="displayImage('${image.filename}', 2)" title="Display on Screen 2">
+                                            <i class="bi bi-2-square"></i>
+                                        </button>
+                                        <button class="btn btn-outline-success" onclick="displayImage('${image.filename}', 0)" title="Display on Both">
+                                            <i class="bi bi-display"></i>
+                                        </button>
+                                        <button class="btn btn-outline-danger" onclick="deleteImage('${image.filename}')" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="file-info">
+                                    <small>Size: ${formatFileSize(image.size)}</small>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                
+                gallery.innerHTML = html;
+                
+                // Update image count
+                document.getElementById('imageCount').textContent = data.images.length;
+                
+            } catch (error) {
+                console.error('Failed to load images:', error);
+                document.getElementById('imageGallery').innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Failed to load images. Please refresh the page.
+                    </div>
+                `;
+            }
+        }
+        
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        // Display image on specific display
+        async function displayImage(filename, displayNum) {
+            try {
+                const endpoint = displayNum === 0 ? `/api/images/display-both/${filename}` : `/api/images/display/${displayNum}/${filename}`;
+                const response = await fetch(endpoint, { method: 'POST' });
+                
+                if (response.ok) {
+                    const displayText = displayNum === 0 ? 'both displays' : `display ${displayNum}`;
+                    showAlert(`Image "${filename}" displayed on ${displayText}`, 'success');
+                } else {
+                    throw new Error('Failed to display image');
+                }
+            } catch (error) {
+                console.error('Failed to display image:', error);
+                showAlert('Failed to display image', 'danger');
+            }
+        }
+        
+        // Delete image
+        async function deleteImage(filename) {
+            if (!confirm(`Are you sure you want to delete "${filename}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/images/delete/${filename}`, { method: 'DELETE' });
+                
+                if (response.ok) {
+                    showAlert(`Image "${filename}" deleted successfully`, 'success');
+                    loadImages();
+                    loadSystemInfo();
+                } else {
+                    throw new Error('Failed to delete image');
+                }
+            } catch (error) {
+                console.error('Failed to delete image:', error);
+                showAlert('Failed to delete image', 'danger');
+            }
+        }
+        
+        // Refresh images
+        function refreshImages() {
+            loadImages();
+            loadSystemInfo();
+        }
+        
+        // Show alert
+        function showAlert(message, type) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.querySelector('.container').insertBefore(alertDiv, document.querySelector('.container').firstChild);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+        
+        // Drag and drop functionality
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+        
+        // Handle file upload
+        async function handleFileUpload(file) {
+            // Validate file type
+            if (!file.type.includes('jpeg') && !file.name.toLowerCase().includes('.jpg')) {
+                showAlert('Only JPEG files are supported', 'danger');
+                return;
+            }
+            
+            // Validate file size
+            if (file.size > systemInfo.maxImageSize) {
+                showAlert(`File too large. Maximum size is ${formatFileSize(systemInfo.maxImageSize)}`, 'danger');
+                return;
+            }
+            
+            // Show upload progress
+            const progressDiv = document.getElementById('uploadProgress');
+            const progressBar = progressDiv.querySelector('.progress-bar');
+            const statusSpan = document.getElementById('uploadStatus');
+            
+            progressDiv.style.display = 'block';
+            progressBar.style.width = '0%';
+            statusSpan.textContent = 'Uploading...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('image', file);
+                
+                const response = await fetch('/api/images/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                progressBar.style.width = '100%';
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    statusSpan.textContent = 'Upload complete!';
+                    showAlert(`Image "${file.name}" uploaded successfully`, 'success');
+                    
+                    setTimeout(() => {
+                        progressDiv.style.display = 'none';
+                        loadImages();
+                        loadSystemInfo();
+                        fileInput.value = '';
+                    }, 1000);
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Upload failed');
+                }
+                
+            } catch (error) {
+                console.error('Upload failed:', error);
+                statusSpan.textContent = 'Upload failed!';
+                progressBar.classList.add('bg-danger');
+                showAlert(`Upload failed: ${error.message}`, 'danger');
+                
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                    progressBar.classList.remove('bg-danger');
+                }, 3000);
+            }
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSystemInfo();
+            loadImages();
+        });
+    </script>
+</body>
+</html>

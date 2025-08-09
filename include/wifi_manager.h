@@ -5,6 +5,7 @@
 #include "time_manager.h"
 #include "settings_manager.h"
 #include "display_manager.h"
+#include "image_manager.h"
 #include "secrets.h"    // For credentials only
 
 class WiFiManager {
@@ -19,6 +20,7 @@ private:
     TimeManager* timeManager;
     SettingsManager* settingsManager;
     DisplayManager* displayManager;
+    ImageManager* imageManager;
     String apSSID;
     String apPassword;
     OperationMode currentMode;
@@ -43,7 +45,7 @@ private:
     unsigned long connectionSuccessStartTime;
     
 public:
-    WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager);
+    WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager);
     
     // Only change the hardcoded password to use secrets.h
     void initializeAP(const String& ssid = "Billboard-Portal", const String& password = PORTAL_PASSWORD);
@@ -63,6 +65,7 @@ public:
     void checkConnectionStatus();
     void checkGpio0FactoryReset();
     void setupNormalModeRoutes();
+    void setupImageRoutes();  // New method for image API endpoints
     void checkScheduledRestart();
     void checkPortalModeSwitch();
     

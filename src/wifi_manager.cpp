@@ -8,8 +8,8 @@ static const String TAG = "WIFI";
 
 const unsigned long WiFiManager::RETRY_DELAYS[] = {5000, 10000, 30000}; // 5s, 10s, 30s
 
-WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager) 
-    : server(webServer), timeManager(timeManager), settingsManager(settingsManager), displayManager(displayManager) {
+WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager) 
+    : server(webServer), timeManager(timeManager), settingsManager(settingsManager), displayManager(displayManager), imageManager(imageManager) {
     LOG_DEBUG(TAG, "WiFiManager constructor called");
     
     // Initialize new Step 2 variables
@@ -696,14 +696,7 @@ void WiFiManager::setupNormalModeRoutes() {
         }
     });
     
-    // File upload endpoint
-    server->on("/upload", HTTP_POST, [](AsyncWebServerRequest *request){
-        request->send(200, "text/plain", "Upload endpoint not implemented yet");
-    }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
-        // Handle file upload data
-        LOG_INFOF(TAG, "📁 File upload: %s, chunk: %d bytes", filename.c_str(), len);
-        // TODO: Implement file upload logic
-    });
+    // File upload endpoint - REMOVED: Conflicted with image upload endpoint below
     
     // API endpoint for current settings
     server->on("/api/settings", HTTP_GET, [this](AsyncWebServerRequest *request){
@@ -827,7 +820,229 @@ void WiFiManager::setupNormalModeRoutes() {
         }
     });
     
+    // Setup image management routes
+    setupImageRoutes();
+    
     LOG_INFO(TAG, "✅ Normal mode routes configured");
+}
+
+void WiFiManager::setupImageRoutes() {
+    if (!imageManager) {
+        LOG_WARN(TAG, "ImageManager not available - skipping image routes");
+        return;
+    }
+    
+    LOG_INFO(TAG, "🖼️ Setting up image management routes");
+    
+    // Enhanced upload endpoint to work with existing index.html
+    server->on("/upload", HTTP_POST, 
+        [this](AsyncWebServerRequest *request) {
+            // This handles the response after file upload is complete
+            Serial.println("=== UPLOAD REQUEST COMPLETE ===");
+            request->send(200, "text/plain", "Upload completed successfully");
+        },
+        [this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
+            // Handle file upload data chunks
+            static uint8_t* uploadBuffer = nullptr;
+            static size_t totalSize = 0;
+            static size_t receivedSize = 0;
+            static String uploadFilename;
+            
+            Serial.printf("Upload chunk: %s, index=%d, len=%d, final=%s\n", 
+                         filename.c_str(), index, len, final ? "YES" : "NO");
+            
+            if (index == 0) {
+                // First chunk - initialize upload
+                uploadFilename = filename;
+                totalSize = request->contentLength();
+                receivedSize = 0;
+                
+                Serial.println("=== UPLOAD START ===");
+                Serial.println("Filename: " + filename);
+                Serial.println("Total size: " + String(totalSize));
+                
+                LOG_INFOF(TAG, "📁 Starting image upload: %s (%d bytes)", filename.c_str(), totalSize);
+                
+                // Allocate buffer for entire file
+                uploadBuffer = (uint8_t*)malloc(totalSize);
+                if (!uploadBuffer) {
+                    Serial.println("ERROR: Failed to allocate upload buffer");
+                    LOG_ERROR(TAG, "Failed to allocate upload buffer");
+                    request->send(500, "text/plain", "Memory allocation failed");
+                    return;
+                }
+                Serial.println("Buffer allocated successfully");
+            }
+            
+            // Copy chunk data to buffer
+            if (uploadBuffer && (receivedSize + len <= totalSize)) {
+                memcpy(uploadBuffer + receivedSize, data, len);
+                receivedSize += len;
+                Serial.printf("Copied chunk, received: %d/%d bytes\n", receivedSize, totalSize);
+            } else {
+                Serial.println("ERROR: Buffer issue or size mismatch");
+            }
+            
+            if (final) {
+                // Upload complete - process the image
+                Serial.println("=== WIFI UPLOAD FINAL ===");
+                Serial.println("Filename: " + uploadFilename);
+                Serial.println("Expected size: " + String(totalSize));
+                Serial.println("Received size: " + String(receivedSize));
+                Serial.println("Size match: " + String(receivedSize == totalSize ? "YES" : "NO"));
+                Serial.println("Buffer available: " + String(uploadBuffer ? "YES" : "NO"));
+                Serial.println("ImageManager available: " + String(imageManager ? "YES" : "NO"));
+                
+                LOG_INFOF(TAG, "📁 Upload complete: %s (%d bytes)", uploadFilename.c_str(), receivedSize);
+                
+                if (uploadBuffer && imageManager) {
+                    Serial.println("Calling handleImageUpload...");
+                    // Use the total expected size, not received size for validation
+                    bool success = imageManager->handleImageUpload(uploadFilename, uploadBuffer, totalSize);
+                    Serial.println("handleImageUpload result: " + String(success ? "SUCCESS" : "FAILED"));
+                    
+                    if (!success) {
+                        LOG_ERROR(TAG, "Image validation/save failed");
+                        request->send(400, "text/plain", "Image validation failed - check format and size");
+                    }
+                } else {
+                    Serial.println("ERROR: Missing buffer or ImageManager");
+                    LOG_ERROR(TAG, "Upload buffer or ImageManager not available");
+                    request->send(500, "text/plain", "Internal server error");
+                }
+                
+                // Cleanup
+                if (uploadBuffer) {
+                    free(uploadBuffer);
+                    uploadBuffer = nullptr;
+                }
+                totalSize = 0;
+                receivedSize = 0;
+            }
+        });
+    
+    // Image system information API
+    server->on("/api/images/info", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!imageManager) {
+            request->send(500, "application/json", "{\"error\":\"ImageManager not available\"}");
+            return;
+        }
+        
+        String response = imageManager->getSystemInfo();
+        request->send(200, "application/json", response);
+    });
+    
+    // List all images API  
+    server->on("/api/images/list", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        LOG_INFO(TAG, "Image list API requested");
+        
+        if (!imageManager) {
+            LOG_ERROR(TAG, "ImageManager not available for list request");
+            request->send(500, "application/json", "{\"error\":\"ImageManager not available\"}");
+            return;
+        }
+        
+        String response = imageManager->getImageListJson();
+        LOG_INFO(TAG, "Sending image list JSON response");
+        request->send(200, "application/json", response);
+    });
+    
+    // Display image on specific display
+    server->on("/api/images/display", HTTP_POST, [this](AsyncWebServerRequest *request) {
+        if (!imageManager) {
+            request->send(500, "application/json", "{\"error\":\"ImageManager not available\"}");
+            return;
+        }
+        
+        if (!request->hasParam("filename", true) || !request->hasParam("display", true)) {
+            request->send(400, "application/json", "{\"error\":\"Missing filename or display parameter\"}");
+            return;
+        }
+        
+        String filename = request->getParam("filename", true)->value();
+        int displayNum = request->getParam("display", true)->value().toInt();
+        
+        bool success = imageManager->displayImage(filename, displayNum);
+        
+        if (success) {
+            request->send(200, "application/json", "{\"status\":\"success\"}");
+        } else {
+            request->send(400, "application/json", "{\"error\":\"Failed to display image\"}");
+        }
+    });
+    
+    // Display image on both displays
+    server->on("/api/images/display-both", HTTP_POST, [this](AsyncWebServerRequest *request) {
+        if (!imageManager) {
+            request->send(500, "application/json", "{\"error\":\"ImageManager not available\"}");
+            return;
+        }
+        
+        if (!request->hasParam("filename", true)) {
+            request->send(400, "application/json", "{\"error\":\"Missing filename parameter\"}");
+            return;
+        }
+        
+        String filename = request->getParam("filename", true)->value();
+        bool success = imageManager->displayImageOnBoth(filename);
+        
+        if (success) {
+            request->send(200, "application/json", "{\"status\":\"success\"}");
+        } else {
+            request->send(400, "application/json", "{\"error\":\"Failed to display image\"}");
+        }
+    });
+    
+    // Delete image
+    server->on("/api/images/delete", HTTP_DELETE, [this](AsyncWebServerRequest *request) {
+        if (!imageManager) {
+            request->send(500, "application/json", "{\"error\":\"ImageManager not available\"}");
+            return;
+        }
+        
+        if (!request->hasParam("filename")) {
+            request->send(400, "application/json", "{\"error\":\"Missing filename parameter\"}");
+            return;
+        }
+        
+        String filename = request->getParam("filename")->value();
+        bool success = imageManager->deleteImage(filename);
+        
+        if (success) {
+            request->send(200, "application/json", "{\"status\":\"success\"}");
+        } else {
+            request->send(400, "application/json", "{\"error\":\"Failed to delete image\"}");
+        }
+    });
+    
+    // Serve image files for thumbnails
+    server->on("/images/*", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!imageManager) {
+            request->send(404, "text/plain", "ImageManager not available");
+            return;
+        }
+        
+        String path = request->url();
+        String filename = path.substring(8); // Remove "/images/" prefix
+        
+        // Validate filename
+        if (filename.length() == 0 || filename.indexOf("..") >= 0) {
+            request->send(400, "text/plain", "Invalid filename");
+            return;
+        }
+        
+        // Check if file exists
+        String imagePath = "/images/" + filename;
+        if (!LittleFS.exists(imagePath)) {
+            request->send(404, "text/plain", "Image not found");
+            return;
+        }
+        
+        // Send the image file
+        request->send(LittleFS, imagePath, "image/jpeg");
+    });
+    
+    LOG_INFO(TAG, "✅ Image management routes configured");
 }
 
 void WiFiManager::checkConnectionStatus() {

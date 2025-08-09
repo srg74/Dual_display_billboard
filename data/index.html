@@ -286,24 +286,31 @@
         .form-row {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
             width: 100%;
         }
 
         .form-row input[type="file"] {
             flex: 1;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #30363d;
             border-radius: 6px;
             background-color: #21262d;
             color: #f0f6fc;
+            min-width: 0; /* Allow flex shrinking */
+        }
+
+        .form-row button {
+            flex-shrink: 0;
+            white-space: nowrap;
+            min-width: 120px;
         }
 
         /* Gallery Styles */
         .gallery-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 12px;
             margin-top: 10px;
         }
 
@@ -313,13 +320,38 @@
             border-radius: 8px;
             overflow: hidden;
             background-color: #21262d;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
-        .gallery-item img {
-            width: 150px;
-            height: 100px;
-            object-fit: cover;
-            display: block;
+        .gallery-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
+        }
+
+        .gallery-item .thumbnail {
+            width: 100%;
+            height: 120px;
+            background-color: #161b22;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .gallery-item .thumbnail img {
+            width: 160px;  /* ST7735 width */
+            height: 80px;  /* ST7735 height */
+            object-fit: contain;
+            border-radius: 4px;
+            image-rendering: pixelated; /* Preserve sharp pixels */
+        }
+
+        /* For ST7789 displays (240x240) - can be updated dynamically */
+        .gallery-item.st7789 .thumbnail img {
+            width: 120px;  /* Scaled down 240px to fit */
+            height: 120px; /* Scaled down 240px to fit */
         }
 
         .gallery-item .controls {
@@ -327,10 +359,68 @@
             text-align: center;
         }
 
-        .gallery-item button {
-            margin: 2px;
-            padding: 4px 8px;
+        .gallery-item .filename {
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 2px;
+            word-break: break-word;
+            font-size: 14px;
+        }
+
+        .gallery-item .filesize {
             font-size: 12px;
+            color: #8b949e;
+            margin-bottom: 6px;
+        }
+
+        .gallery-item .enable-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 0;
+            padding: 6px 8px;
+            background-color: #161b22;
+            border-radius: 6px;
+        }
+
+        .gallery-item .enable-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .gallery-item .enable-checkbox {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .gallery-item .enable-label {
+            font-size: 13px;
+            color: #f0f6fc;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .gallery-item .delete-button {
+            background: #da3633 !important;
+            border-color: #da3633 !important;
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+            min-width: auto !important;
+            border-radius: 4px;
+        }
+
+        .gallery-item .button-row {
+            display: none; /* Hide the old button row */
+        }
+
+        .gallery-item button {
+            padding: 6px 10px;
+            font-size: 12px;
+            min-width: 40px;
+            white-space: nowrap;
         }
 
         /* Control Section Spacing */
@@ -341,20 +431,33 @@
         /* Responsive Design */
         @media (max-width: 768px) {
             .main-container {
-                padding: 0 10px;
+                padding: 0 5px;
+            }
+
+            body {
+                padding: 5px;
             }
 
             .flex-container,
             .flex-container-gray,
             .flex-container-white {
                 flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
+                align-items: stretch;
+                gap: 12px;
+                padding: 15px;
             }
 
             .header-block {
-                flex-direction: row;
-                width: 100%;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .header-left,
+            .header-center,
+            .header-right {
+                flex: none;
+                text-align: center;
             }
 
             .brightness-wrapper {
@@ -365,6 +468,43 @@
             .form-row {
                 flex-direction: column;
                 align-items: stretch;
+                gap: 10px;
+            }
+
+            .form-row button {
+                min-width: auto;
+                width: 100%;
+            }
+
+            .gallery-row {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 10px;
+            }
+
+            .control-section {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                width: 100%;
+            }
+
+            .billboard-name {
+                font-size: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .gallery-item .button-row {
+                justify-content: space-around;
+            }
+            
+            .gallery-item button {
+                flex: 1;
+                max-width: 60px;
             }
         }
     </style>
@@ -433,9 +573,13 @@
         </div>
 
         <!-- 6. Billboard Gallery -->
-        <h2>Billboard Gallery</h2>
-        <div class="gallery-row">
-            {{GALLERY_IMAGES}}
+        <h2>Billboard Gallery 
+            <span id="imageCount" class="status-value">(0 images)</span>
+        </h2>
+        <div id="galleryContainer" class="gallery-row">
+            <div style="text-align: center; color: #6c757d; padding: 20px;">
+                Loading images...
+            </div>
         </div>
 
         <!-- 7. Image Interval -->
@@ -540,6 +684,129 @@
             xhr.send("brightness=" + value);
         }
 
+        // Image Gallery Functions
+        async function loadImageGallery() {
+            try {
+                console.log('Loading image gallery...');
+                const response = await fetch('/api/images/list');
+                console.log('Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Gallery data:', data);
+                
+                const container = document.getElementById('galleryContainer');
+                const countSpan = document.getElementById('imageCount');
+                
+                countSpan.textContent = `(${data.images.length} images)`;
+                
+                if (data.images.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; color: #6c757d; padding: 20px;">
+                            <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">No Images</div>
+                            <div>No images uploaded yet</div>
+                            <div style="font-size: 14px; margin-top: 5px;">Upload JPEG images using the form above</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let html = '';
+                const enabledImages = JSON.parse(localStorage.getItem('enabledImages') || '{}');
+                
+                data.images.forEach(image => {
+                    const sizeKB = Math.round(image.size / 1024);
+                    const isEnabled = enabledImages[image.filename] !== false; // Default to enabled
+                    
+                    html += `
+                        <div class="gallery-item">
+                            <div class="thumbnail">
+                                <img src="/images/${image.filename}" alt="${image.filename}" 
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <div style="display: none; color: #8b949e; font-size: 12px;">Preview unavailable</div>
+                            </div>
+                            <div class="controls">
+                                <div class="filename">${image.filename}</div>
+                                <div class="filesize">${sizeKB} KB</div>
+                                
+                                <div class="enable-section">
+                                    <div class="enable-controls">
+                                        <input type="checkbox" id="enable_${image.filename}" class="enable-checkbox" 
+                                               ${isEnabled ? 'checked' : ''} onchange="toggleImageEnabled('${image.filename}', this.checked)">
+                                        <label for="enable_${image.filename}" class="enable-label">Show on display</label>
+                                    </div>
+                                    <button onclick="deleteImage('${image.filename}')" 
+                                            class="delete-button" title="Delete">
+                                        Del
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Failed to load gallery:', error);
+                document.getElementById('imageCount').textContent = '(error)';
+                document.getElementById('galleryContainer').innerHTML = `
+                    <div style="text-align: center; color: #dc3545; padding: 20px;">
+                        ERROR: Failed to load images<br>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+            }
+        }
+
+        async function deleteImage(filename) {
+            if (!confirm(`Are you sure you want to delete "${filename}"?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/images/delete?filename=${encodeURIComponent(filename)}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert('SUCCESS: "' + filename + '" deleted successfully');
+                    loadImageGallery(); // Refresh gallery
+                } else {
+                    const error = await response.json();
+                    alert('ERROR: Failed to delete image - ' + (error.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Delete error:', error);
+                alert('ERROR: Failed to delete image');
+            }
+        }
+
+        async function toggleImageEnabled(filename, enabled) {
+            try {
+                console.log(`${enabled ? 'Enabling' : 'Disabling'} image: ${filename}`);
+                
+                // For now, just log the action since we don't have a backend endpoint yet
+                // This could be stored in localStorage or sent to a server endpoint
+                const enabledImages = JSON.parse(localStorage.getItem('enabledImages') || '{}');
+                enabledImages[filename] = enabled;
+                localStorage.setItem('enabledImages', JSON.stringify(enabledImages));
+                
+                const action = enabled ? 'enabled' : 'disabled';
+                console.log(`Image "${filename}" ${action} for display rotation`);
+                
+            } catch (error) {
+                console.error('Toggle enabled error:', error);
+            }
+        }
+
+        function refreshGallery() {
+            loadImageGallery();
+        }
+
         // Initialize page
         document.addEventListener('DOMContentLoaded', function() {
             // Load current settings from server
@@ -596,23 +863,63 @@
             // File upload form handler
             document.getElementById('upload-form').addEventListener('submit', function(e) {
                 e.preventDefault();
-                var formData = new FormData(this);
-                var xhr = new XMLHttpRequest();
+                
+                const fileInput = document.getElementById('file-input');
+                const file = fileInput.files[0];
+                
+                if (!file) {
+                    alert('Please select a file to upload');
+                    return;
+                }
+                
+                // Validate file type
+                if (!file.type.includes('jpeg') && !file.name.toLowerCase().includes('.jpg')) {
+                    alert('ERROR: Only JPEG files are supported');
+                    return;
+                }
+                
+                // Validate file size (50KB limit)
+                if (file.size > 50000) {
+                    alert('ERROR: File too large. Maximum size is 50KB');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const xhr = new XMLHttpRequest();
                 xhr.open('POST', '/upload', true);
+                
                 xhr.onload = function() {
                     if (xhr.status === 200) {
-                        alert('File uploaded successfully');
-                        location.reload();
+                        alert('SUCCESS: "' + file.name + '" uploaded successfully!');
+                        fileInput.value = ''; // Clear file input
+                        loadImageGallery(); // Refresh gallery
                     } else {
-                        alert('Upload failed: ' + xhr.responseText);
+                        alert('ERROR: Upload failed - ' + xhr.responseText);
                     }
                 };
+                
+                xhr.onerror = function() {
+                    alert('ERROR: Upload failed - Network error');
+                };
+                
                 xhr.send(formData);
             });
+
+            // Load initial gallery immediately
+            console.log('Starting gallery load...');
+            refreshGallery();
 
             // Start time updates
             setInterval(updateTime, 60000);
             updateTime();
+        });
+
+        // Also try to load gallery when window fully loads (backup)
+        window.addEventListener('load', function() {
+            console.log('Window loaded, refreshing gallery...');
+            setTimeout(refreshGallery, 1000); // Wait 1 second for everything to be ready
         });
     </script>
 </body>

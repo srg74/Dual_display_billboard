@@ -59,6 +59,14 @@ public:
     void showAPStarting();  // NEW: Quick AP starting indicator
     void showAPReady();     // NEW: Quick AP ready indicator
     void showConnectionSuccess(const String& ip);
+    
+    // TFT access for ImageManager
+    TFT_eSPI* getTFT(int displayNum = 1);
+    
+    // Display type detection
+    String getDisplayType() const;
+    uint16_t getDisplayWidth() const;
+    uint16_t getDisplayHeight() const;
 };
 
 #endif // DISPLAY_MANAGER_H

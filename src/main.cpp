@@ -155,6 +155,7 @@ void loop() {
 #include "credential_manager.h"     // ADD: Credential storage
 #include "time_manager.h"           // ADD: Time management
 #include "settings_manager.h"       // ADD: Settings management
+#include "image_manager.h"          // ADD: Image management
 #include "config.h"
 
 // Create instances
@@ -163,19 +164,17 @@ AsyncWebServer server(80);          // ADD: Web server
 
 // Configure TCP settings to reduce timeout errors
 void configureTCPSettings() {
-    // Set TCP keepalive settings to reduce timeout errors
-    int keepalive = 1;
-    int keepidle = 10;  // seconds before starting keepalive probes
-    int keepintvl = 5;  // interval between keepalive probes
-    int keepcnt = 3;    // number of keepalive probes before timeout
+    // More conservative TCP settings for better stability
+    WiFi.setTxPower(WIFI_POWER_15dBm);  // Further reduce power
     
-    // These settings help prevent AsyncTCP timeout errors
-    WiFi.setTxPower(WIFI_POWER_19_5dBm);  // Reduce power to prevent interference
+    // Give more time for ESP32 to handle requests
+    delay(10);
 }
 
 TimeManager timeManager;            // ADD: Time manager
 SettingsManager settingsManager;    // ADD: Settings manager
-WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager);   // ADD: WiFi manager with display manager
+ImageManager imageManager(&displayManager);  // ADD: Image manager
+WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager, &imageManager);   // ADD: WiFi manager with all components
 CredentialManager credentialManager; // ADD: Credential manager
 
 // Timing variables using config.h constants
@@ -241,6 +240,13 @@ void loop() {
                 LOG_INFO("MAIN", "✅ Settings manager initialized");
             } else {
                 LOG_ERROR("MAIN", "❌ Settings manager failed");
+            }
+            
+            // Initialize image manager
+            if (imageManager.begin()) {
+                LOG_INFO("MAIN", "✅ Image manager initialized");
+            } else {
+                LOG_ERROR("MAIN", "❌ Image manager failed");
             }
             
             // Initialize WiFi manager from credentials
@@ -320,10 +326,13 @@ void loop() {
         }
         // In SETUP mode OR showing connection success, keep current display
         
+        // Give more time for network processing
+        delay(10);
         yield();
     }
     
-    // Essential yield for ESP32
+    // Essential yield for ESP32 with small delay to reduce load
+    delay(5);
     yield();
 }
 #endif

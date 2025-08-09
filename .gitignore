@@ -17,3 +17,4 @@ include/secrets.h
 # Project specific folders
 docs/
 test/
+logs/
