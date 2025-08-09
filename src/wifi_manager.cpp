@@ -8,7 +8,7 @@ static const String TAG = "WIFI";
 
 const unsigned long WiFiManager::RETRY_DELAYS[] = {5000, 10000, 30000}; // 5s, 10s, 30s
 
-WiFiManager::WiFiManager(AsyncWebServer* webServer) : server(webServer) {
+WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager) : server(webServer), timeManager(timeManager) {
     LOG_DEBUG(TAG, "WiFiManager constructor called");
     
     // Initialize new Step 2 variables
@@ -20,6 +20,7 @@ WiFiManager::WiFiManager(AsyncWebServer* webServer) : server(webServer) {
     gpio0PressStart = 0;
     restartPending = false;
     restartScheduledTime = 0;
+    switchToPortalMode = false;
     
     // FIX: Uncomment these lines
     connectionSuccessDisplayed = false;
@@ -476,18 +477,28 @@ void WiFiManager::switchToSetupMode() {
 void WiFiManager::setupNormalModeRoutes() {
     LOG_INFO(TAG, "=== Setting up normal mode routes ===");
     
-    // Main billboard page
-    server->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
+    // Main billboard page - FIXED: Use getIndexHTML() instead of hardcoded HTML
+    server->on("/", HTTP_GET, [this](AsyncWebServerRequest *request){
         LOG_INFO(TAG, "🌐 Billboard main page requested");
-        request->send(200, "text/html", 
-            "<html><body style='font-family:Arial;padding:2rem;background:#0d1117;color:#f0f6fc;'>"
-            "<h1>🎯 Billboard Controller</h1>"
-            "<p><strong>Status:</strong> Connected to WiFi</p>"
-            "<p><strong>IP Address:</strong> " + WiFi.localIP().toString() + "</p>"
-            "<p><strong>SSID:</strong> " + WiFi.SSID() + "</p>"
-            "<p><strong>Signal:</strong> " + String(WiFi.RSSI()) + " dBm</p>"
-            "<hr><p><em>Billboard main content will be served here</em></p>"
-            "</body></html>");
+        
+        String html = getIndexHTML();
+        
+        if (html.length() == 0) {
+            request->send(500, "text/plain", "Index HTML not available");
+            return;
+        }
+        
+        // Template replacements
+        html.replace("{{WIFI_SSID}}", WiFi.SSID());
+        html.replace("{{IP_ADDRESS}}", WiFi.localIP().toString());
+        html.replace("{{BRIGHTNESS_VALUE}}", "200");
+        html.replace("{{BRIGHTNESS_PERCENT}}", "78");
+        html.replace("{{TIMEZONE_OPTIONS}}", timeManager ? timeManager->getTimezoneOptions() : "<option value=\"UTC\">UTC</option>");
+        html.replace("{{CLOCK_LABEL}}", timeManager ? timeManager->getClockLabel() : "Clock");
+        html.replace("{{IMAGE_INTERVAL}}", "5");
+        html.replace("{{GALLERY_IMAGES}}", "No images");
+        
+        request->send(200, "text/html", html);
     });
     
     // Status API
@@ -502,6 +513,163 @@ void WiFiManager::setupNormalModeRoutes() {
         status += "\"memory\":\"" + String(ESP.getFreeHeap()) + " bytes\"";
         status += "}";
         request->send(200, "application/json", status);
+    });
+    
+    // Settings page
+    server->on("/settings", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "⚙️ Settings page requested");
+        
+        String html = getSettingsHTML();
+        
+        if (html.length() == 0) {
+            request->send(500, "text/plain", "Settings HTML not available");
+            return;
+        }
+        
+        // Template replacements for settings page
+        html.replace("{{WIFI_SSID}}", WiFi.SSID());
+        html.replace("{{IP_ADDRESS}}", WiFi.localIP().toString());
+        html.replace("{{WIFI_RSSI}}", String(WiFi.RSSI()));
+        html.replace("{{UPTIME}}", String(millis() / 1000));
+        html.replace("{{FREE_MEMORY}}", String(ESP.getFreeHeap()));
+        html.replace("{{TIMEZONE_OPTIONS}}", timeManager ? timeManager->getTimezoneOptions() : "<option value=\"UTC\">UTC</option>");
+        
+        request->send(200, "text/html", html);
+    });
+    
+    // Time API
+    server->on("/time", HTTP_GET, [this](AsyncWebServerRequest *request){
+        if (timeManager && timeManager->isTimeValid()) {
+            request->send(200, "text/plain", timeManager->getCurrentTime());
+        } else {
+            request->send(200, "text/plain", "--:--");
+        }
+    });
+    
+    // Timezone setting
+    server->on("/timezone", HTTP_POST, [this](AsyncWebServerRequest *request){
+        if (request->hasParam("timezone", true)) {
+            String timezone = request->getParam("timezone", true)->value();
+            LOG_INFOF(TAG, "📅 Timezone set to: %s", timezone.c_str());
+            if (timeManager) {
+                timeManager->setTimezone(timezone);
+            }
+        }
+        request->send(200, "text/plain", "OK");
+    });
+    
+    // Clock label setting
+    server->on("/clock-label", HTTP_POST, [this](AsyncWebServerRequest *request){
+        if (request->hasParam("label", true)) {
+            String label = request->getParam("label", true)->value();
+            LOG_INFOF(TAG, "🏷️ Clock label set to: %s", label.c_str());
+            if (timeManager) {
+                timeManager->setClockLabel(label);
+            }
+        }
+        request->send(200, "text/plain", "OK");
+    });
+    
+    // Image interval setting
+    server->on("/image-interval", HTTP_POST, [](AsyncWebServerRequest *request){
+        if (request->hasParam("interval", true)) {
+            String interval = request->getParam("interval", true)->value();
+            LOG_INFOF(TAG, "⏱️ Image interval set to: %s seconds", interval.c_str());
+            // TODO: Implement image interval setting logic
+        }
+        request->send(200, "text/plain", "OK");
+    });
+    
+    // Second display toggle
+    server->on("/second-display", HTTP_POST, [](AsyncWebServerRequest *request){
+        if (request->hasParam("second_display", true)) {
+            String enabled = request->getParam("second_display", true)->value();
+            bool isEnabled = (enabled == "true");
+            LOG_INFOF(TAG, "📺 Second display: %s", isEnabled ? "enabled" : "disabled");
+            // TODO: Implement second display toggle logic
+        }
+        request->send(200, "text/plain", "OK");
+    });
+    
+    // DCC interface toggle
+    server->on("/dcc", HTTP_POST, [](AsyncWebServerRequest *request){
+        if (request->hasParam("dcc", true)) {
+            String enabled = request->getParam("dcc", true)->value();
+            bool isEnabled = (enabled == "true");
+            LOG_INFOF(TAG, "🚂 DCC interface: %s", isEnabled ? "enabled" : "disabled");
+            // TODO: Implement DCC interface toggle logic
+        }
+        request->send(200, "text/plain", "OK");
+    });
+    
+    // Image enable toggle
+    server->on("/image-enable", HTTP_POST, [](AsyncWebServerRequest *request){
+        if (request->hasParam("image_enable", true)) {
+            String enabled = request->getParam("image_enable", true)->value();
+            bool isEnabled = (enabled == "true");
+            LOG_INFOF(TAG, "🖼️ Image display: %s", isEnabled ? "enabled" : "disabled");
+            // TODO: Implement image display toggle logic
+        }
+        request->send(200, "text/plain", "OK");
+    });
+    
+    // Brightness control
+    server->on("/brightness", HTTP_POST, [](AsyncWebServerRequest *request){
+        if (request->hasParam("brightness", true)) {
+            String brightness = request->getParam("brightness", true)->value();
+            int brightnessValue = brightness.toInt();
+            LOG_INFOF(TAG, "🔆 Brightness set to: %d", brightnessValue);
+            // TODO: Implement brightness control logic
+        }
+        request->send(200, "text/plain", "OK");
+    });
+    
+    // File upload endpoint
+    server->on("/upload", HTTP_POST, [](AsyncWebServerRequest *request){
+        request->send(200, "text/plain", "Upload endpoint not implemented yet");
+    }, [](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final){
+        // Handle file upload data
+        LOG_INFOF(TAG, "📁 File upload: %s, chunk: %d bytes", filename.c_str(), len);
+        // TODO: Implement file upload logic
+    });
+    
+    // API endpoints for settings page
+    server->on("/api/wifi-status", HTTP_GET, [](AsyncWebServerRequest *request){
+        String response = "{";
+        response += "\"ssid\":\"" + WiFi.SSID() + "\",";
+        response += "\"ip\":\"" + WiFi.localIP().toString() + "\",";
+        response += "\"rssi\":" + String(WiFi.RSSI()) + ",";
+        response += "\"status\":\"" + String(WiFi.status() == WL_CONNECTED ? "connected" : "disconnected") + "\"";
+        response += "}";
+        request->send(200, "application/json", response);
+    });
+    
+    server->on("/api/system-info", HTTP_GET, [](AsyncWebServerRequest *request){
+        String response = "{";
+        response += "\"uptime\":" + String(millis() / 1000) + ",";
+        response += "\"freeMemory\":" + String(ESP.getFreeHeap());
+        response += "}";
+        request->send(200, "application/json", response);
+    });
+    
+    server->on("/api/portal-mode", HTTP_POST, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "🌐 Portal mode activation requested via settings");
+        request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Switching to portal mode...\"}");
+        // Set flag to switch to portal mode on next loop
+        switchToPortalMode = true;
+    });
+    
+    server->on("/api/ntp-settings", HTTP_POST, [this](AsyncWebServerRequest *request){
+        if (request->hasParam("server", true)) {
+            String ntpServer = request->getParam("server", true)->value();
+            LOG_INFOF(TAG, "🕐 NTP server change requested: %s (Note: NTP servers are configured at compile time)", ntpServer.c_str());
+            
+            // Note: This implementation uses compile-time NTP server configuration
+            // To change NTP servers, they must be modified in config.h and the firmware recompiled
+            request->send(200, "application/json", "{\"status\":\"info\",\"message\":\"NTP servers are configured at compile time. Current servers: pool.ntp.org, time.nist.gov, time.google.com\"}");
+        } else {
+            request->send(400, "application/json", "{\"status\":\"error\",\"message\":\"Missing server parameter\"}");
+        }
     });
     
     // Factory reset endpoint (for debugging)
@@ -607,6 +775,14 @@ void WiFiManager::checkScheduledRestart() {
     if (restartPending && millis() >= restartScheduledTime) {
         LOG_INFO(TAG, "🔄 Executing scheduled restart...");
         ESP.restart();
+    }
+}
+
+void WiFiManager::checkPortalModeSwitch() {
+    if (switchToPortalMode) {
+        LOG_INFO(TAG, "🌐 Switching to portal mode as requested via settings");
+        switchToPortalMode = false;
+        switchToSetupMode();
     }
 }
 

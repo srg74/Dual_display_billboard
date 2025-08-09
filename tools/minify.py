@@ -195,6 +195,16 @@ inline String getPortalHTML() {
     return String((char*)portal_html, sizeof(portal_html) - 1);
 }
 
+// Direct access to index HTML
+inline String getIndexHTML() {
+    return String((char*)index_html, sizeof(index_html) - 1);
+}
+
+// Direct access to settings HTML
+inline String getSettingsHTML() {
+    return String((char*)settings_html, sizeof(settings_html) - 1);
+}
+
 // Get portal HTML size
 inline size_t getPortalHTMLSize() {
     return sizeof(portal_html) - 1;

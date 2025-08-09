@@ -34,3 +34,10 @@
 // File System Configuration
 #define MAX_FILENAME_LENGTH 64
 #define MAX_FILES_IN_DIRECTORY 50
+
+// Time Configuration
+#define NTP_SERVER1 "pool.ntp.org"
+#define NTP_SERVER2 "time.nist.gov"
+#define NTP_SERVER3 "time.google.com"
+#define DEFAULT_TIMEZONE "UTC0"
+#define TIME_SYNC_INTERVAL 3600000  // 1 hour in milliseconds

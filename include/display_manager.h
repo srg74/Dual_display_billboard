@@ -31,8 +31,6 @@ public:
     void fillScreen(uint16_t color, int displayNum = 0);
     void drawText(const char* text, int x, int y, uint16_t color, int displayNum);
     
-    void displayTest();
-    void showSystemInfo();
     void enableSecondDisplay(bool enable);
     void alternateDisplays();
     

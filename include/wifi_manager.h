@@ -2,6 +2,7 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include "credential_manager.h"
+#include "time_manager.h"
 #include "secrets.h"    // For credentials only
 
 class WiFiManager {
@@ -13,6 +14,7 @@ public:
 
 private:
     AsyncWebServer* server;
+    TimeManager* timeManager;
     String apSSID;
     String apPassword;
     OperationMode currentMode;
@@ -30,13 +32,14 @@ private:
     
     bool restartPending;
     unsigned long restartScheduledTime;
+    bool switchToPortalMode;
 
     // New private variables
     bool connectionSuccessDisplayed;
     unsigned long connectionSuccessStartTime;
     
 public:
-    WiFiManager(AsyncWebServer* webServer);
+    WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager);
     
     // Only change the hardcoded password to use secrets.h
     void initializeAP(const String& ssid = "Billboard-Portal", const String& password = PORTAL_PASSWORD);
@@ -57,6 +60,7 @@ public:
     void checkGpio0FactoryReset();
     void setupNormalModeRoutes();
     void checkScheduledRestart();
+    void checkPortalModeSwitch();
     
     // Getters - KEEP AS IS
     OperationMode getCurrentMode() const { return currentMode; }

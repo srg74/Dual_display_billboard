@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Billboard Settings</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background-color: #0d1117;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 10px;
+            color: #f0f6fc;
+        }
+
+        .main-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 5px;
+        }
+
+        .flex-container-gray {
+            display: flex;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            box-sizing: border-box;
+            background-color: #161b22;
+            color: #f0f6fc;
+        }
+
+        .flex-container-gray:first-child {
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
+            border: 1px solid #238636;
+            color: #fff;
+        }
+
+        .header-block {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .billboard-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .status-value {
+            color: #58a6ff;
+            font-weight: 500;
+        }
+
+        h2 {
+            color: #f0f6fc;
+            margin: 20px 0 10px 0;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        button, .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
+            color: #fff;
+            border: 1px solid #1f6feb;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            border: 1px solid #238636;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #da3633 0%, #f85149 100%);
+            border: 1px solid #da3633;
+        }
+
+        .status-connected { color: #2ea043; font-weight: 600; }
+        .status-disconnected { color: #f85149; font-weight: 600; }
+
+        select {
+            padding: 8px 12px;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            background-color: #21262d;
+            color: #f0f6fc;
+            font-size: 14px;
+            min-width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="flex-container-gray">
+            <div class="header-block">
+                <h1 class="billboard-name">BILLBOARD SETTINGS</h1>
+                <div>
+                    <p><strong>Wi-Fi:</strong> <span class="status-value">{{WIFI_SSID}}</span></p>
+                    <p><strong>IP:</strong> <span class="status-value">{{IP_ADDRESS}}</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex-container-gray">
+            <a href="/" class="btn">Back to Main Page</a>
+        </div>
+
+        <h2>WiFi Information</h2>
+        <div class="flex-container-gray">
+            <label><strong>Network:</strong></label>
+            <span id="wifi-ssid" class="status-value">{{WIFI_SSID}}</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>IP Address:</strong></label>
+            <span id="wifi-ip" class="status-value">{{IP_ADDRESS}}</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Signal:</strong></label>
+            <span id="wifi-rssi" class="status-value">{{WIFI_RSSI}} dBm</span>
+        </div>
+
+        <h2>System Information</h2>
+        <div class="flex-container-gray">
+            <label><strong>Uptime:</strong></label>
+            <span id="system-uptime" class="status-value">{{UPTIME}} seconds</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Memory:</strong></label>
+            <span id="system-memory" class="status-value">{{FREE_MEMORY}} bytes</span>
+        </div>
+
+        <h2>NTP Server Configuration</h2>
+        <div class="flex-container-gray">
+            <label><strong>Primary Server:</strong></label>
+            <select id="ntp-server1">
+                <option value="pool.ntp.org">pool.ntp.org</option>
+                <option value="time.nist.gov">time.nist.gov</option>
+                <option value="time.google.com">time.google.com</option>
+                <option value="time.cloudflare.com">time.cloudflare.com</option>
+            </select>
+            <button onclick="updateNTPServer()">Update NTP</button>
+        </div>
+
+        <h2>System Control</h2>
+        <div class="flex-container-gray">
+            <label><strong>Portal Mode:</strong></label>
+            <button class="btn-success" onclick="activatePortalMode()">Switch to Portal</button>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Factory Reset:</strong></label>
+            <button class="btn-warning" onclick="confirmFactoryReset()">Factory Reset</button>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Refresh:</strong></label>
+            <button onclick="refreshInfo()">Update Data</button>
+        </div>
+    </div>
+
+    <script>
+        setInterval(refreshInfo, 30000);
+        window.onload = refreshInfo;
+
+        function refreshInfo() {
+            fetch('/api/wifi-status')
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('wifi-ssid').textContent = d.ssid || 'N/A';
+                    document.getElementById('wifi-ip').textContent = d.ip || 'N/A';
+                    document.getElementById('wifi-rssi').textContent = (d.rssi || 0) + ' dBm';
+                });
+
+            fetch('/api/system-info')
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('system-uptime').textContent = formatTime(d.uptime || 0);
+                    document.getElementById('system-memory').textContent = formatBytes(d.freeMemory || 0);
+                });
+        }
+
+        function formatTime(s) {
+            const h = Math.floor(s / 3600);
+            const m = Math.floor((s % 3600) / 60);
+            return h > 0 ? h + 'h ' + m + 'm' : m + 'm ' + (s % 60) + 's';
+        }
+
+        function formatBytes(b) {
+            if (b === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB'];
+            const i = Math.floor(Math.log(b) / Math.log(k));
+            return parseFloat((b / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function activatePortalMode() {
+            if (confirm('Switch to Portal Mode? This will disconnect WiFi.')) {
+                fetch('/api/portal-mode', { method: 'POST' })
+                    .then(r => r.json())
+                    .then(d => {
+                        alert('Switching to Portal Mode...');
+                        setTimeout(() => window.location.href = '/', 2000);
+                    });
+            }
+        }
+
+        function confirmFactoryReset() {
+            if (confirm('FACTORY RESET: This will erase all settings!')) {
+                if (confirm('This cannot be undone. Continue?')) {
+                    fetch('/factory-reset', { method: 'POST' })
+                        .then(r => r.json())
+                        .then(d => alert('Factory reset initiated.'));
+                }
+            }
+        }
+
+        function updateNTPServer() {
+            const server = document.getElementById('ntp-server1').value;
+            
+            fetch('/api/ntp-settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'server=' + encodeURIComponent(server)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('NTP server updated successfully!');
+                } else {
+                    alert('Error updating NTP server: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating NTP server:', error);
+                alert('Network error updating NTP server');
+            });
+        }
+    </script>
+</body>
+</html>

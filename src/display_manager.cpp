@@ -12,9 +12,6 @@ bool DisplayManager::begin() {
     initializeCS();
     initializeTFT();
     
-    // Test both displays
-    displayTest();
-    
     initialized = true;
     LOG_INFO("DISPLAY", "✅ Display Manager initialized successfully");
     return true;
@@ -115,52 +112,6 @@ void DisplayManager::drawText(const char* text, int x, int y, uint16_t color, in
     tft.setCursor(x, y);
     tft.print(text);
     deselectAll();
-}
-
-void DisplayManager::displayTest() {
-    LOG_INFO("DISPLAY", "🧪 Running display test...");
-    
-    // Test first screen (exact copy)
-    selectDisplay(1);
-    tft.fillScreen(TFT_RED);
-    deselectAll();
-    LOG_INFO("DISPLAY", "✅ First screen RED");
-    
-    // Test second screen (exact copy)
-    selectDisplay(2);
-    tft.fillScreen(TFT_GREEN);
-    deselectAll();
-    LOG_INFO("DISPLAY", "✅ Second screen GREEN");
-}
-
-void DisplayManager::showSystemInfo() {
-    // Display 1: System info
-    selectDisplay(1);
-    tft.fillScreen(TFT_BLACK);
-    tft.setTextColor(TFT_WHITE);
-    tft.setTextSize(1);
-    tft.setCursor(5, 5);
-    tft.print("BILLBOARD");
-    tft.setCursor(5, 20);
-    tft.printf("Heap: %d", ESP.getFreeHeap());
-    tft.setCursor(5, 35);
-    tft.printf("Display: 1");
-    deselectAll();
-    
-    // Display 2: System info
-    selectDisplay(2);
-    tft.fillScreen(TFT_BLUE);
-    tft.setTextColor(TFT_WHITE);
-    tft.setTextSize(1);
-    tft.setCursor(5, 5);
-    tft.print("BILLBOARD");
-    tft.setCursor(5, 20);
-    tft.printf("Heap: %d", ESP.getFreeHeap());
-    tft.setCursor(5, 35);
-    tft.printf("Display: 2");
-    deselectAll();
-    
-    LOG_INFO("DISPLAY", "✅ System info displayed on both screens");
 }
 
 void DisplayManager::enableSecondDisplay(bool enable) {

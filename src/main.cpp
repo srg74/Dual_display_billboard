@@ -153,23 +153,25 @@ void loop() {
 #include "display_manager.h"
 #include "wifi_manager.h"           // ADD: WiFi management
 #include "credential_manager.h"     // ADD: Credential storage
+#include "time_manager.h"           // ADD: Time management
 #include "config.h"
 
 // Create instances
 DisplayManager displayManager;
 AsyncWebServer server(80);          // ADD: Web server
-WiFiManager wifiManager(&server);   // ADD: WiFi manager
+TimeManager timeManager;            // ADD: Time manager
+WiFiManager wifiManager(&server, &timeManager);   // ADD: WiFi manager
 CredentialManager credentialManager; // ADD: Credential manager
 
 // Timing variables using config.h constants
 unsigned long lastHeartbeat = 0;
-unsigned long lastDisplayTest = 0;
 unsigned long startupTime = 0;
 
 // State management
 bool systemInitialized = false;
 bool wifiInitialized = false;
 bool displayInitialized = false;
+bool timeInitialized = false;
 
 void setup() {
     // Initialize logging first
@@ -182,10 +184,8 @@ void setup() {
     
     LOG_INFO("MAIN", "🎯 System startup initiated");
     
-    // CRITICAL: Initialize server routes early
-    LOG_INFO("MAIN", "🌐 Setting up web server routes...");
-    wifiManager.setupRoutes();
-    LOG_INFO("MAIN", "✅ Web server routes configured");
+    // NOTE: WiFi manager will set up appropriate routes based on mode
+    // Do not set up routes here to avoid conflicts
 }
 
 void loop() {
@@ -202,7 +202,7 @@ void loop() {
             LOG_INFO("MAIN", "📺 Initializing display subsystem...");
             if (displayManager.begin()) {
                 LOG_INFO("MAIN", "✅ Display manager initialized");
-                displayManager.showSystemInfo();
+                // displayManager.showSystemInfo(); // Commented out to skip startup info
                 displayInitialized = true;
             } else {
                 LOG_ERROR("MAIN", "❌ Display manager failed");
@@ -231,12 +231,25 @@ void loop() {
             }
         }
         
-        // Step 3: System ready
+        // Step 3: Initialize time system (only in normal mode)
+        if (!timeInitialized && wifiInitialized && 
+            wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL) {
+            LOG_INFO("MAIN", "🕐 Initializing time subsystem...");
+            
+            if (timeManager.begin()) {
+                LOG_INFO("MAIN", "✅ Time manager initialized");
+                timeInitialized = true;
+            } else {
+                LOG_WARN("MAIN", "⚠️ Time manager initialization failed");
+                timeInitialized = true; // Continue without time sync
+            }
+        }
+        
+        // Step 4: System ready
         if (displayInitialized && wifiInitialized) {
             displayManager.enableSecondDisplay(true);
             systemInitialized = true;
             lastHeartbeat = currentTime;
-            lastDisplayTest = currentTime;
             
             LOG_INFO("MAIN", "🎉 Integrated billboard system ready!");
             LOG_INFOF("MAIN", "📱 WiFi Mode: %s", 
@@ -250,6 +263,7 @@ void loop() {
         wifiManager.checkConnectionStatus();
         wifiManager.checkGpio0FactoryReset();
         wifiManager.checkScheduledRestart();
+        wifiManager.checkPortalModeSwitch();
         wifiManager.checkConnectionSuccessDisplay();  // NEW: Add this line
         
         // FIXED: Only alternate displays when not in setup mode AND not showing connection success
