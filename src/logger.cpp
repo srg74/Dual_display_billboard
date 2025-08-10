@@ -15,7 +15,7 @@ void Logger::init(unsigned long baudRate) {
     #if defined(LOGGER_ENABLED) && LOGGER_ENABLED
     Serial.begin(baudRate);
     while (!Serial && millis() < 3000) {
-        delay(10);
+        yield(); // Non-blocking yield instead of delay
     }
     initialized = true;
     

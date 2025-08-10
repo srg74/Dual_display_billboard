@@ -9,6 +9,8 @@ private:
     // Settings file paths
     static const char* SECOND_DISPLAY_FILE;
     static const char* DCC_ENABLED_FILE;
+    static const char* DCC_ADDRESS_FILE;
+    static const char* DCC_PIN_FILE;
     static const char* IMAGE_INTERVAL_FILE;
     static const char* IMAGE_ENABLED_FILE;
     static const char* BRIGHTNESS_FILE;
@@ -18,6 +20,8 @@ private:
     // Current settings values
     bool secondDisplayEnabled;
     bool dccEnabled;
+    int dccAddress;
+    int dccPin;
     int imageInterval;
     bool imageEnabled;
     int brightness;
@@ -43,6 +47,10 @@ public:
     // DCC settings
     void setDCCEnabled(bool enabled);
     bool isDCCEnabled();
+    void setDCCAddress(int address);
+    int getDCCAddress();
+    void setDCCPin(int pin);
+    int getDCCPin();
     
     // Image settings
     void setImageInterval(int seconds);

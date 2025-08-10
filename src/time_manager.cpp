@@ -93,7 +93,8 @@ bool TimeManager::waitForTimeSync(int maxRetries) {
     
     int retries = 0;
     while (time(nullptr) < 100000 && retries < maxRetries) {
-        delay(500);
+        yield(); // Non-blocking yield instead of delay
+        delayMicroseconds(500000); // 500ms in microseconds - less blocking than delay()
         retries++;
         LOG_DEBUGF(TAG, "⏳ Time sync attempt %d/%d", retries, maxRetries);
     }

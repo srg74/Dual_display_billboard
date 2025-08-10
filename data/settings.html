@@ -238,33 +238,158 @@
             margin-top: 8px;
         }
 
-        /* Colorful Clock Preview */
+        /* Modern Square Clock Preview */
         .colorful-preview {
             height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            border-radius: 4px;
+            background: #000000;
             overflow: hidden;
         }
 
-        .colorful-bg {
+        .modern-clock-face {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            background: #000000;
+        }
+
+        .modern-hour-marker {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            opacity: 0.3;
+            background: #ffffff;
+        }
+
+        /* 12 o'clock marker */
+        .modern-hour-marker.h12 {
+            width: 1px;
+            height: 6px;
+            top: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* 3 o'clock marker */
+        .modern-hour-marker.h3 {
+            width: 6px;
+            height: 1px;
+            right: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* 6 o'clock marker */
+        .modern-hour-marker.h6 {
+            width: 1px;
+            height: 6px;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* 9 o'clock marker */
+        .modern-hour-marker.h9 {
+            width: 6px;
+            height: 1px;
+            left: 2px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Minor hour markers */
+        .modern-hour-marker.minor {
+            width: 1px;
+            height: 3px;
+            background: #ffffff;
+        }
+
+        .modern-hour-marker.minor.h1 {
+            top: 4px;
+            right: 7px;
+            transform: rotate(30deg);
+        }
+
+        .modern-hour-marker.minor.h2 {
+            top: 9px;
+            right: 4px;
+            transform: rotate(60deg);
+        }
+
+        .modern-hour-marker.minor.h4 {
+            bottom: 9px;
+            right: 4px;
+            transform: rotate(-60deg);
+        }
+
+        .modern-hour-marker.minor.h5 {
+            bottom: 4px;
+            right: 7px;
+            transform: rotate(-30deg);
+        }
+
+        .modern-hour-marker.minor.h7 {
+            bottom: 4px;
+            left: 7px;
+            transform: rotate(30deg);
+        }
+
+        .modern-hour-marker.minor.h8 {
+            bottom: 9px;
+            left: 4px;
+            transform: rotate(60deg);
+        }
+
+        .modern-hour-marker.minor.h10 {
+            top: 9px;
+            left: 4px;
+            transform: rotate(-60deg);
+        }
+
+        .modern-hour-marker.minor.h11 {
+            top: 4px;
+            left: 7px;
+            transform: rotate(-30deg);
+        }
+
+        .modern-hour-hand {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 12px;
+            background: #0066ff;
+            transform-origin: center bottom;
+            transform: translate(-50%, -100%) rotate(45deg);
+            border-radius: 1px;
+        }
+
+        .modern-minute-hand {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 1px;
+            height: 16px;
+            background: #0066ff;
+            transform-origin: center bottom;
+            transform: translate(-50%, -100%) rotate(90deg);
+            border-radius: 0.5px;
+        }
+
+        .modern-center-dot {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 4px;
+            background: #ff0000;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
         }
 
         .colorful-time {
-            font-size: 16px;
-            font-weight: bold;
-            font-family: 'Arial', sans-serif;
-            position: relative;
-            z-index: 1;
+            display: none; /* Hide the text label */
         }
     </style>
 </head>
@@ -369,18 +494,57 @@
                         <input type="radio" id="clockFace3" name="clockFace" value="3" onchange="changeClockFace()">
                         <div class="clock-preview">
                             <div class="colorful-preview">
-                                <div class="colorful-bg"></div>
-                                <div class="colorful-time">
-                                    <span style="color: #ff4444;">12</span>
-                                    <span style="color: #ffffff;">:</span>
-                                    <span style="color: #44ff44;">34</span>
+                                <div class="modern-clock-face">
+                                    <!-- Major hour markers -->
+                                    <div class="modern-hour-marker h12"></div>
+                                    <div class="modern-hour-marker h3"></div>
+                                    <div class="modern-hour-marker h6"></div>
+                                    <div class="modern-hour-marker h9"></div>
+                                    <!-- Minor hour markers -->
+                                    <div class="modern-hour-marker minor h1"></div>
+                                    <div class="modern-hour-marker minor h2"></div>
+                                    <div class="modern-hour-marker minor h4"></div>
+                                    <div class="modern-hour-marker minor h5"></div>
+                                    <div class="modern-hour-marker minor h7"></div>
+                                    <div class="modern-hour-marker minor h8"></div>
+                                    <div class="modern-hour-marker minor h10"></div>
+                                    <div class="modern-hour-marker minor h11"></div>
+                                    <!-- Clock hands showing 3:15 -->
+                                    <div class="modern-minute-hand"></div>
+                                    <div class="modern-hour-hand"></div>
+                                    <!-- Center dot -->
+                                    <div class="modern-center-dot"></div>
                                 </div>
+                                <div class="colorful-time">LABEL</div>
                             </div>
-                            <span>Colorful</span>
+                            <span>Modern Square</span>
                         </div>
                     </label>
                 </div>
             </div>
+        </div>
+
+        <h2>DCC Settings</h2>
+        <div class="flex-container-gray">
+            <div class="control-section">
+                <label for="dccCheckbox"><strong>Enable DCC interface</strong></label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="dccCheckbox" onchange="toggleDCC()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="flex-container-gray">
+            <label for="dccAddress"><strong>DCC Address:</strong></label>
+            <input type="number" id="dccAddress" value="101" min="1" max="2048" placeholder="101">
+            <button onclick="setDCCAddress()">Set Address</button>
+        </div>
+        
+        <div class="flex-container-gray">
+            <label for="dccPin"><strong>DCC GPIO Pin:</strong></label>
+            <input type="number" id="dccPin" value="4" min="0" max="39" placeholder="4">
+            <button onclick="setDCCPin()">Set Pin</button>
         </div>
 
         <h2>System Control</h2>
@@ -399,24 +563,49 @@
     </div>
 
     <script>
-        setInterval(refreshInfo, 30000);
+        // Auto-refresh every 60 seconds (reduced from 30s for better performance)
+        setInterval(refreshInfo, 60000);
         window.onload = refreshInfo;
 
         function refreshInfo() {
-            fetch('/api/wifi-status')
+            // Add timeout and error handling to prevent hanging requests
+            const fetchWithTimeout = (url, timeout = 5000) => {
+                return Promise.race([
+                    fetch(url),
+                    new Promise((_, reject) => 
+                        setTimeout(() => reject(new Error('Timeout')), timeout)
+                    )
+                ]);
+            };
+
+            fetchWithTimeout('/api/wifi-status')
                 .then(r => r.json())
                 .then(d => {
                     document.getElementById('wifi-ssid').textContent = d.ssid || 'N/A';
                     document.getElementById('wifi-ip').textContent = d.ip || 'N/A';
                     document.getElementById('wifi-rssi').textContent = (d.rssi || 0) + ' dBm';
-                });
+                })
+                .catch(() => console.log('WiFi status update failed'));
 
-            fetch('/api/system-info')
+            fetchWithTimeout('/api/system-info')
                 .then(r => r.json())
                 .then(d => {
                     document.getElementById('system-uptime').textContent = formatTime(d.uptime || 0);
                     document.getElementById('system-memory').textContent = formatBytes(d.freeMemory || 0);
-                });
+                })
+                .catch(() => console.log('System info update failed'));
+
+            // Load current settings including DCC state
+            fetchWithTimeout('/api/settings')
+                .then(r => r.json())
+                .then(d => {
+                    // Set DCC checkbox to match server state (defaults to false)
+                    document.getElementById('dccCheckbox').checked = d.dcc || false;
+                    // Update DCC address and pin fields
+                    document.getElementById('dccAddress').value = d.dccAddress || 101;
+                    document.getElementById('dccPin').value = d.dccPin || 4;
+                })
+                .catch(() => console.log('Settings update failed'));
         }
 
         function formatTime(s) {
@@ -524,9 +713,78 @@
                 });
         }
 
+        // DCC functions
+        function toggleDCC() {
+            var checked = document.getElementById('dccCheckbox').checked;
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/dcc", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.send("dcc=" + checked);
+        }
+
+        function setDCCAddress() {
+            var address = document.getElementById('dccAddress').value;
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/dccaddress", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    alert('DCC address set to: ' + address);
+                } else {
+                    alert('Failed to set DCC address');
+                }
+            };
+            xhr.send("address=" + address);
+        }
+
+        function setDCCPin() {
+            var pin = document.getElementById('dccPin').value;
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/dccpin", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    alert('DCC GPIO pin set to: ' + pin);
+                } else {
+                    alert('Failed to set DCC pin');
+                }
+            };
+            xhr.send("pin=" + pin);
+        }
+
+        function loadDCCSettings() {
+            fetch('/api/settings')
+                .then(response => response.json())
+                .then(settings => {
+                    console.log('Loading DCC settings:', settings);
+                    
+                    // Set DCC checkbox
+                    const dccCheckbox = document.getElementById('dccCheckbox');
+                    if (dccCheckbox) {
+                        dccCheckbox.checked = settings.dcc || false;
+                    }
+                    
+                    // Set DCC address
+                    const dccAddress = document.getElementById('dccAddress');
+                    if (dccAddress) {
+                        dccAddress.value = settings.dccAddress || 101;
+                    }
+                    
+                    // Set DCC pin
+                    const dccPin = document.getElementById('dccPin');
+                    if (dccPin) {
+                        dccPin.value = settings.dccPin || 4;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading DCC settings:', error);
+                });
+        }
+
         // Load settings when page loads
         document.addEventListener('DOMContentLoaded', function() {
             loadClockFaceSettings();
+            loadDCCSettings();
         });
     </script>
 </body>

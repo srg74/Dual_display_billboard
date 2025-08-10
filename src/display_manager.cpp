@@ -159,12 +159,12 @@ void DisplayManager::alternateDisplays() {
             selectDisplay(1);
             tft.fillScreen(TFT_BLUE);
             deselectAll();
-            LOG_INFO("DISPLAY", "🔵 First screen BLUE");
+            // LOG_INFO("DISPLAY", "🔵 First screen BLUE"); // Commented to reduce log spam
         } else {
             selectDisplay(2);
             tft.fillScreen(TFT_YELLOW);
             deselectAll();
-            LOG_INFO("DISPLAY", "🟡 Second screen YELLOW");
+            // LOG_INFO("DISPLAY", "🟡 Second screen YELLOW"); // Commented to reduce log spam
         }
         
         useFirst = !useFirst;

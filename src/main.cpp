@@ -1,249 +1,6 @@
 #include <Arduino.h>
 
-#ifdef ROTATION_TEST_MODE
-// Simple rotation test with minimal WiFi
-#include <WiFi.h>
-#include <ESPAsyncWebServer.h>
-#include <TFT_eSPI.h>
-#include <LittleFS.h>
-#include <TJpg_Decoder.h>
-#include "display_manager.h"
-#include "credential_manager.h"
-
-AsyncWebServer server(80);
-DisplayManager displayManager;
-TFT_eSPI* currentDisplayTft = nullptr;  // Global pointer for TJpg callback
-
-// TJpg decoder callback function
-bool tftOutput(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
-    if (currentDisplayTft && x < currentDisplayTft->width() && y < currentDisplayTft->height()) {
-        currentDisplayTft->pushImage(x, y, w, h, bitmap);
-    }
-    return true;
-}
-
-#define TFT_BACKLIGHT_PIN 22
-
-void setup() {
-    Serial.begin(115200);
-    Serial.println("🔄 ROTATION TEST MODE");
-    
-    // Initialize display
-    if (!displayManager.begin()) {
-        Serial.println("❌ DisplayManager failed");
-        return;
-    }
-    Serial.println("✅ DisplayManager ready");
-    
-    // Initialize LittleFS for images
-    if (!LittleFS.begin()) {
-        Serial.println("❌ LittleFS failed");
-        return;
-    }
-    Serial.println("✅ LittleFS ready");
-    
-    // Try to connect using saved credentials
-    if (CredentialManager::hasCredentials()) {
-        CredentialManager::WiFiCredentials creds = CredentialManager::loadCredentials();
-        if (creds.isValid) {
-            Serial.println("🔗 Using saved WiFi credentials");
-            WiFi.begin(creds.ssid.c_str(), creds.password.c_str());
-        }
-    } else {
-        Serial.println("⚠️ No saved credentials, starting AP");
-        WiFi.softAP("RotationTest", "test123456");
-        Serial.println("AP IP: " + WiFi.softAPIP().toString());
-    }
-    
-    // Wait for connection
-    Serial.print("Connecting to WiFi");
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 30) {
-        delay(500);
-        Serial.print(".");
-        attempts++;
-    }
-    
-    if (WiFi.status() == WL_CONNECTED) {
-        Serial.println();
-        Serial.println("✅ WiFi connected!");
-        Serial.println("IP: " + WiFi.localIP().toString());
-    } else {
-        Serial.println();
-        Serial.println("❌ WiFi failed - starting AP mode");
-        WiFi.softAP("RotationTest", "test123456");
-        Serial.println("AP IP: " + WiFi.softAPIP().toString());
-    }
-    
-    // Setup web routes
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        String html = "<html><body>";
-        html += "<h1>Rotation Tester</h1>";
-        html += "<p>Device IP: " + WiFi.localIP().toString() + "</p>";
-        html += "<button onclick=\"test(0)\" style=\"margin:10px;padding:20px;font-size:24px;\">ROT 0</button><br>";
-        html += "<button onclick=\"test(1)\" style=\"margin:10px;padding:20px;font-size:24px;\">ROT 1</button><br>";
-        html += "<button onclick=\"test(2)\" style=\"margin:10px;padding:20px;font-size:24px;\">ROT 2</button><br>";
-        html += "<button onclick=\"test(3)\" style=\"margin:10px;padding:20px;font-size:24px;\">ROT 3</button><br>";
-        html += "<div id=\"result\" style=\"margin:20px;font-size:18px;\"></div>";
-        html += "<script>";
-        html += "function test(r) {";
-        html += "  document.getElementById('result').innerHTML = 'Testing rotation ' + r + '...';";
-        html += "  fetch('/test-rotation?r=' + r)";
-        html += "    .then(response => response.text())";
-        html += "    .then(data => document.getElementById('result').innerHTML = data);";
-        html += "}";
-        html += "</script></body></html>";
-        request->send(200, "text/html", html);
-    });
-    
-    // Add debug endpoint to list files
-    server.on("/list-files", HTTP_GET, [](AsyncWebServerRequest *request){
-        String fileList = "Files in LittleFS:\n";
-        File root = LittleFS.open("/");
-        File file;
-        int fileCount = 0;
-        
-        while ((file = root.openNextFile())) {
-            String fileName = file.name();
-            size_t fileSize = file.size();
-            fileList += String(fileCount) + ": " + fileName + " (" + String(fileSize) + " bytes)\n";
-            fileCount++;
-            file.close();
-        }
-        root.close();
-        
-        if (fileCount == 0) {
-            fileList += "No files found!\n";
-        }
-        
-        request->send(200, "text/plain", fileList);
-    });
-
-    server.on("/test-rotation", HTTP_GET, [](AsyncWebServerRequest *request){
-        if (request->hasParam("r")) {
-            int rotation = request->getParam("r")->value().toInt();
-            Serial.println("Testing rotation: " + String(rotation));
-            
-            if (rotation >= 0 && rotation <= 3) {
-                // Find first available image in LittleFS
-                File root = LittleFS.open("/");
-                File file;
-                String imagePath = "";
-                int fileCount = 0;
-                
-                Serial.println("Searching for JPEG files in LittleFS...");
-                while ((file = root.openNextFile())) {
-                    String fileName = file.name();
-                    Serial.println("Found file: " + fileName + " (size: " + String(file.size()) + ")");
-                    fileCount++;
-                    
-                    // Check for JPEG files (case insensitive)
-                    String lowerName = fileName;
-                    lowerName.toLowerCase();
-                    if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) {
-                        imagePath = fileName.startsWith("/") ? fileName : "/" + fileName;
-                        Serial.println("Selected JPEG: " + imagePath);
-                        file.close();
-                        break;
-                    }
-                    file.close();
-                }
-                root.close();
-                
-                Serial.println("Total files found: " + String(fileCount));
-                Serial.println("Selected image path: " + imagePath);
-                
-                // Test rotation on display 1
-                displayManager.selectDisplay(1);
-                TFT_eSPI* tft = displayManager.getTFT(1);
-                if (tft) {
-                    tft->setRotation(rotation);
-                    tft->fillScreen(TFT_BLACK);
-                    
-                    if (imagePath.length() > 0) {
-                        Serial.println("Found image: " + imagePath);
-                        
-                        // Set up TJpg decoder callback
-                        currentDisplayTft = tft;
-                        TJpgDec.setCallback(tftOutput);
-                        
-                        // Decode and display the image
-                        uint8_t result = TJpgDec.drawFsJpg(0, 0, imagePath.c_str());
-                        Serial.println("TJpg decode result: " + String(result));
-                    } else {
-                        // Draw a test pattern that clearly shows orientation
-                        Serial.println("No image found, drawing test pattern");
-                        
-                        // Clear screen
-                        tft->fillScreen(TFT_BLACK);
-                        
-                        // Draw orientation indicators
-                        // TOP: White bar
-                        tft->fillRect(0, 0, tft->width(), 20, TFT_WHITE);
-                        tft->setTextColor(TFT_BLACK, TFT_WHITE);
-                        tft->setTextSize(2);
-                        tft->drawString("TOP", 10, 2, 2);
-                        
-                        // BOTTOM: Red bar  
-                        tft->fillRect(0, tft->height()-20, tft->width(), 20, TFT_RED);
-                        tft->setTextColor(TFT_WHITE, TFT_RED);
-                        tft->drawString("BOT", 10, tft->height()-18, 2);
-                        
-                        // LEFT: Green bar
-                        tft->fillRect(0, 20, 20, tft->height()-40, TFT_GREEN);
-                        tft->setTextColor(TFT_BLACK, TFT_GREEN);
-                        tft->drawString("L", 5, tft->height()/2-8, 2);
-                        
-                        // RIGHT: Blue bar
-                        tft->fillRect(tft->width()-20, 20, 20, tft->height()-40, TFT_BLUE);
-                        tft->setTextColor(TFT_WHITE, TFT_BLUE);
-                        tft->drawString("R", tft->width()-15, tft->height()/2-8, 2);
-                        
-                        // Center: Arrow pointing UP
-                        int centerX = tft->width() / 2;
-                        int centerY = tft->height() / 2;
-                        
-                        // Draw arrow pointing up
-                        tft->fillTriangle(centerX, centerY-30, centerX-20, centerY, centerX+20, centerY, TFT_YELLOW);
-                        tft->fillRect(centerX-8, centerY, 16, 30, TFT_YELLOW);
-                        
-                        tft->setTextColor(TFT_BLACK, TFT_YELLOW);
-                        tft->drawString("UP", centerX-15, centerY+5, 2);
-                    }
-                    
-                    // Add rotation indicator in a corner
-                    tft->setTextColor(TFT_WHITE, TFT_BLACK);
-                    tft->setTextSize(2);
-                    String label = "R" + String(rotation);
-                    tft->drawString(label, 5, 25, 2);
-                    
-                    Serial.println("Display 1 - Rotation " + String(rotation) + " applied");
-                }
-                displayManager.deselectAll();
-                
-                if (imagePath.length() > 0) {
-                    request->send(200, "text/plain", "Rotation " + String(rotation) + " applied with image " + imagePath + "! Check display 1.");
-                } else {
-                    request->send(200, "text/plain", "Rotation " + String(rotation) + " applied with test pattern! Check display 1. Look for: TOP(white), BOT(red), L(green), R(blue), UP(yellow arrow).");
-                }
-            } else {
-                request->send(400, "text/plain", "Invalid rotation: " + String(rotation));
-            }
-        } else {
-            request->send(400, "text/plain", "Missing rotation parameter");
-        }
-    });
-    
-    server.begin();
-    Serial.println("✅ Web server started");
-    Serial.println("Open: http://" + WiFi.localIP().toString());
-}
-
-void loop() {
-    delay(1000);
-}
-
-#elif defined(TFT_TEST_ONLY)
+#ifdef TFT_TEST_ONLY
 // Exact initialization from your working project
 #include <TFT_eSPI.h>
 
@@ -401,6 +158,7 @@ void loop() {
 #include "image_manager.h"          // ADD: Image management
 #include "slideshow_manager.h"      // ADD: Slideshow management
 #include "display_clock_manager.h"  // ADD: Clock management
+#include "dcc_manager.h"            // ADD: DCC management
 #include "config.h"
 
 // Create instances
@@ -412,8 +170,8 @@ void configureTCPSettings() {
     // More conservative TCP settings for better stability
     WiFi.setTxPower(WIFI_POWER_15dBm);  // Further reduce power
     
-    // Give more time for ESP32 to handle requests
-    delay(10);
+    // Use yield instead of blocking delay
+    yield();
 }
 
 TimeManager timeManager;            // ADD: Time manager
@@ -421,7 +179,8 @@ SettingsManager settingsManager;    // ADD: Settings manager
 ImageManager imageManager(&displayManager);  // ADD: Image manager
 DisplayClockManager clockManager(&displayManager, &timeManager);  // ADD: Clock manager
 SlideshowManager slideshowManager(&imageManager, &settingsManager, &clockManager);  // ADD: Slideshow manager
-WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager, &imageManager, &slideshowManager);   // ADD: WiFi manager with all components
+DCCManager dccManager(&settingsManager, &slideshowManager);  // ADD: DCC manager
+WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager, &imageManager, &slideshowManager, &dccManager);   // ADD: WiFi manager with all components
 CredentialManager credentialManager; // ADD: Credential manager
 
 // Timing variables using config.h constants
@@ -506,6 +265,13 @@ void loop() {
                 } else {
                     LOG_ERROR("MAIN", "❌ Slideshow manager failed");
                 }
+                
+                // Initialize DCC manager
+                if (dccManager.begin()) {
+                    LOG_INFO("MAIN", "✅ DCC manager initialized");
+                } else {
+                    LOG_ERROR("MAIN", "❌ DCC manager failed");
+                }
             } else {
                 LOG_ERROR("MAIN", "❌ Image manager failed");
             }
@@ -580,6 +346,9 @@ void loop() {
         wifiManager.checkPortalModeSwitch();
         wifiManager.checkConnectionSuccessDisplay();  // NEW: Add this line
         
+        // DCC signal processing (non-blocking)
+        dccManager.loop();
+        
         // Image slideshow management
         if (settingsManager.isImageEnabled() && 
             wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL && 
@@ -607,13 +376,18 @@ void loop() {
         }
         // In SETUP mode OR showing connection success, keep current display
         
-        // Give more time for network processing
-        delay(10);
+        // Essential yield for ESP32 responsiveness
         yield();
+        
+        // Cooperative multitasking - yield more frequently for web server
+        static unsigned long lastMainLoopYield = 0;
+        if (millis() - lastMainLoopYield >= 10) {
+            lastMainLoopYield = millis();
+            vTaskDelay(1 / portTICK_PERIOD_MS); // 1ms FreeRTOS delay
+        }
     }
     
-    // Essential yield for ESP32 with small delay to reduce load
-    delay(5);
+    // Always yield to prevent watchdog issues
     yield();
 }
 #endif

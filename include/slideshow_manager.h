@@ -28,7 +28,6 @@ private:
     void loadEnabledImages();
     bool isImageEnabled(const String& filename);
     void showNextImage();
-    void showClock();
     void showNoImagesMessage();
     
 public:
@@ -47,6 +46,9 @@ public:
     int getCurrentImageIndex() const { return currentImageIndex; }
     int getEnabledImageCount() const { return enabledImages.size(); }
     String getCurrentImageName() const;
+    
+    // Clock/gallery switching for DCC control
+    void showClock();
     
     // Configuration
     void refreshImageList(); // Call when images are added/deleted/enabled/disabled

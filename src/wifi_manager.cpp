@@ -1,4 +1,5 @@
 #include "wifi_manager.h"
+#include "dcc_manager.h"
 #include "logger.h"
 #include "config.h"
 #include "webcontent.h"
@@ -9,8 +10,8 @@ static const String TAG = "WIFI";
 
 const unsigned long WiFiManager::RETRY_DELAYS[] = {5000, 10000, 30000}; // 5s, 10s, 30s
 
-WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager, SlideshowManager* slideshowManager) 
-    : server(webServer), timeManager(timeManager), settingsManager(settingsManager), displayManager(displayManager), imageManager(imageManager), slideshowManager(slideshowManager) {
+WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager, SlideshowManager* slideshowManager, class DCCManager* dccManager) 
+    : server(webServer), timeManager(timeManager), settingsManager(settingsManager), displayManager(displayManager), imageManager(imageManager), slideshowManager(slideshowManager), dccManager(dccManager) {
     LOG_DEBUG(TAG, "WiFiManager constructor called");
     
     // Initialize new Step 2 variables
@@ -99,6 +100,9 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
 void WiFiManager::setupRoutes() {
     LOG_INFO(TAG, "=== Setting up web server routes ===");
     
+    // Add global request filters to reduce AsyncTCP warnings
+    server->addRewrite(new AsyncWebRewrite("/", "/"));
+    
     // Test route for connectivity
     server->on("/test", HTTP_GET, [this](AsyncWebServerRequest *request){
         LOG_INFO(TAG, "🌐 Test route accessed!");
@@ -162,7 +166,10 @@ void WiFiManager::setupRoutes() {
         status += "\"uptime\":\"" + String(millis() / 1000) + " seconds\",";
         status += "\"memory\":\"" + String(ESP.getFreeHeap()) + " bytes\"";
         status += "}";
-        request->send(200, "application/json", status);
+        AsyncWebServerResponse *response = request->beginResponse(200, "application/json", status);
+        response->addHeader("Connection", "close");
+        response->addHeader("Cache-Control", "no-cache");
+        request->send(response);
     });
     
     // WiFi status route
@@ -174,7 +181,10 @@ void WiFiManager::setupRoutes() {
         status += "\"rssi\":" + String(WiFi.RSSI()) + ",";
         status += "\"ap_clients\":" + String(WiFi.softAPgetStationNum());
         status += "}";
-        request->send(200, "application/json", status);
+        AsyncWebServerResponse *response = request->beginResponse(200, "application/json", status);
+        response->addHeader("Connection", "close");
+        response->addHeader("Cache-Control", "no-cache");
+        request->send(response);
     });
     
     // Captive portal routes for different devices
@@ -258,7 +268,29 @@ String WiFiManager::scanNetworks() {
     // Clear any previous scan results first
     WiFi.scanDelete();
     
-    int n = WiFi.scanNetworks(false, true); // async=false, show_hidden=true
+    // PERFORMANCE FIX: Use asynchronous scan to prevent blocking
+    int n = WiFi.scanNetworks(true, true); // async=true, show_hidden=true
+    
+    // Check if scan started successfully
+    if (n == WIFI_SCAN_FAILED) {
+        LOG_ERROR(TAG, "WiFi scan failed to start");
+        return "[]";
+    }
+    
+    // Wait for async scan to complete with timeout
+    unsigned long scanStart = millis();
+    const unsigned long scanTimeout = 10000; // 10 second timeout
+    
+    while ((n = WiFi.scanComplete()) == WIFI_SCAN_RUNNING && 
+           (millis() - scanStart) < scanTimeout) {
+        yield(); // Allow other tasks while waiting
+        delayMicroseconds(10000); // 10ms delay
+    }
+    
+    if (n == WIFI_SCAN_RUNNING) {
+        LOG_ERROR(TAG, "WiFi scan timeout");
+        return "[]";
+    }
     
     if (n == WIFI_SCAN_FAILED) {
         LOG_ERROR(TAG, "WiFi scan failed");
@@ -686,11 +718,126 @@ void WiFiManager::setupNormalModeRoutes() {
             // Send response immediately to prevent timeout
             request->send(200, "text/plain", "OK");
             
-            // Save to persistent settings after response sent
-            settingsManager->setDCCEnabled(isEnabled);
+            // Update DCC manager if available
+            if (dccManager) {
+                dccManager->setEnabled(isEnabled);
+            } else {
+                // Fallback to settings manager only
+                settingsManager->setDCCEnabled(isEnabled);
+            }
             LOG_INFOF(TAG, "🚂 DCC setting saved, current value: %s", settingsManager->isDCCEnabled() ? "true" : "false");
         } else {
             LOG_WARN(TAG, "⚠️ Missing dcc parameter");
+            request->send(400, "text/plain", "Missing parameter");
+        }
+    });
+    
+    // DCC address setting
+    server->on("/dccaddress", HTTP_POST, [this](AsyncWebServerRequest *request){
+        LOG_DEBUG(TAG, "🚂 DCC address endpoint called");
+        
+        if (request->hasParam("address", true)) {
+            String addressStr = request->getParam("address", true)->value();
+            int address = addressStr.toInt();
+            
+            if (address >= 1 && address <= 2048) {
+                LOG_INFOF(TAG, "🚂 DCC address request: %d", address);
+                
+                // Send response immediately
+                request->send(200, "text/plain", "OK");
+                
+                // Update DCC manager if available
+                if (dccManager) {
+                    dccManager->setAddress(address);
+                } else {
+                    // Fallback to settings manager only
+                    settingsManager->setDCCAddress(address);
+                }
+                LOG_INFOF(TAG, "🚂 DCC address saved: %d", address);
+            } else {
+                LOG_WARNF(TAG, "⚠️ Invalid DCC address: %d", address);
+                request->send(400, "text/plain", "Invalid address (must be 1-2048)");
+            }
+        } else {
+            LOG_WARN(TAG, "⚠️ Missing address parameter");
+            request->send(400, "text/plain", "Missing address parameter");
+        }
+    });
+    
+    // DCC pin setting
+    server->on("/dccpin", HTTP_POST, [this](AsyncWebServerRequest *request){
+        LOG_DEBUG(TAG, "🚂 DCC pin endpoint called");
+        
+        if (request->hasParam("pin", true)) {
+            String pinStr = request->getParam("pin", true)->value();
+            int pin = pinStr.toInt();
+            
+            if (pin >= 0 && pin <= 39) {
+                LOG_INFOF(TAG, "🚂 DCC pin request: %d", pin);
+                
+                // Send response immediately
+                request->send(200, "text/plain", "OK");
+                
+                // Update DCC manager if available
+                if (dccManager) {
+                    dccManager->setPin(pin);
+                } else {
+                    // Fallback to settings manager only
+                    settingsManager->setDCCPin(pin);
+                }
+                LOG_INFOF(TAG, "🚂 DCC pin saved: %d", pin);
+            } else {
+                LOG_WARNF(TAG, "⚠️ Invalid DCC pin: %d", pin);
+                request->send(400, "text/plain", "Invalid pin (must be 0-39)");
+            }
+        } else {
+            LOG_WARN(TAG, "⚠️ Missing pin parameter");
+            request->send(400, "text/plain", "Missing pin parameter");
+        }
+    });
+    
+    // DCC address setting
+    server->on("/dccaddress", HTTP_POST, [this](AsyncWebServerRequest *request){
+        LOG_DEBUG(TAG, "🚂 DCC address endpoint called");
+        
+        if (request->hasParam("address", true)) {
+            String addressStr = request->getParam("address", true)->value();
+            int address = addressStr.toInt();
+            
+            // Validate DCC address range (1-2048 for accessories)
+            if (address >= 1 && address <= 2048) {
+                settingsManager->setDCCAddress(address);
+                LOG_INFOF(TAG, "🚂 DCC address set to: %d", address);
+                request->send(200, "text/plain", "DCC address updated");
+            } else {
+                LOG_WARNF(TAG, "⚠️ Invalid DCC address: %d", address);
+                request->send(400, "text/plain", "Invalid DCC address (1-2048)");
+            }
+        } else {
+            LOG_WARN(TAG, "⚠️ Missing address parameter");
+            request->send(400, "text/plain", "Missing parameter");
+        }
+    });
+    
+    // DCC pin setting
+    server->on("/dccpin", HTTP_POST, [this](AsyncWebServerRequest *request){
+        LOG_DEBUG(TAG, "🚂 DCC pin endpoint called");
+        
+        if (request->hasParam("pin", true)) {
+            String pinStr = request->getParam("pin", true)->value();
+            int pin = pinStr.toInt();
+            
+            // Validate GPIO pin range for ESP32
+            if (pin >= 0 && pin <= 39) {
+                settingsManager->setDCCPin(pin);
+                LOG_INFOF(TAG, "🚂 DCC GPIO pin set to: %d", pin);
+                request->send(200, "text/plain", "DCC pin updated");
+            } else {
+                LOG_WARNF(TAG, "⚠️ Invalid GPIO pin: %d", pin);
+                request->send(400, "text/plain", "Invalid GPIO pin (0-39)");
+            }
+        } else {
+            LOG_WARN(TAG, "⚠️ Missing pin parameter");
             request->send(400, "text/plain", "Missing parameter");
         }
     });
@@ -801,13 +948,18 @@ void WiFiManager::setupNormalModeRoutes() {
         String response = "{";
         response += "\"secondDisplay\":" + String(settingsManager->isSecondDisplayEnabled() ? "true" : "false") + ",";
         response += "\"dcc\":" + String(settingsManager->isDCCEnabled() ? "true" : "false") + ",";
+        response += "\"dccAddress\":" + String(settingsManager->getDCCAddress()) + ",";
+        response += "\"dccPin\":" + String(settingsManager->getDCCPin()) + ",";
         response += "\"clock\":" + String(settingsManager->isClockEnabled() ? "true" : "false") + ",";
         response += "\"clockFace\":" + String(static_cast<int>(settingsManager->getClockFace())) + ",";
         response += "\"brightness\":" + String(settingsManager->getBrightness()) + ",";
         response += "\"imageInterval\":" + String(settingsManager->getImageInterval()) + ",";
         response += "\"imageEnabled\":" + String(settingsManager->isImageEnabled() ? "true" : "false");
         response += "}";
-        request->send(200, "application/json", response);
+        AsyncWebServerResponse *apiResponse = request->beginResponse(200, "application/json", response);
+        apiResponse->addHeader("Connection", "close");
+        apiResponse->addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        request->send(apiResponse);
     });
 
     // API endpoints for settings page
@@ -818,7 +970,10 @@ void WiFiManager::setupNormalModeRoutes() {
         response += "\"rssi\":" + String(WiFi.RSSI()) + ",";
         response += "\"status\":\"" + String(WiFi.status() == WL_CONNECTED ? "connected" : "disconnected") + "\"";
         response += "}";
-        request->send(200, "application/json", response);
+        AsyncWebServerResponse *apiResponse = request->beginResponse(200, "application/json", response);
+        apiResponse->addHeader("Connection", "close");
+        apiResponse->addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        request->send(apiResponse);
     });
     
     server->on("/api/system-info", HTTP_GET, [](AsyncWebServerRequest *request){
@@ -826,7 +981,10 @@ void WiFiManager::setupNormalModeRoutes() {
         response += "\"uptime\":" + String(millis() / 1000) + ",";
         response += "\"freeMemory\":" + String(ESP.getFreeHeap());
         response += "}";
-        request->send(200, "application/json", response);
+        AsyncWebServerResponse *apiResponse = request->beginResponse(200, "application/json", response);
+        apiResponse->addHeader("Connection", "close");
+        apiResponse->addHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+        request->send(apiResponse);
     });
     
     server->on("/api/portal-mode", HTTP_POST, [this](AsyncWebServerRequest *request){

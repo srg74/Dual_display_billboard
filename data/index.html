@@ -560,13 +560,6 @@
                     <span class="slider"></span>
                 </label>
             </div>
-            <div class="control-section">
-                <label for="dccCheckbox"><strong>Enable DCC interface</strong></label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="dccCheckbox" onchange="toggleDCC()">
-                    <span class="slider"></span>
-                </label>
-            </div>
         </div>
 
         <!-- 5. File Upload -->
@@ -655,14 +648,6 @@
             xhr.open("POST", "/second-display", true);
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
             xhr.send("second_display=" + checked);
-        }
-
-        function toggleDCC() {
-            var checked = document.getElementById('dccCheckbox').checked;
-            var xhr = new XMLHttpRequest();
-            xhr.open("POST", "/dcc", true);
-            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-            xhr.send("dcc=" + checked);
         }
 
         function toggleClock() {
@@ -887,18 +872,12 @@
                     
                     // Set checkbox states
                     const secondDisplayCheckbox = document.getElementById('secondDisplayCheckbox');
-                    const dccCheckbox = document.getElementById('dccCheckbox');
                     const clockCheckbox = document.getElementById('clockCheckbox');
                     const brightnessSlider = document.getElementById('brightnessSlider');
                     
                     if (secondDisplayCheckbox) {
                         secondDisplayCheckbox.checked = settings.secondDisplay;
                         console.log('Second Display checkbox set to:', settings.secondDisplay);
-                    }
-                    
-                    if (dccCheckbox) {
-                        dccCheckbox.checked = settings.dcc;
-                        console.log('DCC checkbox set to:', settings.dcc);
                     }
                     
                     if (clockCheckbox) {

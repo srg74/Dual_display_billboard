@@ -5,6 +5,8 @@ static const String TAG = "SETTINGS";
 // Settings file paths
 const char* SettingsManager::SECOND_DISPLAY_FILE = "/second_display.txt";
 const char* SettingsManager::DCC_ENABLED_FILE = "/dcc_enabled.txt";
+const char* SettingsManager::DCC_ADDRESS_FILE = "/dcc_address.txt";
+const char* SettingsManager::DCC_PIN_FILE = "/dcc_pin.txt";
 const char* SettingsManager::IMAGE_INTERVAL_FILE = "/image_interval.txt";
 const char* SettingsManager::IMAGE_ENABLED_FILE = "/image_enabled.txt";
 const char* SettingsManager::BRIGHTNESS_FILE = "/brightness.txt";
@@ -15,11 +17,13 @@ SettingsManager::SettingsManager() {
     // Set defaults - will be loaded in begin()
     secondDisplayEnabled = true;
     dccEnabled = false;
+    dccAddress = 101; // Default DCC address
+    dccPin = 4; // Default DCC GPIO pin
     imageInterval = 10; // Default image interval 10 (seconds)
     imageEnabled = true;
     brightness = 200; // Default brightness value (0-255)
     clockEnabled = false; // Default clock disabled to maintain existing behavior
-    clockFace = CLOCK_CLASSIC_ANALOG; // Default to classic analog
+    clockFace = CLOCK_MODERN_SQUARE; // Default to Modern Square
 }
 
 bool SettingsManager::begin() {
@@ -28,14 +32,18 @@ bool SettingsManager::begin() {
     // Load all settings from LittleFS
     secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, true);
     dccEnabled = loadBoolean(DCC_ENABLED_FILE, false);
+    dccAddress = loadInteger(DCC_ADDRESS_FILE, 101);
+    dccPin = loadInteger(DCC_PIN_FILE, 4);
     imageInterval = loadInteger(IMAGE_INTERVAL_FILE, 10); // Default 10 seconds
     imageEnabled = loadBoolean(IMAGE_ENABLED_FILE, true);
     brightness = loadInteger(BRIGHTNESS_FILE, 200);
     clockEnabled = loadBoolean(CLOCK_ENABLED_FILE, false); // Default disabled
-    clockFace = static_cast<ClockFaceType>(loadInteger(CLOCK_FACE_FILE, CLOCK_CLASSIC_ANALOG));
+    clockFace = static_cast<ClockFaceType>(loadInteger(CLOCK_FACE_FILE, CLOCK_MODERN_SQUARE));
     
     LOG_INFOF(TAG, "📺 Second Display: %s", secondDisplayEnabled ? "enabled" : "disabled");
     LOG_INFOF(TAG, "🚂 DCC Interface: %s", dccEnabled ? "enabled" : "disabled");
+    LOG_INFOF(TAG, "🚂 DCC Address: %d", dccAddress);
+    LOG_INFOF(TAG, "🚂 DCC GPIO Pin: %d", dccPin);
     LOG_INFOF(TAG, "⏱️ Image Interval: %d seconds", imageInterval);
     LOG_INFOF(TAG, "🖼️ Image Display: %s", imageEnabled ? "enabled" : "disabled");
     LOG_INFOF(TAG, "🔆 Brightness: %d", brightness);
@@ -71,6 +79,32 @@ void SettingsManager::setDCCEnabled(bool enabled) {
 
 bool SettingsManager::isDCCEnabled() {
     return dccEnabled;
+}
+
+void SettingsManager::setDCCAddress(int address) {
+    dccAddress = address;
+    if (saveInteger(DCC_ADDRESS_FILE, address)) {
+        LOG_INFOF(TAG, "💾 DCC address saved: %d", address);
+    } else {
+        LOG_WARN(TAG, "⚠️ Failed to save DCC address");
+    }
+}
+
+int SettingsManager::getDCCAddress() {
+    return dccAddress;
+}
+
+void SettingsManager::setDCCPin(int pin) {
+    dccPin = pin;
+    if (saveInteger(DCC_PIN_FILE, pin)) {
+        LOG_INFOF(TAG, "💾 DCC GPIO pin saved: %d", pin);
+    } else {
+        LOG_WARN(TAG, "⚠️ Failed to save DCC pin");
+    }
+}
+
+int SettingsManager::getDCCPin() {
+    return dccPin;
 }
 
 // Image settings
@@ -123,6 +157,8 @@ void SettingsManager::printSettings() {
     LOG_INFO(TAG, "📋 Current Settings:");
     LOG_INFOF(TAG, "  📺 Second Display: %s", secondDisplayEnabled ? "enabled" : "disabled");
     LOG_INFOF(TAG, "  🚂 DCC Interface: %s", dccEnabled ? "enabled" : "disabled");
+    LOG_INFOF(TAG, "  🚂 DCC Address: %d", dccAddress);
+    LOG_INFOF(TAG, "  🚂 DCC GPIO Pin: %d", dccPin);
     LOG_INFOF(TAG, "  ⏱️ Image Interval: %d seconds", imageInterval);
     LOG_INFOF(TAG, "  🖼️ Image Display: %s", imageEnabled ? "enabled" : "disabled");
     LOG_INFOF(TAG, "  🔆 Brightness: %d", brightness);
@@ -132,6 +168,8 @@ void SettingsManager::resetToDefaults() {
     LOG_INFO(TAG, "🔄 Resetting settings to defaults...");
     setSecondDisplayEnabled(true);
     setDCCEnabled(false);
+    setDCCAddress(101);
+    setDCCPin(4);
     setImageInterval(10); // Reset to default 10 seconds
     setImageEnabled(true);
     setBrightness(200);
