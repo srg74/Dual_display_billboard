@@ -11,6 +11,7 @@ private:
     static const char* IMAGE_INTERVAL_FILE;
     static const char* IMAGE_ENABLED_FILE;
     static const char* BRIGHTNESS_FILE;
+    static const char* CLOCK_ENABLED_FILE;
     
     // Current settings values
     bool secondDisplayEnabled;
@@ -18,6 +19,7 @@ private:
     int imageInterval;
     bool imageEnabled;
     int brightness;
+    bool clockEnabled;
     
     // Private helper methods
     bool saveBoolean(const char* filename, bool value);
@@ -48,6 +50,10 @@ public:
     // Brightness settings
     void setBrightness(int value);
     int getBrightness();
+    
+    // Clock settings
+    void setClockEnabled(bool enabled);
+    bool isClockEnabled();
     
     // Utility
     void printSettings();

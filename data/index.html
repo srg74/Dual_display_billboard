@@ -554,6 +554,13 @@
                 </label>
             </div>
             <div class="control-section">
+                <label for="clockCheckbox"><strong>Add clock to gallery</strong></label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="clockCheckbox" onchange="toggleClock()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="control-section">
                 <label for="dccCheckbox"><strong>Enable DCC interface</strong></label>
                 <label class="toggle-switch">
                     <input type="checkbox" id="dccCheckbox" onchange="toggleDCC()">
@@ -658,6 +665,14 @@
             xhr.send("dcc=" + checked);
         }
 
+        function toggleClock() {
+            var checked = document.getElementById('clockCheckbox').checked;
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/clock", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.send("clock=" + checked);
+        }
+
         function setImageEnabled(img, enabled) {
             var xhr = new XMLHttpRequest();
             xhr.open("POST", "/image-enable", true);
@@ -698,6 +713,17 @@
                 const data = await response.json();
                 console.log('Gallery data:', data);
                 
+                // Load enabled states from server
+                const enabledStatesResponse = await fetch('/api/images/enabled-states');
+                let enabledStates = {};
+                if (enabledStatesResponse.ok) {
+                    const enabledData = await enabledStatesResponse.json();
+                    enabledStates = enabledData.states || {};
+                    console.log('Loaded enabled states from server:', enabledStates);
+                } else {
+                    console.warn('Failed to load enabled states from server, using defaults');
+                }
+                
                 const container = document.getElementById('galleryContainer');
                 const countSpan = document.getElementById('imageCount');
                 
@@ -715,11 +741,11 @@
                 }
                 
                 let html = '';
-                const enabledImages = JSON.parse(localStorage.getItem('enabledImages') || '{}');
                 
                 data.images.forEach(image => {
                     const sizeKB = Math.round(image.size / 1024);
-                    const isEnabled = enabledImages[image.filename] !== false; // Default to enabled
+                    // Use server state if available, otherwise default to enabled
+                    const isEnabled = enabledStates.hasOwnProperty(image.filename) ? enabledStates[image.filename] : true;
                     
                     html += `
                         <div class="gallery-item">
@@ -735,7 +761,7 @@
                                 <div class="enable-section">
                                     <div class="enable-controls">
                                         <input type="checkbox" id="enable_${image.filename}" class="enable-checkbox" 
-                                               ${isEnabled ? 'checked' : ''} onchange="toggleImageEnabled('${image.filename}', this.checked)">
+                                               data-filename="${image.filename}" ${isEnabled ? 'checked' : ''}>
                                         <label for="enable_${image.filename}" class="enable-label">Show on display</label>
                                     </div>
                                     <button onclick="deleteImage('${image.filename}')" 
@@ -748,6 +774,7 @@
                     `;
                 });
                 
+                console.log('Generated HTML preview:', html.substring(0, 1000));
                 container.innerHTML = html;
                 
             } catch (error) {
@@ -786,6 +813,11 @@
         }
 
         async function toggleImageEnabled(filename, enabled) {
+            console.log('=== TOGGLE FUNCTION CALLED ===');
+            console.log('Filename:', filename);
+            console.log('Enabled:', enabled);
+            console.log('Type of enabled:', typeof enabled);
+            
             try {
                 console.log(`${enabled ? 'Enabling' : 'Disabling'} image: ${filename}`);
                 
@@ -794,10 +826,15 @@
                 formData.append('filename', filename);
                 formData.append('enabled', enabled.toString());
                 
+                console.log('Sending POST request to /api/images/toggle-enabled');
+                console.log('FormData contents:', {filename: filename, enabled: enabled.toString()});
+                
                 const response = await fetch('/api/images/toggle-enabled', {
                     method: 'POST',
                     body: formData
                 });
+                
+                console.log('Response received:', response.status, response.statusText);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -806,18 +843,33 @@
                 const result = await response.json();
                 console.log('API response:', result);
                 
-                // Also update localStorage for UI consistency
-                const enabledImages = JSON.parse(localStorage.getItem('enabledImages') || '{}');
-                enabledImages[filename] = enabled;
-                localStorage.setItem('enabledImages', JSON.stringify(enabledImages));
-                
                 const action = enabled ? 'enabled' : 'disabled';
                 console.log(`Image "${filename}" ${action} for display rotation`);
                 
             } catch (error) {
                 console.error('Toggle enabled error:', error);
-                // Show user feedback on error
+                // Show user feedback on error and revert checkbox
                 alert(`Failed to ${enabled ? 'enable' : 'disable'} image: ${error.message}`);
+                // Revert the checkbox state
+                const checkbox = document.getElementById(`enable_${filename}`);
+                if (checkbox) {
+                    checkbox.checked = !enabled;
+                }
+            }
+        }
+
+        // Simple checkbox handler function
+        function handleCheckboxChange(checkbox, filename) {
+            console.log('=== CHECKBOX HANDLER CALLED ===');
+            console.log('Checkbox element:', checkbox);
+            console.log('Filename:', filename);
+            console.log('Checked state:', checkbox.checked);
+            
+            if (filename && filename !== 'null' && filename !== '') {
+                console.log('Calling toggleImageEnabled with:', filename, checkbox.checked);
+                toggleImageEnabled(filename, checkbox.checked);
+            } else {
+                console.error('Invalid filename in checkbox handler:', filename);
             }
         }
 
@@ -836,6 +888,7 @@
                     // Set checkbox states
                     const secondDisplayCheckbox = document.getElementById('secondDisplayCheckbox');
                     const dccCheckbox = document.getElementById('dccCheckbox');
+                    const clockCheckbox = document.getElementById('clockCheckbox');
                     const brightnessSlider = document.getElementById('brightnessSlider');
                     
                     if (secondDisplayCheckbox) {
@@ -846,6 +899,11 @@
                     if (dccCheckbox) {
                         dccCheckbox.checked = settings.dcc;
                         console.log('DCC checkbox set to:', settings.dcc);
+                    }
+                    
+                    if (clockCheckbox) {
+                        clockCheckbox.checked = settings.clock;
+                        console.log('Clock checkbox set to:', settings.clock);
                     }
                     
                     if (brightnessSlider) {
@@ -928,6 +986,23 @@
             // Load initial gallery immediately
             console.log('Starting gallery load...');
             refreshGallery();
+
+            // Add event delegation for dynamically created checkboxes
+            document.addEventListener('change', function(event) {
+                if (event.target.classList.contains('enable-checkbox')) {
+                    const filename = event.target.getAttribute('data-filename');
+                    console.log('=== EVENT DELEGATION CHECKBOX CLICKED ===');
+                    console.log('Filename from data attribute:', filename);
+                    console.log('Checked state:', event.target.checked);
+                    
+                    if (filename && filename !== 'null' && filename !== '') {
+                        console.log('Calling toggleImageEnabled via event delegation');
+                        toggleImageEnabled(filename, event.target.checked);
+                    } else {
+                        console.error('Invalid filename in event delegation:', filename);
+                    }
+                }
+            });
 
             // Start time updates
             setInterval(updateTime, 60000);

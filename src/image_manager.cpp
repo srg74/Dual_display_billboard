@@ -284,6 +284,47 @@ bool ImageManager::displayImageOnBoth(const String& filename) {
     return success1 && success2;
 }
 
+void ImageManager::showNoImagesMessage() {
+    if (!displayManager) {
+        return;
+    }
+    
+    // Get both TFT displays
+    TFT_eSPI* tft1 = displayManager->getTFT(1);
+    TFT_eSPI* tft2 = displayManager->getTFT(2);
+    
+    // Display "No Images" message on both screens
+    if (tft1) {
+        displayManager->selectDisplay(1);
+        tft1->fillScreen(TFT_BLACK);
+        tft1->setTextColor(TFT_WHITE, TFT_BLACK);
+        tft1->setTextSize(2);
+        
+        // Center the text on display
+        String message = "No Images";
+        int16_t x = (displayWidth - (message.length() * 12)) / 2; // Approximate character width
+        int16_t y = (displayHeight - 16) / 2; // Approximate character height
+        
+        tft1->setCursor(x, y);
+        tft1->print(message);
+    }
+    
+    if (tft2) {
+        displayManager->selectDisplay(2);
+        tft2->fillScreen(TFT_BLACK);
+        tft2->setTextColor(TFT_WHITE, TFT_BLACK);
+        tft2->setTextSize(2);
+        
+        // Center the text on display
+        String message = "No Images";
+        int16_t x = (displayWidth - (message.length() * 12)) / 2;
+        int16_t y = (displayHeight - 16) / 2;
+        
+        tft2->setCursor(x, y);
+        tft2->print(message);
+    }
+}
+
 // Static callback for TJpg_Decoder
 bool ImageManager::tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
     if (!instance || !instance->displayManager) {

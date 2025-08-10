@@ -1,10 +1,12 @@
 #include "slideshow_manager.h"
 
-SlideshowManager::SlideshowManager(ImageManager* im, SettingsManager* sm) 
-    : imageManager(im), settingsManager(sm) {
+SlideshowManager::SlideshowManager(ImageManager* im, SettingsManager* sm, DisplayClockManager* cm) 
+    : imageManager(im), settingsManager(sm), clockManager(cm) {
     slideshowActive = false;
     lastImageChange = 0;
+    lastNoImagesCheck = 0;  // Initialize the new timing variable
     currentImageIndex = 0;
+    showingClock = false;
 }
 
 SlideshowManager::~SlideshowManager() {
@@ -33,6 +35,7 @@ void SlideshowManager::startSlideshow() {
         Serial.println("No enabled images found - showing 'No Images' message");
         slideshowActive = false;
         showNoImagesMessage();
+        lastNoImagesCheck = millis(); // Set timing to prevent immediate restart
         return;
     }
     
@@ -40,6 +43,7 @@ void SlideshowManager::startSlideshow() {
     slideshowActive = true;
     currentImageIndex = 0;
     lastImageChange = millis();
+    lastNoImagesCheck = 0; // Reset no images check when we have images
     
     // Display first image immediately
     showNextImage();
@@ -59,9 +63,24 @@ void SlideshowManager::updateSlideshow() {
     uint32_t imageInterval = settingsManager->getImageInterval() * 1000; // Convert seconds to ms
     
     if (currentTime - lastImageChange >= imageInterval) {
-        // Move to next image
-        currentImageIndex = (currentImageIndex + 1) % enabledImages.size();
-        showNextImage();
+        // Check if clock is enabled and we've shown all images
+        bool clockEnabled = settingsManager->isClockEnabled();
+        
+        if (clockEnabled && !showingClock && currentImageIndex == enabledImages.size() - 1) {
+            // Time to show clock after last image
+            showingClock = true;
+            showClock();
+        } else if (showingClock) {
+            // Clock was showing, now return to first image
+            showingClock = false;
+            currentImageIndex = 0;
+            showNextImage();
+        } else {
+            // Normal image progression
+            currentImageIndex = (currentImageIndex + 1) % enabledImages.size();
+            showNextImage();
+        }
+        
         lastImageChange = currentTime;
     }
 }
@@ -116,6 +135,32 @@ String SlideshowManager::getCurrentImageName() const {
         return enabledImages[currentImageIndex];
     }
     return "";
+}
+
+bool SlideshowManager::shouldRetrySlideshow() const {
+    // If slideshow is active, no need to retry
+    if (slideshowActive) {
+        return false;
+    }
+    
+    // If we've never checked for no images, allow retry
+    if (lastNoImagesCheck == 0) {
+        return true;
+    }
+    
+    // Check if enough time has passed since last "no images" check
+    // Use the same interval as image display (default 30 seconds, configurable to 10)
+    unsigned long currentTime = millis();
+    uint32_t checkInterval = 10000; // 10 seconds as requested
+    if (settingsManager) {
+        checkInterval = settingsManager->getImageInterval() * 1000; // Convert to ms
+        // Minimum 10 seconds to avoid rapid loops
+        if (checkInterval < 10000) {
+            checkInterval = 10000;
+        }
+    }
+    
+    return (currentTime - lastNoImagesCheck >= checkInterval);
 }
 
 void SlideshowManager::showNextImage() {
@@ -174,23 +219,30 @@ bool SlideshowManager::isImageEnabled(const String& filename) {
 }
 
 void SlideshowManager::updateImageEnabledState(const String& filename, bool enabled) {
+    Serial.printf("=== UPDATING IMAGE STATE ===\n");
     Serial.printf("Updating image state: %s = %s\n", filename.c_str(), enabled ? "enabled" : "disabled");
     
     imageEnabledStates[filename] = enabled;
+    Serial.printf("Map now contains %d entries\n", imageEnabledStates.size());
     
     // Save states to file
     File file = LittleFS.open("/slideshow_states.json", "w");
     if (file) {
-        file.print("{");
+        String json = "{";
         bool first = true;
         for (const auto& pair : imageEnabledStates) {
-            if (!first) file.print(",");
-            file.printf("\"%s\":%s", pair.first.c_str(), pair.second ? "true" : "false");
+            if (!first) json += ",";
+            json += "\"" + pair.first + "\":" + (pair.second ? "true" : "false");
             first = false;
         }
-        file.print("}");
+        json += "}";
+        
+        file.print(json);
         file.close();
-        Serial.println("Image states saved to storage");
+        Serial.printf("Saved JSON to file: %s\n", json.c_str());
+        Serial.println("Image states saved to storage successfully");
+    } else {
+        Serial.println("ERROR: Failed to open /slideshow_states.json for writing");
     }
     
     // Refresh slideshow if needed
@@ -240,6 +292,44 @@ void SlideshowManager::loadImageStatesFromStorage() {
     Serial.printf("Loaded %d image states from storage\n", imageEnabledStates.size());
 }
 
+std::map<String, bool> SlideshowManager::getImageEnabledStates() const {
+    Serial.println("=== GET IMAGE ENABLED STATES ===");
+    std::map<String, bool> result = imageEnabledStates;
+    Serial.printf("Starting with %d stored states\n", result.size());
+    
+    // Ensure all existing images are included in the result, defaulting to enabled
+    File dir = LittleFS.open("/images");
+    if (dir && dir.isDirectory()) {
+        File file = dir.openNextFile();
+        int newDefaults = 0;
+        while (file) {
+            if (!file.isDirectory()) {
+                String filename = file.name();
+                if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
+                    // If this image doesn't have a stored state, default to enabled
+                    if (result.find(filename) == result.end()) {
+                        result[filename] = true;
+                        newDefaults++;
+                        Serial.printf("Added default enabled state for: %s\n", filename.c_str());
+                    }
+                }
+            }
+            file = dir.openNextFile();
+        }
+        dir.close();
+        Serial.printf("Added %d default enabled states\n", newDefaults);
+    } else {
+        Serial.println("ERROR: Could not open /images directory");
+    }
+    
+    Serial.printf("Returning %d total states:\n", result.size());
+    for (const auto& pair : result) {
+        Serial.printf("  %s = %s\n", pair.first.c_str(), pair.second ? "enabled" : "disabled");
+    }
+    
+    return result;
+}
+
 void SlideshowManager::showNoImagesMessage() {
     if (!imageManager) {
         return;
@@ -247,15 +337,23 @@ void SlideshowManager::showNoImagesMessage() {
     
     Serial.println("Displaying 'No Images' message on screens");
     
-    // Get display manager from image manager
-    // Note: This is a temporary approach - we might need to access DisplayManager directly
-    // For now, we'll use the existing display system to show a message
-    
-    // TODO: Implement a proper "No Images" display method
-    // This could involve:
-    // 1. Creating a simple text overlay on the display
-    // 2. Using a pre-generated "no images" image
-    // 3. Drawing text directly to the display buffer
+    // Use the image manager's display functionality to show "No Images" message
+    // This will use the display manager internally to show text on both screens
+    imageManager->showNoImagesMessage();
     
     Serial.println("'No Images' message displayed");
+}
+
+void SlideshowManager::showClock() {
+    if (!clockManager) {
+        Serial.println("ClockManager not available (temporarily disabled)");
+        return;
+    }
+    
+    Serial.println("Slideshow: Showing clock");
+    
+    // Display clock on both screens
+    clockManager->displayClockOnBothDisplays();
+    
+    Serial.println("Clock display complete");
 }

@@ -1,5 +1,4 @@
 #include "wifi_manager.h"
-#include "rotation_tester.h"
 #include "logger.h"
 #include "config.h"
 #include "webcontent.h"
@@ -13,9 +12,6 @@ const unsigned long WiFiManager::RETRY_DELAYS[] = {5000, 10000, 30000}; // 5s, 1
 WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager, SlideshowManager* slideshowManager) 
     : server(webServer), timeManager(timeManager), settingsManager(settingsManager), displayManager(displayManager), imageManager(imageManager), slideshowManager(slideshowManager) {
     LOG_DEBUG(TAG, "WiFiManager constructor called");
-    
-    // Initialize rotation tester
-    rotationTester = new RotationTester(displayManager);
     
     // Initialize new Step 2 variables
     currentMode = MODE_SETUP;
@@ -72,7 +68,7 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     LOG_DEBUG(TAG, "AP IP configured, starting access point...");
     
     // Start the Access Point (critical path)
-    bool apStarted = WiFi.softAP(apSSID.c_str(), apPassword.c_str(), 1, 0, 4);
+    bool apStarted = WiFi.softAP(apSSID.c_str(), apPassword.c_str(), 11, 0, 4);
     
     if (apStarted) {
         // Quick success feedback
@@ -202,9 +198,6 @@ void WiFiManager::setupRoutes() {
         LOG_WARNF(TAG, "⚠️ 404 - Not found: %s", request->url().c_str());
         request->redirect("/");
     });
-    
-    // Add rotation test routes for setup mode too
-    // setupRotationTestRoutes();  // DISABLED: Add simple inline version instead
     
     // Simple rotation test route that works directly
     server->on("/debug/rotation-test", HTTP_GET, [this](AsyncWebServerRequest *request){
@@ -753,6 +746,27 @@ void WiFiManager::setupNormalModeRoutes() {
         }
     });
     
+    // Clock display toggle
+    server->on("/clock", HTTP_POST, [this](AsyncWebServerRequest *request){
+        LOG_DEBUG(TAG, "🕒 Clock endpoint called");
+        
+        if (request->hasParam("clock", true)) {
+            String enabled = request->getParam("clock", true)->value();
+            bool isEnabled = (enabled == "true");
+            LOG_INFOF(TAG, "🕒 Clock display request: param='%s', parsed=%s", enabled.c_str(), isEnabled ? "true" : "false");
+            
+            // Send response immediately to prevent timeout
+            request->send(200, "text/plain", "OK");
+            
+            // Save to persistent settings after response sent
+            settingsManager->setClockEnabled(isEnabled);
+            LOG_INFOF(TAG, "🕒 Clock setting saved, current value: %s", settingsManager->isClockEnabled() ? "true" : "false");
+        } else {
+            LOG_WARN(TAG, "⚠️ Missing clock parameter");
+            request->send(400, "text/plain", "Missing parameter");
+        }
+    });
+    
     // File upload endpoint - REMOVED: Conflicted with image upload endpoint below
     
     // API endpoint for current settings
@@ -760,6 +774,7 @@ void WiFiManager::setupNormalModeRoutes() {
         String response = "{";
         response += "\"secondDisplay\":" + String(settingsManager->isSecondDisplayEnabled() ? "true" : "false") + ",";
         response += "\"dcc\":" + String(settingsManager->isDCCEnabled() ? "true" : "false") + ",";
+        response += "\"clock\":" + String(settingsManager->isClockEnabled() ? "true" : "false") + ",";
         response += "\"brightness\":" + String(settingsManager->getBrightness()) + ",";
         response += "\"imageInterval\":" + String(settingsManager->getImageInterval()) + ",";
         response += "\"imageEnabled\":" + String(settingsManager->isImageEnabled() ? "true" : "false");
@@ -879,9 +894,6 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // Setup image management routes
     setupImageRoutes();
-    
-    // Setup rotation test routes
-    // setupRotationTestRoutes();  // DISABLED: Use simple inline version in both modes
     
     // Simple inline rotation test for normal mode too
     server->on("/debug/rotation-test", HTTP_GET, [this](AsyncWebServerRequest *request){
@@ -1119,9 +1131,38 @@ void WiFiManager::setupImageRoutes() {
         }
     });
     
+    // Get image enabled states for slideshow
+    server->on("/api/images/enabled-states", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        Serial.println("=== ENABLED STATES REQUEST ===");
+        if (!slideshowManager) {
+            Serial.println("ERROR: SlideshowManager not available");
+            request->send(500, "application/json", "{\"error\":\"SlideshowManager not available\"}");
+            return;
+        }
+        
+        auto enabledStates = slideshowManager->getImageEnabledStates();
+        Serial.printf("Retrieved %d image states from slideshow manager\n", enabledStates.size());
+        
+        String response = "{\"states\":{";
+        
+        bool first = true;
+        for (const auto& pair : enabledStates) {
+            if (!first) response += ",";
+            response += "\"" + pair.first + "\":" + (pair.second ? "true" : "false");
+            Serial.printf("  %s = %s\n", pair.first.c_str(), pair.second ? "true" : "false");
+            first = false;
+        }
+        
+        response += "}}";
+        Serial.printf("Sending response: %s\n", response.c_str());
+        request->send(200, "application/json", response);
+    });
+    
     // Update image enabled state for slideshow
     server->on("/api/images/toggle-enabled", HTTP_POST, [this](AsyncWebServerRequest *request) {
+        Serial.println("=== TOGGLE REQUEST RECEIVED ===");
         if (!request->hasParam("filename", true) || !request->hasParam("enabled", true)) {
+            Serial.println("ERROR: Missing filename or enabled parameter");
             request->send(400, "application/json", "{\"error\":\"Missing filename or enabled parameter\"}");
             return;
         }
@@ -1130,9 +1171,17 @@ void WiFiManager::setupImageRoutes() {
         String enabledStr = request->getParam("enabled", true)->value();
         bool enabled = (enabledStr == "true");
         
+        Serial.printf("Toggle request: filename='%s', enabled='%s' -> %s\n", 
+                     filename.c_str(), enabledStr.c_str(), enabled ? "TRUE" : "FALSE");
+        
         // Update slideshow manager with the enabled state
         if (slideshowManager) {
             slideshowManager->updateImageEnabledState(filename, enabled);
+            // Refresh the image list to apply the enabled/disabled state immediately
+            slideshowManager->refreshImageList();
+            Serial.println("Slideshow manager updated and refreshed");
+        } else {
+            Serial.println("ERROR: slideshowManager is null");
         }
         
         Serial.printf("Image %s %s for slideshow\n", filename.c_str(), enabled ? "enabled" : "disabled");
@@ -1290,50 +1339,5 @@ void WiFiManager::checkConnectionSuccessDisplay() {
 // NEW: Getter method for connection success display state
 bool WiFiManager::isShowingConnectionSuccess() const {
     return connectionSuccessDisplayed;
-}
-
-void WiFiManager::setupRotationTestRoutes() {
-    if (!rotationTester) {
-        LOG_WARN(TAG, "RotationTester not available - skipping rotation test routes");
-        return;
-    }
-    
-    LOG_INFO(TAG, "🔄 Setting up rotation test routes");
-    
-    // Initialize rotation tester
-    if (!rotationTester->begin()) {
-        LOG_ERROR(TAG, "Failed to initialize RotationTester");
-        return;
-    }
-    
-    // Main rotation test page at /debug/rotation-test
-    server->on("/debug/rotation-test", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🔄 Rotation test page requested");
-        
-        // Check if this is a test request with rotation parameter
-        if (request->hasParam("rotation")) {
-            String rotationStr = request->getParam("rotation")->value();
-            int rotation = rotationStr.toInt();
-            
-            if (rotation >= 0 && rotation <= 3) {
-                LOG_INFOF(TAG, "🔄 Testing rotation %d", rotation);
-                bool success = rotationTester->testRotation(rotation, 1); // Test on display 1
-                
-                if (success) {
-                    request->send(200, "text/plain", "Rotation " + String(rotation) + " test completed successfully");
-                } else {
-                    request->send(500, "text/plain", "Rotation " + String(rotation) + " test failed");
-                }
-            } else {
-                request->send(400, "text/plain", "Invalid rotation value. Use 0, 1, 2, or 3");
-            }
-        } else {
-            // Show the web interface
-            String html = rotationTester->getWebInterface();
-            request->send(200, "text/html", html);
-        }
-    });
-    
-    LOG_INFO(TAG, "✅ Rotation test routes configured");
 }
 

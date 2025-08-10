@@ -400,6 +400,7 @@ void loop() {
 #include "settings_manager.h"       // ADD: Settings management
 #include "image_manager.h"          // ADD: Image management
 #include "slideshow_manager.h"      // ADD: Slideshow management
+#include "display_clock_manager.h"  // ADD: Clock management
 #include "config.h"
 
 // Create instances
@@ -418,7 +419,8 @@ void configureTCPSettings() {
 TimeManager timeManager;            // ADD: Time manager
 SettingsManager settingsManager;    // ADD: Settings manager
 ImageManager imageManager(&displayManager);  // ADD: Image manager
-SlideshowManager slideshowManager(&imageManager, &settingsManager);  // ADD: Slideshow manager
+DisplayClockManager clockManager(&displayManager, &timeManager);  // ADD: Clock manager
+SlideshowManager slideshowManager(&imageManager, &settingsManager, nullptr);  // ADD: Slideshow manager - temp null for clock
 WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager, &imageManager, &slideshowManager);   // ADD: WiFi manager with all components
 CredentialManager credentialManager; // ADD: Credential manager
 
@@ -490,6 +492,15 @@ void loop() {
             // Initialize image manager
             if (imageManager.begin()) {
                 LOG_INFO("MAIN", "✅ Image manager initialized");
+                
+                // Initialize clock manager
+                // TEMP: Commenting out to test startup delay
+                // if (clockManager.begin()) {
+                //     LOG_INFO("MAIN", "✅ Clock manager initialized");
+                // } else {
+                //     LOG_ERROR("MAIN", "❌ Clock manager failed");
+                // }
+                LOG_INFO("MAIN", "⏸️ Clock manager initialization temporarily disabled");
                 
                 // Initialize slideshow manager
                 if (slideshowManager.begin()) {
@@ -577,7 +588,8 @@ void loop() {
             !wifiManager.isShowingConnectionSuccess()) {
             
             // Start slideshow if not active and images are enabled
-            if (!slideshowManager.isSlideshowActive()) {
+            // But only retry if enough time has passed since last "no images" check
+            if (!slideshowManager.isSlideshowActive() && slideshowManager.shouldRetrySlideshow()) {
                 slideshowManager.startSlideshow();
             }
             

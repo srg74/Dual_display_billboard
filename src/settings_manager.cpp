@@ -8,14 +8,16 @@ const char* SettingsManager::DCC_ENABLED_FILE = "/dcc_enabled.txt";
 const char* SettingsManager::IMAGE_INTERVAL_FILE = "/image_interval.txt";
 const char* SettingsManager::IMAGE_ENABLED_FILE = "/image_enabled.txt";
 const char* SettingsManager::BRIGHTNESS_FILE = "/brightness.txt";
+const char* SettingsManager::CLOCK_ENABLED_FILE = "/clock_enabled.txt";
 
 SettingsManager::SettingsManager() {
     // Set defaults - will be loaded in begin()
     secondDisplayEnabled = true;
     dccEnabled = false;
-    imageInterval = 30;
+    imageInterval = 10; // Default image interval 10 (seconds)
     imageEnabled = true;
     brightness = 200; // Default brightness value (0-255)
+    clockEnabled = false; // Default clock disabled to maintain existing behavior
 }
 
 bool SettingsManager::begin() {
@@ -24,15 +26,17 @@ bool SettingsManager::begin() {
     // Load all settings from LittleFS
     secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, true);
     dccEnabled = loadBoolean(DCC_ENABLED_FILE, false);
-    imageInterval = loadInteger(IMAGE_INTERVAL_FILE, 30);
+    imageInterval = loadInteger(IMAGE_INTERVAL_FILE, 10); // Default 10 seconds
     imageEnabled = loadBoolean(IMAGE_ENABLED_FILE, true);
     brightness = loadInteger(BRIGHTNESS_FILE, 200);
+    clockEnabled = loadBoolean(CLOCK_ENABLED_FILE, false); // Default disabled
     
     LOG_INFOF(TAG, "📺 Second Display: %s", secondDisplayEnabled ? "enabled" : "disabled");
     LOG_INFOF(TAG, "🚂 DCC Interface: %s", dccEnabled ? "enabled" : "disabled");
     LOG_INFOF(TAG, "⏱️ Image Interval: %d seconds", imageInterval);
     LOG_INFOF(TAG, "🖼️ Image Display: %s", imageEnabled ? "enabled" : "disabled");
     LOG_INFOF(TAG, "🔆 Brightness: %d", brightness);
+    LOG_INFOF(TAG, "🕒 Clock Display: %s", clockEnabled ? "enabled" : "disabled");
     
     LOG_INFO(TAG, "✅ Settings Manager initialized");
     return true;
@@ -125,7 +129,7 @@ void SettingsManager::resetToDefaults() {
     LOG_INFO(TAG, "🔄 Resetting settings to defaults...");
     setSecondDisplayEnabled(true);
     setDCCEnabled(false);
-    setImageInterval(30);
+    setImageInterval(10); // Reset to default 10 seconds
     setImageEnabled(true);
     setBrightness(200);
     LOG_INFO(TAG, "✅ Settings reset to defaults");
@@ -182,4 +186,18 @@ int SettingsManager::loadInteger(const char* filename, int defaultValue) {
     file.close();
     value.trim();
     return value.toInt();
+}
+
+// Clock settings
+void SettingsManager::setClockEnabled(bool enabled) {
+    clockEnabled = enabled;
+    if (saveBoolean(CLOCK_ENABLED_FILE, enabled)) {
+        LOG_INFOF(TAG, "💾 Clock setting saved: %s", enabled ? "enabled" : "disabled");
+    } else {
+        LOG_WARN(TAG, "⚠️ Failed to save clock setting");
+    }
+}
+
+bool SettingsManager::isClockEnabled() {
+    return clockEnabled;
 }

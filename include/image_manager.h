@@ -65,6 +65,7 @@ public:
     // Image display
     bool displayImage(const String& filename, uint8_t displayNum = 1);
     bool displayImageOnBoth(const String& filename);
+    void showNoImagesMessage(); // NEW: Show "No Images" message on displays
     
     // Image listing and info
     String getImageListJson();

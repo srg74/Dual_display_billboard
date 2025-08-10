@@ -9,7 +9,6 @@
 #include "secrets.h"    // For credentials only
 
 // Forward declarations
-class RotationTester;
 
 class WiFiManager {
 public:
@@ -24,7 +23,6 @@ private:
     SettingsManager* settingsManager;
     DisplayManager* displayManager;
     ImageManager* imageManager;
-    RotationTester* rotationTester;
     class SlideshowManager* slideshowManager;
     String apSSID;
     String apPassword;
@@ -71,7 +69,6 @@ public:
     void checkGpio0FactoryReset();
     void setupNormalModeRoutes();
     void setupImageRoutes();  // New method for image API endpoints
-    void setupRotationTestRoutes();  // New method for rotation test endpoints
     void checkScheduledRestart();
     void checkPortalModeSwitch();
     
