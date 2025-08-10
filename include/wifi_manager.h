@@ -21,6 +21,7 @@ private:
     SettingsManager* settingsManager;
     DisplayManager* displayManager;
     ImageManager* imageManager;
+    class SlideshowManager* slideshowManager;
     String apSSID;
     String apPassword;
     OperationMode currentMode;
@@ -45,7 +46,7 @@ private:
     unsigned long connectionSuccessStartTime;
     
 public:
-    WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager);
+    WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager, class SlideshowManager* slideshowManager = nullptr);
     
     // Only change the hardcoded password to use secrets.h
     void initializeAP(const String& ssid = "Billboard-Portal", const String& password = PORTAL_PASSWORD);

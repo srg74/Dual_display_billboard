@@ -31,6 +31,7 @@ private:
     DisplayType currentDisplayType;
     uint16_t displayWidth;
     uint16_t displayHeight;
+    uint8_t currentTargetDisplay; // Track which display we're targeting for TJpg callback
     
     // JPEG decoding callback functions
     static bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap);

@@ -156,6 +156,7 @@ void loop() {
 #include "time_manager.h"           // ADD: Time management
 #include "settings_manager.h"       // ADD: Settings management
 #include "image_manager.h"          // ADD: Image management
+#include "slideshow_manager.h"      // ADD: Slideshow management
 #include "config.h"
 
 // Create instances
@@ -174,7 +175,8 @@ void configureTCPSettings() {
 TimeManager timeManager;            // ADD: Time manager
 SettingsManager settingsManager;    // ADD: Settings manager
 ImageManager imageManager(&displayManager);  // ADD: Image manager
-WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager, &imageManager);   // ADD: WiFi manager with all components
+SlideshowManager slideshowManager(&imageManager, &settingsManager);  // ADD: Slideshow manager
+WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager, &imageManager, &slideshowManager);   // ADD: WiFi manager with all components
 CredentialManager credentialManager; // ADD: Credential manager
 
 // Timing variables using config.h constants
@@ -245,6 +247,13 @@ void loop() {
             // Initialize image manager
             if (imageManager.begin()) {
                 LOG_INFO("MAIN", "✅ Image manager initialized");
+                
+                // Initialize slideshow manager
+                if (slideshowManager.begin()) {
+                    LOG_INFO("MAIN", "✅ Slideshow manager initialized");
+                } else {
+                    LOG_ERROR("MAIN", "❌ Slideshow manager failed");
+                }
             } else {
                 LOG_ERROR("MAIN", "❌ Image manager failed");
             }
@@ -319,10 +328,29 @@ void loop() {
         wifiManager.checkPortalModeSwitch();
         wifiManager.checkConnectionSuccessDisplay();  // NEW: Add this line
         
-        // FIXED: Only alternate displays when not in setup mode AND not showing connection success
-        if (wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL && 
+        // Image slideshow management
+        if (settingsManager.isImageEnabled() && 
+            wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL && 
             !wifiManager.isShowingConnectionSuccess()) {
-            displayManager.alternateDisplays();
+            
+            // Start slideshow if not active and images are enabled
+            if (!slideshowManager.isSlideshowActive()) {
+                slideshowManager.startSlideshow();
+            }
+            
+            // Update slideshow
+            slideshowManager.updateSlideshow();
+        } else {
+            // Stop slideshow if conditions are not met
+            if (slideshowManager.isSlideshowActive()) {
+                slideshowManager.stopSlideshow();
+            }
+            
+            // FIXED: Only alternate displays when not in setup mode AND not showing connection success AND images disabled
+            if (wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL && 
+                !wifiManager.isShowingConnectionSuccess()) {
+                displayManager.alternateDisplays();
+            }
         }
         // In SETUP mode OR showing connection success, keep current display
         

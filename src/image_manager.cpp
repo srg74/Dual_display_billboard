@@ -11,6 +11,7 @@ ImageManager* g_imageManager = nullptr;
 ImageManager::ImageManager(DisplayManager* dm) : displayManager(dm) {
     instance = this;
     g_imageManager = this;
+    currentTargetDisplay = 1; // Default to display 1
     
     // Determine display type from build flags
     #ifdef DISPLAY_TYPE_ST7789
@@ -238,10 +239,31 @@ bool ImageManager::displayImage(const String& filename, uint8_t displayNum) {
     file.close();
     
     // Set target display for callback
-    // Note: This is a simplified approach - in reality you'd need display selection in callback
+    currentTargetDisplay = displayNum;
     
-    // Decode and display
+    // Clear the screen before drawing the image
+    if (displayManager) {
+        // Set rotation for all displays and TJpg decoder
+        displayManager->setRotation(3);  // 270 degrees rotation
+        
+        displayManager->selectDisplay(displayNum);
+        TFT_eSPI* tft = displayManager->getTFT(displayNum);
+        if (tft) {
+            tft->fillScreen(TFT_BLACK);  // Clear screen with black background
+            Serial.printf("Cleared display %d for image %s with rotation 3\n", displayNum, filename.c_str());
+        }
+        // Keep display selected for TJpg drawing - don't deselect yet
+    }
+    
+    // Decode and display (display should still be selected from above)
+    Serial.printf("Starting TJpg decode for display %d\n", displayNum);
     bool success = (TJpgDec.drawJpg(0, 0, buffer, fileSize) == JDR_OK);
+    Serial.printf("TJpg decode finished for display %d, result: %s\n", displayNum, success ? "SUCCESS" : "FAILED");
+    
+    // Now deselect the display
+    if (displayManager) {
+        displayManager->deselectAll();
+    }
     
     free(buffer);
     
@@ -268,15 +290,24 @@ bool ImageManager::tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint
         return false;
     }
     
-    // For now, output to display 1
-    // This needs to be enhanced for display selection
-    TFT_eSPI* tft = instance->displayManager->getTFT(1);
+    // Use getTFT with the target display number
+    // Note: We need to know which display we're targeting
+    TFT_eSPI* tft = instance->displayManager->getTFT(instance->currentTargetDisplay);
     if (!tft) {
         return false;
     }
     
-    // Push the pixels to the display
+    // Push the pixels to the display (rotation should already be set)
     tft->pushImage(x, y, w, h, bitmap);
+    
+    // Debug output (only for first few pixels to avoid spam)
+    static int pixelCount = 0;
+    if (pixelCount < 5) {
+        Serial.printf("Drawing pixels to display %d at (%d,%d) size %dx%d\n", 
+                     instance->currentTargetDisplay, x, y, w, h);
+        pixelCount++;
+    }
+    
     return true;
 }
 

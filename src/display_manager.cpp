@@ -405,3 +405,19 @@ uint16_t DisplayManager::getDisplayHeight() const {
     #endif
 }
 
+void DisplayManager::setRotation(uint8_t rotation) {
+    if (!initialized) return;
+    
+    // Set rotation on the main TFT instance (used by TJpg decoder)
+    tft.setRotation(rotation);
+    
+    // Also ensure rotation is set for both display selections
+    selectDisplay(1);
+    tft.setRotation(rotation);
+    selectDisplay(2);
+    tft.setRotation(rotation);
+    deselectAll();
+    
+    Serial.printf("Set rotation to %d for all displays\n", rotation);
+}
+

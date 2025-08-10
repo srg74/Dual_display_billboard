@@ -62,6 +62,7 @@ public:
     
     // TFT access for ImageManager
     TFT_eSPI* getTFT(int displayNum = 1);
+    void setRotation(uint8_t rotation);  // Set rotation for all displays
     
     // Display type detection
     String getDisplayType() const;

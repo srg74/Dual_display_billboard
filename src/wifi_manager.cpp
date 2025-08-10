@@ -3,13 +3,14 @@
 #include "config.h"
 #include "webcontent.h"
 #include "display_manager.h"
+#include "slideshow_manager.h"
 
 static const String TAG = "WIFI";
 
 const unsigned long WiFiManager::RETRY_DELAYS[] = {5000, 10000, 30000}; // 5s, 10s, 30s
 
-WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager) 
-    : server(webServer), timeManager(timeManager), settingsManager(settingsManager), displayManager(displayManager), imageManager(imageManager) {
+WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager, SlideshowManager* slideshowManager) 
+    : server(webServer), timeManager(timeManager), settingsManager(settingsManager), displayManager(displayManager), imageManager(imageManager), slideshowManager(slideshowManager) {
     LOG_DEBUG(TAG, "WiFiManager constructor called");
     
     // Initialize new Step 2 variables
@@ -1013,6 +1014,27 @@ void WiFiManager::setupImageRoutes() {
         } else {
             request->send(400, "application/json", "{\"error\":\"Failed to delete image\"}");
         }
+    });
+    
+    // Update image enabled state for slideshow
+    server->on("/api/images/toggle-enabled", HTTP_POST, [this](AsyncWebServerRequest *request) {
+        if (!request->hasParam("filename", true) || !request->hasParam("enabled", true)) {
+            request->send(400, "application/json", "{\"error\":\"Missing filename or enabled parameter\"}");
+            return;
+        }
+        
+        String filename = request->getParam("filename", true)->value();
+        String enabledStr = request->getParam("enabled", true)->value();
+        bool enabled = (enabledStr == "true");
+        
+        // Update slideshow manager with the enabled state
+        if (slideshowManager) {
+            slideshowManager->updateImageEnabledState(filename, enabled);
+        }
+        
+        Serial.printf("Image %s %s for slideshow\n", filename.c_str(), enabled ? "enabled" : "disabled");
+        
+        request->send(200, "application/json", "{\"status\":\"success\"}");
     });
     
     // Serve image files for thumbnails

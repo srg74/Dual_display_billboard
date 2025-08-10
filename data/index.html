@@ -789,8 +789,24 @@
             try {
                 console.log(`${enabled ? 'Enabling' : 'Disabling'} image: ${filename}`);
                 
-                // For now, just log the action since we don't have a backend endpoint yet
-                // This could be stored in localStorage or sent to a server endpoint
+                // Send to backend API endpoint
+                const formData = new FormData();
+                formData.append('filename', filename);
+                formData.append('enabled', enabled.toString());
+                
+                const response = await fetch('/api/images/toggle-enabled', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('API response:', result);
+                
+                // Also update localStorage for UI consistency
                 const enabledImages = JSON.parse(localStorage.getItem('enabledImages') || '{}');
                 enabledImages[filename] = enabled;
                 localStorage.setItem('enabledImages', JSON.stringify(enabledImages));
@@ -800,6 +816,8 @@
                 
             } catch (error) {
                 console.error('Toggle enabled error:', error);
+                // Show user feedback on error
+                alert(`Failed to ${enabled ? 'enable' : 'disable'} image: ${error.message}`);
             }
         }
 
