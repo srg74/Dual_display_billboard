@@ -10,6 +10,10 @@ private:
     bool initialized;
     uint8_t brightness1, brightness2;
     
+    // Rotation settings for different content types
+    static const uint8_t TEXT_ROTATION = 3;   // Rotation for text displays
+    static const uint8_t IMAGE_ROTATION = 0;  // Rotation for images (confirmed working)
+    
     // Splash screen timing
     unsigned long splashStartTime;
     bool splashActive;
@@ -35,6 +39,8 @@ public:
     bool begin();
     
     void selectDisplay(int displayNum);
+    void selectDisplayForText(int displayNum);   // Select display with text rotation
+    void selectDisplayForImage(int displayNum);  // Select display with image rotation
     void deselectAll();
     void setBrightness(uint8_t brightness, int displayNum = 0);
     void fillScreen(uint16_t color, int displayNum = 0);

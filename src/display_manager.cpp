@@ -58,18 +58,42 @@ void DisplayManager::initializeTFT() {
     digitalWrite(firstScreenCS, HIGH);  // Both CS HIGH
     digitalWrite(secondScreenCS, HIGH);
     
+    // Set correct rotation for both displays immediately after init
+    selectDisplay(1);
+    tft.setRotation(0);  // Ensure display 1 uses correct rotation
+    selectDisplay(2); 
+    tft.setRotation(0);  // Ensure display 2 uses correct rotation
+    deselectAll();
+    
     LOG_INFO("DISPLAY", "✅ TFT initialized with dual CS method");
 }
 
 void DisplayManager::selectDisplay(int displayNum) {
+    // Default to text rotation for backward compatibility
+    selectDisplayForText(displayNum);
+}
+
+void DisplayManager::selectDisplayForText(int displayNum) {
     deselectAll();
     
     if (displayNum == 1) {
         digitalWrite(firstScreenCS, LOW);
-        tft.setRotation(3);  // Working project uses rotation 3
+        tft.setRotation(TEXT_ROTATION);  // Use text rotation
     } else if (displayNum == 2) {
         digitalWrite(secondScreenCS, LOW);
-        tft.setRotation(3);  // Working project uses rotation 3
+        tft.setRotation(TEXT_ROTATION);  // Use text rotation
+    }
+}
+
+void DisplayManager::selectDisplayForImage(int displayNum) {
+    deselectAll();
+    
+    if (displayNum == 1) {
+        digitalWrite(firstScreenCS, LOW);
+        tft.setRotation(IMAGE_ROTATION);  // Use image rotation (0)
+    } else if (displayNum == 2) {
+        digitalWrite(secondScreenCS, LOW);
+        tft.setRotation(IMAGE_ROTATION);  // Use image rotation (0)
     }
 }
 
@@ -319,7 +343,7 @@ void DisplayManager::showSplashScreen(int displayNum, unsigned long timeoutMs) {
         return;
     }
     
-    selectDisplay(displayNum);
+    selectDisplayForImage(displayNum);  // Use image rotation for splash screen
     
     // Clear screen with black background
     fillScreen(TFT_BLACK, displayNum);

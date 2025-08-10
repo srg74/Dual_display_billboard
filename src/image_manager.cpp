@@ -244,13 +244,13 @@ bool ImageManager::displayImage(const String& filename, uint8_t displayNum) {
     // Clear the screen before drawing the image
     if (displayManager) {
         // Set rotation for all displays and TJpg decoder
-        displayManager->setRotation(3);  // 270 degrees rotation
+        displayManager->setRotation(0);  // Correct rotation for proper orientation
         
-        displayManager->selectDisplay(displayNum);
+        displayManager->selectDisplayForImage(displayNum);  // Use image rotation
         TFT_eSPI* tft = displayManager->getTFT(displayNum);
         if (tft) {
             tft->fillScreen(TFT_BLACK);  // Clear screen with black background
-            Serial.printf("Cleared display %d for image %s with rotation 3\n", displayNum, filename.c_str());
+            Serial.printf("Cleared display %d for image %s with rotation 0\n", displayNum, filename.c_str());
         }
         // Keep display selected for TJpg drawing - don't deselect yet
     }

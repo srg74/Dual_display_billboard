@@ -1,4 +1,5 @@
 #include "wifi_manager.h"
+#include "rotation_tester.h"
 #include "logger.h"
 #include "config.h"
 #include "webcontent.h"
@@ -12,6 +13,9 @@ const unsigned long WiFiManager::RETRY_DELAYS[] = {5000, 10000, 30000}; // 5s, 1
 WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager, SlideshowManager* slideshowManager) 
     : server(webServer), timeManager(timeManager), settingsManager(settingsManager), displayManager(displayManager), imageManager(imageManager), slideshowManager(slideshowManager) {
     LOG_DEBUG(TAG, "WiFiManager constructor called");
+    
+    // Initialize rotation tester
+    rotationTester = new RotationTester(displayManager);
     
     // Initialize new Step 2 variables
     currentMode = MODE_SETUP;
@@ -100,9 +104,14 @@ void WiFiManager::setupRoutes() {
     LOG_INFO(TAG, "=== Setting up web server routes ===");
     
     // Test route for connectivity
-    server->on("/test", HTTP_GET, [](AsyncWebServerRequest *request){
+    server->on("/test", HTTP_GET, [this](AsyncWebServerRequest *request){
         LOG_INFO(TAG, "🌐 Test route accessed!");
-        request->send(200, "text/plain", "Billboard server is working!\nTime: " + String(millis()));
+        String response = "Billboard server is working!\n";
+        response += "Time: " + String(millis()) + "\n";
+        response += "Mode: " + String(currentMode == MODE_SETUP ? "Setup" : "Normal") + "\n";
+        response += "Free Memory: " + String(ESP.getFreeHeap()) + " bytes\n";
+        response += "\nRotation Tester: /debug/rotation-test\n";
+        request->send(200, "text/plain", response);
     });
 
     // Main portal route
@@ -192,6 +201,53 @@ void WiFiManager::setupRoutes() {
     server->onNotFound([](AsyncWebServerRequest *request){
         LOG_WARNF(TAG, "⚠️ 404 - Not found: %s", request->url().c_str());
         request->redirect("/");
+    });
+    
+    // Add rotation test routes for setup mode too
+    // setupRotationTestRoutes();  // DISABLED: Add simple inline version instead
+    
+    // Simple rotation test route that works directly
+    server->on("/debug/rotation-test", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "🔄 Simple rotation test requested");
+        
+        if (request->hasParam("rotation")) {
+            String rotationStr = request->getParam("rotation")->value();
+            int rotation = rotationStr.toInt();
+            LOG_INFOF(TAG, "🔄 Testing rotation %d", rotation);
+            
+            if (rotation >= 0 && rotation <= 3 && displayManager) {
+                // Simple test: set rotation and clear screen with colored label
+                displayManager->selectDisplay(1);
+                TFT_eSPI* tft = displayManager->getTFT(1);
+                if (tft) {
+                    tft->setRotation(rotation);
+                    tft->fillScreen(TFT_BLACK);
+                    tft->setTextColor(TFT_YELLOW, TFT_BLACK);
+                    tft->setTextSize(3);
+                    String label = "ROT " + String(rotation);
+                    tft->drawString(label, 10, 40, 2);
+                    displayManager->deselectAll();
+                    
+                    request->send(200, "text/plain", "Rotation " + String(rotation) + " applied - check display");
+                } else {
+                    request->send(500, "text/plain", "Display not available");
+                }
+            } else {
+                request->send(400, "text/plain", "Invalid rotation (0-3) or display not available");
+            }
+        } else {
+            // Show the web interface
+            String html = "<html><head><title>Rotation Test</title></head><body>";
+            html += "<h1>Rotation Tester</h1>";
+            html += "<p>Click buttons to test rotations:</p>";
+            html += "<button onclick=\"test(0)\" style=\"margin:10px;padding:20px;font-size:18px;\">ROT 0</button>";
+            html += "<button onclick=\"test(1)\" style=\"margin:10px;padding:20px;font-size:18px;\">ROT 1</button>";
+            html += "<button onclick=\"test(2)\" style=\"margin:10px;padding:20px;font-size:18px;\">ROT 2</button>";
+            html += "<button onclick=\"test(3)\" style=\"margin:10px;padding:20px;font-size:18px;\">ROT 3</button>";
+            html += "<script>function test(r){fetch('/debug/rotation-test?rotation='+r).then(r=>r.text()).then(t=>alert(t));}</script>";
+            html += "</body></html>";
+            request->send(200, "text/html", html);
+        }
     });
     
     LOG_INFO(TAG, "✅ Web routes configured successfully");
@@ -824,6 +880,53 @@ void WiFiManager::setupNormalModeRoutes() {
     // Setup image management routes
     setupImageRoutes();
     
+    // Setup rotation test routes
+    // setupRotationTestRoutes();  // DISABLED: Use simple inline version in both modes
+    
+    // Simple inline rotation test for normal mode too
+    server->on("/debug/rotation-test", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "🔄 Rotation test requested (normal mode)");
+        
+        if (request->hasParam("rotation")) {
+            String rotationStr = request->getParam("rotation")->value();
+            int rotation = rotationStr.toInt();
+            LOG_INFOF(TAG, "🔄 Testing rotation %d", rotation);
+            
+            if (rotation >= 0 && rotation <= 3 && displayManager) {
+                // Simple test: set rotation and clear screen with colored label
+                displayManager->selectDisplay(1);
+                TFT_eSPI* tft = displayManager->getTFT(1);
+                if (tft) {
+                    tft->setRotation(rotation);
+                    tft->fillScreen(TFT_BLACK);
+                    tft->setTextColor(TFT_YELLOW, TFT_BLACK);
+                    tft->setTextSize(3);
+                    String label = "ROT " + String(rotation);
+                    tft->drawString(label, 10, 40, 2);
+                    displayManager->deselectAll();
+                    
+                    request->send(200, "text/plain", "Rotation " + String(rotation) + " applied - check display");
+                } else {
+                    request->send(500, "text/plain", "Display not available");
+                }
+            } else {
+                request->send(400, "text/plain", "Invalid rotation (0-3) or display not available");
+            }
+        } else {
+            // Show the web interface
+            String html = "<html><head><title>Rotation Test</title></head><body>";
+            html += "<h1>Rotation Tester</h1>";
+            html += "<p>Click buttons to test rotations:</p>";
+            html += "<button onclick=\"test(0)\" style=\"margin:10px;padding:20px;font-size:18px;\">ROT 0</button>";
+            html += "<button onclick=\"test(1)\" style=\"margin:10px;padding:20px;font-size:18px;\">ROT 1</button>";
+            html += "<button onclick=\"test(2)\" style=\"margin:10px;padding:20px;font-size:18px;\">ROT 2</button>";
+            html += "<button onclick=\"test(3)\" style=\"margin:10px;padding:20px;font-size:18px;\">ROT 3</button>";
+            html += "<script>function test(r){fetch('/debug/rotation-test?rotation='+r).then(r=>r.text()).then(t=>alert(t));}</script>";
+            html += "</body></html>";
+            request->send(200, "text/html", html);
+        }
+    });
+    
     LOG_INFO(TAG, "✅ Normal mode routes configured");
 }
 
@@ -1187,5 +1290,50 @@ void WiFiManager::checkConnectionSuccessDisplay() {
 // NEW: Getter method for connection success display state
 bool WiFiManager::isShowingConnectionSuccess() const {
     return connectionSuccessDisplayed;
+}
+
+void WiFiManager::setupRotationTestRoutes() {
+    if (!rotationTester) {
+        LOG_WARN(TAG, "RotationTester not available - skipping rotation test routes");
+        return;
+    }
+    
+    LOG_INFO(TAG, "🔄 Setting up rotation test routes");
+    
+    // Initialize rotation tester
+    if (!rotationTester->begin()) {
+        LOG_ERROR(TAG, "Failed to initialize RotationTester");
+        return;
+    }
+    
+    // Main rotation test page at /debug/rotation-test
+    server->on("/debug/rotation-test", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "🔄 Rotation test page requested");
+        
+        // Check if this is a test request with rotation parameter
+        if (request->hasParam("rotation")) {
+            String rotationStr = request->getParam("rotation")->value();
+            int rotation = rotationStr.toInt();
+            
+            if (rotation >= 0 && rotation <= 3) {
+                LOG_INFOF(TAG, "🔄 Testing rotation %d", rotation);
+                bool success = rotationTester->testRotation(rotation, 1); // Test on display 1
+                
+                if (success) {
+                    request->send(200, "text/plain", "Rotation " + String(rotation) + " test completed successfully");
+                } else {
+                    request->send(500, "text/plain", "Rotation " + String(rotation) + " test failed");
+                }
+            } else {
+                request->send(400, "text/plain", "Invalid rotation value. Use 0, 1, 2, or 3");
+            }
+        } else {
+            // Show the web interface
+            String html = rotationTester->getWebInterface();
+            request->send(200, "text/html", html);
+        }
+    });
+    
+    LOG_INFO(TAG, "✅ Rotation test routes configured");
 }
 
