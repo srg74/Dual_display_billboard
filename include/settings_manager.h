@@ -2,6 +2,7 @@
 #include <Arduino.h>
 #include <LittleFS.h>
 #include "logger.h"
+#include "clock_types.h"
 
 class SettingsManager {
 private:
@@ -12,6 +13,7 @@ private:
     static const char* IMAGE_ENABLED_FILE;
     static const char* BRIGHTNESS_FILE;
     static const char* CLOCK_ENABLED_FILE;
+    static const char* CLOCK_FACE_FILE;
     
     // Current settings values
     bool secondDisplayEnabled;
@@ -20,6 +22,7 @@ private:
     bool imageEnabled;
     int brightness;
     bool clockEnabled;
+    ClockFaceType clockFace;
     
     // Private helper methods
     bool saveBoolean(const char* filename, bool value);
@@ -54,6 +57,8 @@ public:
     // Clock settings
     void setClockEnabled(bool enabled);
     bool isClockEnabled();
+    void setClockFace(ClockFaceType faceType);
+    ClockFaceType getClockFace();
     
     // Utility
     void printSettings();

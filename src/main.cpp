@@ -420,7 +420,7 @@ TimeManager timeManager;            // ADD: Time manager
 SettingsManager settingsManager;    // ADD: Settings manager
 ImageManager imageManager(&displayManager);  // ADD: Image manager
 DisplayClockManager clockManager(&displayManager, &timeManager);  // ADD: Clock manager
-SlideshowManager slideshowManager(&imageManager, &settingsManager, nullptr);  // ADD: Slideshow manager - temp null for clock
+SlideshowManager slideshowManager(&imageManager, &settingsManager, &clockManager);  // ADD: Slideshow manager
 WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager, &imageManager, &slideshowManager);   // ADD: WiFi manager with all components
 CredentialManager credentialManager; // ADD: Credential manager
 
@@ -494,13 +494,11 @@ void loop() {
                 LOG_INFO("MAIN", "✅ Image manager initialized");
                 
                 // Initialize clock manager
-                // TEMP: Commenting out to test startup delay
-                // if (clockManager.begin()) {
-                //     LOG_INFO("MAIN", "✅ Clock manager initialized");
-                // } else {
-                //     LOG_ERROR("MAIN", "❌ Clock manager failed");
-                // }
-                LOG_INFO("MAIN", "⏸️ Clock manager initialization temporarily disabled");
+                if (clockManager.begin()) {
+                    LOG_INFO("MAIN", "✅ Clock manager initialized");
+                } else {
+                    LOG_ERROR("MAIN", "❌ Clock manager failed");
+                }
                 
                 // Initialize slideshow manager
                 if (slideshowManager.begin()) {

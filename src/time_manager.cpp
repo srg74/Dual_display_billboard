@@ -106,11 +106,13 @@ bool TimeManager::isTimeValid() {
 }
 
 String TimeManager::getCurrentTime() {
-    if (!isTimeValid()) {
+    time_t now = time(nullptr);
+    
+    // Check if we have any reasonable time (not just 1970 epoch)
+    if (now < 100000) {
         return "--:--";
     }
     
-    time_t now = time(nullptr);
     struct tm timeinfo;
     localtime_r(&now, &timeinfo);
     

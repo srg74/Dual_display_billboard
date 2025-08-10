@@ -53,7 +53,7 @@
         }
 
         .status-value {
-            color: #58a6ff;
+            color: #ffffff;
             font-weight: 500;
         }
 
@@ -100,6 +100,171 @@
             color: #f0f6fc;
             font-size: 14px;
             min-width: 120px;
+        }
+
+        /* Clock Face Preview Styles */
+        .clock-face-option {
+            cursor: pointer;
+            padding: 12px;
+            border: 2px solid #30363d;
+            border-radius: 8px;
+            background-color: #161b22;
+            transition: all 0.2s ease;
+            display: block;
+        }
+
+        .clock-face-option:hover {
+            border-color: #58a6ff;
+            background-color: #21262d;
+        }
+
+        .clock-face-option input[type="radio"] {
+            display: none;
+        }
+
+        .clock-face-option input[type="radio"]:checked + .clock-preview {
+            border-color: #58a6ff;
+            background-color: #1c2128;
+        }
+
+        .clock-preview {
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            background-color: #0d1117;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .clock-preview span {
+            display: block;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #f0f6fc;
+            font-weight: 500;
+        }
+
+        /* Analog Clock Preview */
+        .analog-preview {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .clock-circle {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #58a6ff;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .hour-hand, .minute-hand {
+            position: absolute;
+            background-color: #ff6b6b;
+            border-radius: 2px;
+            transform-origin: bottom center;
+        }
+
+        .hour-hand {
+            width: 2px;
+            height: 12px;
+            top: 8px;
+            left: 19px;
+            transform: rotate(45deg);
+        }
+
+        .minute-hand {
+            width: 1px;
+            height: 16px;
+            top: 4px;
+            left: 19.5px;
+            transform: rotate(90deg);
+        }
+
+        .center-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background-color: #fff;
+            border-radius: 50%;
+            top: 18px;
+            left: 18px;
+        }
+
+        /* Digital Clock Preview */
+        .digital-preview {
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .digital-time {
+            font-size: 18px;
+            font-weight: bold;
+            color: #00d4aa;
+            font-family: 'Courier New', monospace;
+        }
+
+        .digital-seconds {
+            font-size: 12px;
+            color: #00d4aa;
+            font-family: 'Courier New', monospace;
+            margin-top: 2px;
+        }
+
+        /* Minimalist Clock Preview */
+        .minimalist-preview {
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .minimalist-time {
+            font-size: 16px;
+            color: #f0f6fc;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .minimalist-line {
+            width: 30px;
+            height: 1px;
+            background-color: #f0f6fc;
+            margin-top: 8px;
+        }
+
+        /* Colorful Clock Preview */
+        .colorful-preview {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .colorful-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            opacity: 0.3;
+        }
+
+        .colorful-time {
+            font-size: 16px;
+            font-weight: bold;
+            font-family: 'Arial', sans-serif;
+            position: relative;
+            z-index: 1;
         }
     </style>
 </head>
@@ -160,6 +325,62 @@
                 </select>
             </div>
             <button onclick="updateNTPServer()">Update NTP</button>
+        </div>
+
+        <h2>Clock Settings</h2>
+        <div class="flex-container-gray">
+            <label><strong>Clock Face Style:</strong></label>
+            <div style="display: flex; flex-direction: column; gap: 12px; flex: 1;">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+                    <label class="clock-face-option" for="clockFace0">
+                        <input type="radio" id="clockFace0" name="clockFace" value="0" onchange="changeClockFace()">
+                        <div class="clock-preview">
+                            <div class="analog-preview">
+                                <div class="clock-circle">
+                                    <div class="hour-hand"></div>
+                                    <div class="minute-hand"></div>
+                                    <div class="center-dot"></div>
+                                </div>
+                            </div>
+                            <span>Classic Analog</span>
+                        </div>
+                    </label>
+                    <label class="clock-face-option" for="clockFace1">
+                        <input type="radio" id="clockFace1" name="clockFace" value="1" onchange="changeClockFace()">
+                        <div class="clock-preview">
+                            <div class="digital-preview">
+                                <div class="digital-time">12:34</div>
+                                <div class="digital-seconds">:56</div>
+                            </div>
+                            <span>Digital Modern</span>
+                        </div>
+                    </label>
+                    <label class="clock-face-option" for="clockFace2">
+                        <input type="radio" id="clockFace2" name="clockFace" value="2" onchange="changeClockFace()">
+                        <div class="clock-preview">
+                            <div class="minimalist-preview">
+                                <div class="minimalist-time">12:34</div>
+                                <div class="minimalist-line"></div>
+                            </div>
+                            <span>Minimalist</span>
+                        </div>
+                    </label>
+                    <label class="clock-face-option" for="clockFace3">
+                        <input type="radio" id="clockFace3" name="clockFace" value="3" onchange="changeClockFace()">
+                        <div class="clock-preview">
+                            <div class="colorful-preview">
+                                <div class="colorful-bg"></div>
+                                <div class="colorful-time">
+                                    <span style="color: #ff4444;">12</span>
+                                    <span style="color: #ffffff;">:</span>
+                                    <span style="color: #44ff44;">34</span>
+                                </div>
+                            </div>
+                            <span>Colorful</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
         </div>
 
         <h2>System Control</h2>
@@ -265,6 +486,48 @@
                 dropdown.selectedIndex = 0; // Reset dropdown to "Quick Select..."
             }
         }
+
+        function changeClockFace() {
+            const selectedRadio = document.querySelector('input[name="clockFace"]:checked');
+            if (selectedRadio) {
+                const faceType = selectedRadio.value;
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "/clockface", true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        console.log('Clock face updated successfully');
+                    } else {
+                        alert('Error updating clock face');
+                    }
+                };
+                xhr.send("face=" + faceType);
+            }
+        }
+
+        function loadClockFaceSettings() {
+            fetch('/api/settings')
+                .then(response => response.json())
+                .then(settings => {
+                    console.log('Loaded settings:', settings);
+                    
+                    // Set the clock face radio button
+                    const clockFaceValue = settings.clockFace || 0;
+                    const clockFaceRadio = document.getElementById('clockFace' + clockFaceValue);
+                    if (clockFaceRadio) {
+                        clockFaceRadio.checked = true;
+                        console.log('Clock face set to:', clockFaceValue);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading clock face settings:', error);
+                });
+        }
+
+        // Load settings when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadClockFaceSettings();
+        });
     </script>
 </body>
 </html>

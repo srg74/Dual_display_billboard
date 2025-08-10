@@ -1,19 +1,17 @@
 #pragma once
-
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 #include <time.h>
+#include "clock_types.h"
 #include "display_manager.h"
 #include "time_manager.h"
 
-// Clock display configuration constants (matching external project)
+// Clock display configuration constants
 #define GALLERY_INTERVAL 30000         // 30 seconds - how long gallery runs before showing clock  
 #define CLOCK_DISPLAY_DURATION 5000    // 5 seconds - how long clock is displayed
-#define LINE_HEIGHT 18                 // Line height for display text
 
 class DisplayClockManager {
 private:
-    // Manager dependencies
     DisplayManager* displayManager;
     TimeManager* timeManager;
     
@@ -22,50 +20,44 @@ private:
     unsigned long clockDisplayStart;
     unsigned long galleryStartTime;
     
-    // Display pins
     int firstScreenCS;
     int secondScreenCS;
-    
-    // Settings
     bool enableSecondDisplay;
-    String clockLabel;
     
-    // Internal helper method
+    ClockFaceType currentClockFace;  // Current selected clock face
+
+    // Clock face implementations (Phase 2)
+    void displayAnalogClock(TFT_eSPI& tft);           // Classic analog
+    void displayDigitalClock(TFT_eSPI& tft);          // Digital modern
+    void displayMinimalistClock(TFT_eSPI& tft);       // Minimalist
+    void displayColorfulClock(TFT_eSPI& tft);         // Colorful
+
     void displayClockOnDisplay(TFT_eSPI& tft, int csPin);
-    
+
 public:
     DisplayClockManager(DisplayManager* dm, TimeManager* tm);
     
-    // Initialization
     bool begin();
     void begin(int firstCS, int secondCS);
+    void displayClockOnBothDisplays();
+    void setClockLabel(const String& label);
+    String getClockLabel();
+    void setSecondDisplayEnabled(bool enabled);
+    void setDisplayPins(int firstCS, int secondCS);
     
-    // Clock state management
+    // Gallery integration
+    unsigned long getGalleryElapsedTime();
+    unsigned long getClockDisplayElapsedTime();
     void resetGalleryTimer();
     bool shouldShowClock();
     bool shouldHideClock();
     void startClockDisplay();
     void stopClockDisplay();
     bool isClockDisplayActive();
-    
-    // Clock display functions
     void displayAnalogClockOnBothTFTs(TFT_eSPI& tft);
-    void displayClockOnBothDisplays(); // New method for DisplayManager integration
     
-    // Settings management
-    void setClockLabel(const String& label);
-    String getClockLabel();
-    void setSecondDisplayEnabled(bool enabled);
-    void setDisplayPins(int firstCS, int secondCS);
-    
-    // Timing functions
-    unsigned long getGalleryElapsedTime();
-    unsigned long getClockDisplayElapsedTime();
-    
-    // Clock intervals
-    static unsigned long getGalleryInterval() { return GALLERY_INTERVAL; }
-    static unsigned long getClockDisplayDuration() { return CLOCK_DISPLAY_DURATION; }
+    // Clock face management (Phase 2)
+    void setClockFace(ClockFaceType faceType);
+    ClockFaceType getClockFace() const;
+    String getClockFaceName(ClockFaceType faceType) const;
 };
-
-// Global instance declaration
-extern DisplayClockManager clockManager;

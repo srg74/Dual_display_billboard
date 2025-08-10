@@ -346,11 +346,17 @@ void SlideshowManager::showNoImagesMessage() {
 
 void SlideshowManager::showClock() {
     if (!clockManager) {
-        Serial.println("ClockManager not available (temporarily disabled)");
+        Serial.println("ClockManager not available");
         return;
     }
     
     Serial.println("Slideshow: Showing clock");
+    
+    // Set the clock face from settings before displaying
+    if (settingsManager) {
+        ClockFaceType currentFace = settingsManager->getClockFace();
+        clockManager->setClockFace(currentFace);
+    }
     
     // Display clock on both screens
     clockManager->displayClockOnBothDisplays();

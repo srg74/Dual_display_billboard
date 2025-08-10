@@ -767,6 +767,33 @@ void WiFiManager::setupNormalModeRoutes() {
         }
     });
     
+    // Clock face selection endpoint
+    server->on("/clockface", HTTP_POST, [this](AsyncWebServerRequest *request){
+        LOG_DEBUG(TAG, "🎨 Clock face endpoint called");
+        
+        if (request->hasParam("face", true)) {
+            String faceStr = request->getParam("face", true)->value();
+            int faceType = faceStr.toInt();
+            LOG_INFOF(TAG, "🎨 Clock face request: param='%s', parsed=%d", faceStr.c_str(), faceType);
+            
+            // Validate face type
+            if (faceType >= 0 && faceType < 4) {
+                // Send response immediately to prevent timeout
+                request->send(200, "text/plain", "OK");
+                
+                // Save to persistent settings after response sent
+                settingsManager->setClockFace(static_cast<ClockFaceType>(faceType));
+                LOG_INFOF(TAG, "🎨 Clock face setting saved, current value: %d", static_cast<int>(settingsManager->getClockFace()));
+            } else {
+                LOG_WARN(TAG, "⚠️ Invalid clock face type");
+                request->send(400, "text/plain", "Invalid face type");
+            }
+        } else {
+            LOG_WARN(TAG, "⚠️ Missing face parameter");
+            request->send(400, "text/plain", "Missing parameter");
+        }
+    });
+    
     // File upload endpoint - REMOVED: Conflicted with image upload endpoint below
     
     // API endpoint for current settings
@@ -775,6 +802,7 @@ void WiFiManager::setupNormalModeRoutes() {
         response += "\"secondDisplay\":" + String(settingsManager->isSecondDisplayEnabled() ? "true" : "false") + ",";
         response += "\"dcc\":" + String(settingsManager->isDCCEnabled() ? "true" : "false") + ",";
         response += "\"clock\":" + String(settingsManager->isClockEnabled() ? "true" : "false") + ",";
+        response += "\"clockFace\":" + String(static_cast<int>(settingsManager->getClockFace())) + ",";
         response += "\"brightness\":" + String(settingsManager->getBrightness()) + ",";
         response += "\"imageInterval\":" + String(settingsManager->getImageInterval()) + ",";
         response += "\"imageEnabled\":" + String(settingsManager->isImageEnabled() ? "true" : "false");

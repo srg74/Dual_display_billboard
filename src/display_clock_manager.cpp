@@ -11,7 +11,7 @@ DisplayClockManager::DisplayClockManager(DisplayManager* dm, TimeManager* tm) {
     firstScreenCS = -1;
     secondScreenCS = -1;
     enableSecondDisplay = true;
-    clockLabel = "Munich";
+    currentClockFace = CLOCK_CLASSIC_ANALOG;  // Default to classic analog
 }
 
 bool DisplayClockManager::begin() {
@@ -77,14 +77,6 @@ void DisplayClockManager::displayAnalogClockOnBothTFTs(TFT_eSPI& tft) {
 void DisplayClockManager::displayClockOnDisplay(TFT_eSPI& tft, int csPin) {
     if (csPin < 0) return;
     
-    time_t now = time(nullptr);
-    struct tm timeinfo;
-    localtime_r(&now, &timeinfo);
-
-    int centerX = 40; // Center X for 80px wide display
-    int centerY = 80; // Center Y for 160px tall display  
-    int radius = 39;  // Clock radius
-
     digitalWrite(csPin, LOW);
     tft.setRotation(0); // Use rotation 0 like the original
     tft.fillScreen(TFT_BLACK);
@@ -92,10 +84,44 @@ void DisplayClockManager::displayClockOnDisplay(TFT_eSPI& tft, int csPin) {
     // Draw clock label above the clock
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setTextFont(2);
-    int textWidth = tft.textWidth(clockLabel.c_str());
-    tft.setCursor(centerX - textWidth / 2, 18); // LINE_HEIGHT = 18
-    tft.print(clockLabel);
+    String currentLabel = timeManager ? timeManager->getClockLabel() : "Clock";
+    int textWidth = tft.textWidth(currentLabel.c_str());
+    tft.setCursor(40 - textWidth / 2, 18); // Center the label
+    tft.print(currentLabel);
 
+    // Display the selected clock face type
+    switch (currentClockFace) {
+        case CLOCK_CLASSIC_ANALOG:
+            displayAnalogClock(tft);
+            break;
+        case CLOCK_DIGITAL_MODERN:
+            displayDigitalClock(tft);
+            break;
+        case CLOCK_MINIMALIST:
+            displayMinimalistClock(tft);
+            break;
+        case CLOCK_COLORFUL:
+            displayColorfulClock(tft);
+            break;
+        default:
+            displayAnalogClock(tft); // Fallback to analog
+            break;
+    }
+
+    digitalWrite(csPin, HIGH);
+}
+
+// Clock face implementations (Phase 2)
+void DisplayClockManager::displayAnalogClock(TFT_eSPI& tft) {
+    // Get current time
+    time_t now = time(nullptr);
+    struct tm timeinfo;
+    localtime_r(&now, &timeinfo);
+    
+    // Clock face dimensions
+    int centerX = 40, centerY = 80;
+    int radius = 35;
+    
     // Draw clock face
     tft.drawCircle(centerX, centerY, radius, TFT_SKYBLUE);
     tft.drawCircle(centerX, centerY, 2, TFT_WHITE);
@@ -123,17 +149,94 @@ void DisplayClockManager::displayClockOnDisplay(TFT_eSPI& tft, int csPin) {
     int mx = centerX + cos(minAngle) * (radius * 0.8);
     int my = centerY + sin(minAngle) * (radius * 0.8);
     tft.drawLine(centerX, centerY, mx, my, TFT_RED);
+}
 
-    digitalWrite(csPin, HIGH);
+void DisplayClockManager::displayDigitalClock(TFT_eSPI& tft) {
+    // Get current time
+    time_t now = time(nullptr);
+    struct tm timeinfo;
+    localtime_r(&now, &timeinfo);
+    
+    // Modern digital display with large font
+    tft.setTextColor(TFT_CYAN, TFT_BLACK);
+    tft.setTextFont(4);
+    
+    // Format time as HH:MM
+    char timeStr[10];
+    snprintf(timeStr, sizeof(timeStr), "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+    
+    // Center the time
+    int textWidth = tft.textWidth(timeStr);
+    tft.setCursor(40 - textWidth / 2, 60);
+    tft.print(timeStr);
+}
+
+void DisplayClockManager::displayMinimalistClock(TFT_eSPI& tft) {
+    // Get current time
+    time_t now = time(nullptr);
+    struct tm timeinfo;
+    localtime_r(&now, &timeinfo);
+    
+    // Simple, clean design with minimal elements
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setTextFont(4);
+    
+    // Just the time, centered
+    char timeStr[10];
+    snprintf(timeStr, sizeof(timeStr), "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+    
+    int textWidth = tft.textWidth(timeStr);
+    tft.setCursor(40 - textWidth / 2, 70);
+    tft.print(timeStr);
+    
+    // Single line under the time
+    tft.drawLine(20, 95, 60, 95, TFT_WHITE);
+}
+
+void DisplayClockManager::displayColorfulClock(TFT_eSPI& tft) {
+    // Get current time
+    time_t now = time(nullptr);
+    struct tm timeinfo;
+    localtime_r(&now, &timeinfo);
+    
+    // Colorful gradient background effect
+    for (int i = 0; i < 160; i++) {
+        uint16_t color = tft.color565(i/2, (160-i)/2, 100);
+        tft.drawFastHLine(0, i, 80, color);
+    }
+    
+    // Multi-colored time display
+    tft.setTextFont(4);
+    
+    // Hour in red
+    char hourStr[5];
+    snprintf(hourStr, sizeof(hourStr), "%02d", timeinfo.tm_hour);
+    tft.setTextColor(TFT_RED, TFT_BLACK);
+    tft.setCursor(15, 60);
+    tft.print(hourStr);
+    
+    // Colon in white
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.setCursor(35, 60);
+    tft.print(":");
+    
+    // Minutes in green
+    char minStr[5];
+    snprintf(minStr, sizeof(minStr), "%02d", timeinfo.tm_min);
+    tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    tft.setCursor(45, 60);
+    tft.print(minStr);
 }
 
 void DisplayClockManager::setClockLabel(const String& label) {
-    clockLabel = label;
-    Serial.printf("[ClockManager] Clock label set to: %s\n", label.c_str());
+    if (timeManager) {
+        timeManager->setClockLabel(label);
+        Serial.printf("[ClockManager] Clock label set to: %s\n", label.c_str());
+    }
 }
 
 String DisplayClockManager::getClockLabel() {
-    return clockLabel;
+    return timeManager ? timeManager->getClockLabel() : "Clock";
 }
 
 void DisplayClockManager::setSecondDisplayEnabled(bool enabled) {
@@ -168,12 +271,6 @@ void DisplayClockManager::displayClockOnBothDisplays() {
     struct tm timeInfo;
     localtime_r(&now, &timeInfo);
     
-    // Check if time is valid
-    if (!timeManager->isTimeValid()) {
-        Serial.println("[ClockManager] Time not synchronized for clock display");
-        return;
-    }
-    
     // Display on first screen
     TFT_eSPI* tft1 = displayManager->getTFT(1);
     if (tft1) {
@@ -186,5 +283,25 @@ void DisplayClockManager::displayClockOnBothDisplays() {
     if (tft2 && enableSecondDisplay) {
         displayManager->selectDisplayForImage(2);
         displayClockOnDisplay(*tft2, 2);
+    }
+}
+
+// Clock face management methods (Phase 2)
+void DisplayClockManager::setClockFace(ClockFaceType faceType) {
+    currentClockFace = faceType;
+    Serial.printf("[ClockManager] Clock face changed to: %s\n", getClockFaceName(faceType).c_str());
+}
+
+ClockFaceType DisplayClockManager::getClockFace() const {
+    return currentClockFace;
+}
+
+String DisplayClockManager::getClockFaceName(ClockFaceType faceType) const {
+    switch (faceType) {
+        case CLOCK_CLASSIC_ANALOG: return "Classic Analog";
+        case CLOCK_DIGITAL_MODERN: return "Digital Modern";
+        case CLOCK_MINIMALIST: return "Minimalist";
+        case CLOCK_COLORFUL: return "Colorful";
+        default: return "Unknown";
     }
 }

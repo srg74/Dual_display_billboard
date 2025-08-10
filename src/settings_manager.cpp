@@ -9,6 +9,7 @@ const char* SettingsManager::IMAGE_INTERVAL_FILE = "/image_interval.txt";
 const char* SettingsManager::IMAGE_ENABLED_FILE = "/image_enabled.txt";
 const char* SettingsManager::BRIGHTNESS_FILE = "/brightness.txt";
 const char* SettingsManager::CLOCK_ENABLED_FILE = "/clock_enabled.txt";
+const char* SettingsManager::CLOCK_FACE_FILE = "/clock_face.txt";
 
 SettingsManager::SettingsManager() {
     // Set defaults - will be loaded in begin()
@@ -18,6 +19,7 @@ SettingsManager::SettingsManager() {
     imageEnabled = true;
     brightness = 200; // Default brightness value (0-255)
     clockEnabled = false; // Default clock disabled to maintain existing behavior
+    clockFace = CLOCK_CLASSIC_ANALOG; // Default to classic analog
 }
 
 bool SettingsManager::begin() {
@@ -30,6 +32,7 @@ bool SettingsManager::begin() {
     imageEnabled = loadBoolean(IMAGE_ENABLED_FILE, true);
     brightness = loadInteger(BRIGHTNESS_FILE, 200);
     clockEnabled = loadBoolean(CLOCK_ENABLED_FILE, false); // Default disabled
+    clockFace = static_cast<ClockFaceType>(loadInteger(CLOCK_FACE_FILE, CLOCK_CLASSIC_ANALOG));
     
     LOG_INFOF(TAG, "📺 Second Display: %s", secondDisplayEnabled ? "enabled" : "disabled");
     LOG_INFOF(TAG, "🚂 DCC Interface: %s", dccEnabled ? "enabled" : "disabled");
@@ -200,4 +203,17 @@ void SettingsManager::setClockEnabled(bool enabled) {
 
 bool SettingsManager::isClockEnabled() {
     return clockEnabled;
+}
+
+void SettingsManager::setClockFace(ClockFaceType faceType) {
+    clockFace = faceType;
+    if (saveInteger(CLOCK_FACE_FILE, static_cast<int>(faceType))) {
+        LOG_INFOF(TAG, "💾 Clock face setting saved: %d", static_cast<int>(faceType));
+    } else {
+        LOG_WARN(TAG, "⚠️ Failed to save clock face setting");
+    }
+}
+
+ClockFaceType SettingsManager::getClockFace() {
+    return clockFace;
 }
