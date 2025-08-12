@@ -7,12 +7,14 @@ A sophisticated dual display billboard system designed for scale modelers, featu
 ## ✨ Key Features
 
 ### 🖥️ **Dual Display Support**
+
 - Independent control of two ST7735 (160x80) displays
 - ST7789 (240x240) compatibility 
 - Hardware-specific pin mapping for ESP32 and ESP32-S3
 - Content-aware rotation settings
 
 ### 📸 **Advanced Image Management**
+
 - **10-image maximum limit** for optimal memory management
 - JPEG validation with dimension checking
 - 50KB per image size limit
@@ -20,18 +22,21 @@ A sophisticated dual display billboard system designed for scale modelers, featu
 - User-friendly error reporting
 
 ### 🕐 **Multiple Clock Faces**
+
 - **Modern Square**: Rounded border analog design with colored hands
 - **Classic Analog**: Traditional analog clock with hour markers
 - **Digital Modern**: Large font digital display
 - **Minimalist**: Clean, simple time display
 
 ### 🌐 **WiFi & Web Management**
+
 - Captive portal setup for easy configuration
 - WiFi network scanning and connection
 - Web-based image upload interface
 - Real-time system status monitoring
 
 ### 🔧 **Professional Code Architecture**
+
 - Comprehensive documentation with Doxygen-style comments
 - Configurable logging system (ERROR/WARN/INFO levels)
 - Memory management and error handling
