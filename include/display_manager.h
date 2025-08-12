@@ -23,12 +23,22 @@ private:
     bool portalSequenceActive;
     String pendingSSID, pendingIP, pendingStatus;
     
-    // CORRECT Pin definitions 
-    static const int firstScreenCS = 5;      // CS1 = GPIO 5 ✅
-    static const int secondScreenCS = 15;    // CS2 = GPIO 15 ✅
-    static const int TFT_DC_PIN = 14;        // DC = GPIO 14 (shared) ✅
-    static const int TFT_BACKLIGHT1_PIN = 22; // BLK1 = GPIO 22 ✅
-    static const int TFT_BACKLIGHT2_PIN = 27; // BLK2 = GPIO 27 ✅
+    // Pin definitions - ESP32 vs ESP32-S3
+    #if defined(ESP32S3_MODE) 
+        // ESP32-S3 pinout: CS1=10, CS2=39, BL1=7, BL2=8, DC=14
+        static const int firstScreenCS = 10;     // CS1 = GPIO 10 ✅  
+        static const int secondScreenCS = 39;    // CS2 = GPIO 39 ✅
+        static const int TFT_DC_PIN = 14;        // DC = GPIO 14 (shared) ✅
+        static const int TFT_BACKLIGHT1_PIN = 7; // BLK1 = GPIO 7 ✅
+        static const int TFT_BACKLIGHT2_PIN = 8; // BLK2 = GPIO 8 ✅
+    #elif defined(ESP32DEV_MODE)
+        // ESP32 pinout (original)
+        static const int firstScreenCS = 5;      // CS1 = GPIO 5 ✅
+        static const int secondScreenCS = 15;    // CS2 = GPIO 15 ✅
+        static const int TFT_DC_PIN = 14;        // DC = GPIO 14 (shared) ✅
+        static const int TFT_BACKLIGHT1_PIN = 22; // BLK1 = GPIO 22 ✅
+        static const int TFT_BACKLIGHT2_PIN = 27; // BLK2 = GPIO 27 ✅
+    #endif
     
     void initializeBacklight();
     void initializeCS();

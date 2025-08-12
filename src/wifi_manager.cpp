@@ -268,33 +268,35 @@ String WiFiManager::scanNetworks() {
     // Clear any previous scan results first
     WiFi.scanDelete();
     
-    // PERFORMANCE FIX: Use asynchronous scan to prevent blocking
-    int n = WiFi.scanNetworks(true, true); // async=true, show_hidden=true
+    // MULTIPLATFORM FIX: For ESP32-S3 in AP mode, temporarily switch to AP+STA for scanning
+    wifi_mode_t currentMode = WiFi.getMode();
+    bool modeChanged = false;
     
-    // Check if scan started successfully
+    if (currentMode == WIFI_AP) {
+        LOG_DEBUG(TAG, "Switching to AP+STA mode for scanning");
+        WiFi.mode(WIFI_AP_STA);
+        modeChanged = true;
+        delay(100); // Small delay for mode change
+    }
+    
+    // PERFORMANCE FIX: Use synchronous scan for better ESP32-S3 compatibility
+    int n = WiFi.scanNetworks(false, true); // async=false, show_hidden=true
+    
+    // Check if scan failed
     if (n == WIFI_SCAN_FAILED) {
         LOG_ERROR(TAG, "WiFi scan failed to start");
+        // Restore original mode if changed
+        if (modeChanged) {
+            WiFi.mode(currentMode);
+        }
         return "[]";
     }
     
-    // Wait for async scan to complete with timeout
-    unsigned long scanStart = millis();
-    const unsigned long scanTimeout = 10000; // 10 second timeout
-    
-    while ((n = WiFi.scanComplete()) == WIFI_SCAN_RUNNING && 
-           (millis() - scanStart) < scanTimeout) {
-        yield(); // Allow other tasks while waiting
-        delayMicroseconds(10000); // 10ms delay
-    }
-    
-    if (n == WIFI_SCAN_RUNNING) {
-        LOG_ERROR(TAG, "WiFi scan timeout");
-        return "[]";
-    }
-    
-    if (n == WIFI_SCAN_FAILED) {
-        LOG_ERROR(TAG, "WiFi scan failed");
-        return "[]";
+    // Restore original WiFi mode if we changed it
+    if (modeChanged) {
+        LOG_DEBUG(TAG, "Restoring AP mode after scan");
+        WiFi.mode(currentMode);
+        delay(50); // Small delay for mode change
     }
     
     String networks = "[";
