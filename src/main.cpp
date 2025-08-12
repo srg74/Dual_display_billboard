@@ -1,7 +1,42 @@
+/**
+ * @file main.cpp
+ * @brief Dual Display Billboard System - Multi-Mode Application Entry Point
+ * 
+ * Advanced ESP32/ESP32-S3 based digital billboard system with dual ST7735 displays.
+ * 
+ * SYSTEM MODES:
+ * - TFT_TEST_ONLY: Hardware validation and basic display testing
+ * - SAFE_MODE_ONLY: Minimal functionality for troubleshooting
+ * - Production Mode: Full billboard system with WiFi, image management, and clock display
+ * 
+ * FEATURES:
+ * - Dual 160x80 ST7735 TFT displays with independent control
+ * - WiFi management with captive portal setup
+ * - JPEG image upload and slideshow functionality
+ * - Multiple clock face styles with time synchronization
+ * - Professional logging system with configurable levels
+ * - Memory management and storage optimization
+ * - DCC (Digital Command Control) integration support
+ * 
+ * HARDWARE SUPPORT:
+ * - ESP32 DevKit (original)
+ * - ESP32-S3 DevKitC-1 (with 2MB PSRAM)
+ * - ST7735 TFT displays (160x80)
+ * - Optional ST7789 displays (240x240)
+ * 
+ * @author Dual Display Billboard Project
+ * @version 2.0
+ * @date 2025
+ */
+
 #include <Arduino.h>
 
 #ifdef TFT_TEST_ONLY
-// Exact initialization from your working project
+/**
+ * TFT_TEST_ONLY MODE
+ * Basic hardware validation mode for confirming display functionality
+ * and hardware connections. Uses minimal code for rapid testing.
+ */
 #include <TFT_eSPI.h>
 
 #define TFT_BACKLIGHT_PIN 22
@@ -12,9 +47,9 @@ TFT_eSPI tft = TFT_eSPI();
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("🎨 WORKING PROJECT INITIALIZATION");
+    Serial.println("🎨 DUAL DISPLAY BILLBOARD - HARDWARE TEST MODE");
     
-    // Backlight setup (exact copy)
+    // Configure backlight PWM for optimal visibility
     ledcAttachPin(TFT_BACKLIGHT_PIN, 1); // channel 1
     ledcSetup(1, 5000, 8); // channel 1, 5 KHz, 8-bit
     ledcWrite(1, 255); // Full brightness
@@ -159,6 +194,7 @@ void loop() {
 #include "slideshow_manager.h"      // ADD: Slideshow management
 #include "display_clock_manager.h"  // ADD: Clock management
 #include "dcc_manager.h"            // ADD: DCC management
+#include "memory_manager.h"         // ADD: Memory monitoring
 #include "config.h"
 
 // Create instances
@@ -203,6 +239,14 @@ void setup() {
     LOG_SYSTEM_INFO();
     
     LOG_INFO("MAIN", "🎯 System startup initiated");
+    
+    // Initialize memory monitoring system first
+    if (MemoryManager::initialize(10000, true)) {  // 10 second intervals, auto-cleanup enabled
+        LOG_INFO("MAIN", "✅ Memory monitoring system initialized");
+        MEMORY_STATUS();  // Show initial memory status
+    } else {
+        LOG_ERROR("MAIN", "❌ Memory monitoring system failed to initialize");
+    }
     
     // NOTE: WiFi manager will set up appropriate routes based on mode
     // Do not set up routes here to avoid conflicts
@@ -379,12 +423,35 @@ void loop() {
         // Essential yield for ESP32 responsiveness
         yield();
         
+        // Memory monitoring and health checks
+        MEMORY_UPDATE();
+        
+        // Check for critical memory conditions
+        if (MEMORY_IS_CRITICAL()) {
+            LOG_WARNF("MAIN", "⚠️ Critical memory condition detected, running cleanup");
+            MEMORY_CLEANUP();
+        }
+        
         // Cooperative multitasking - yield more frequently for web server
         static unsigned long lastMainLoopYield = 0;
         if (millis() - lastMainLoopYield >= 10) {
             lastMainLoopYield = millis();
             vTaskDelay(1 / portTICK_PERIOD_MS); // 1ms FreeRTOS delay
         }
+    }
+    
+    // System heartbeat with memory monitoring (for all initialized systems)
+    if (systemInitialized && (currentTime - lastHeartbeat >= HEARTBEAT_INTERVAL)) {
+        MEMORY_STATUS();  // Print memory status every heartbeat
+        
+        // Additional system health check
+        if (MEMORY_IS_LOW()) {
+            LOG_WARNF("MAIN", "💓 System heartbeat - LOW MEMORY WARNING");
+        } else {
+            LOG_INFOF("MAIN", "💓 System heartbeat - All systems operational");
+        }
+        
+        lastHeartbeat = currentTime;
     }
     
     // Always yield to prevent watchdog issues

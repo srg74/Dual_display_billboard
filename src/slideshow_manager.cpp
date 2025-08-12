@@ -27,19 +27,15 @@ bool SlideshowManager::begin() {
 }
 
 void SlideshowManager::startSlideshow() {
-    Serial.println("=== Starting Slideshow ===");
-    
     loadEnabledImages();
     
     if (enabledImages.empty()) {
-        Serial.println("No enabled images found - showing 'No Images' message");
         slideshowActive = false;
         showNoImagesMessage();
         lastNoImagesCheck = millis(); // Set timing to prevent immediate restart
         return;
     }
     
-    Serial.printf("Found %d enabled images for slideshow\n", enabledImages.size());
     slideshowActive = true;
     currentImageIndex = 0;
     lastImageChange = millis();
@@ -50,8 +46,8 @@ void SlideshowManager::startSlideshow() {
 }
 
 void SlideshowManager::stopSlideshow() {
-    Serial.println("=== Stopping Slideshow ===");
     slideshowActive = false;
+    currentImageIndex = 0;
 }
 
 void SlideshowManager::updateSlideshow() {
@@ -169,18 +165,13 @@ void SlideshowManager::showNextImage() {
     }
     
     String currentImage = enabledImages[currentImageIndex];
-    Serial.printf("Slideshow: Showing image %d/%d: %s\n", 
-                 currentImageIndex + 1, enabledImages.size(), currentImage.c_str());
     
     // Display on both screens or based on display settings
     bool result = imageManager->displayImageOnBoth(currentImage);
-    Serial.printf("Image display result: %s\n", result ? "SUCCESS" : "FAILED");
 }
 
 void SlideshowManager::loadEnabledImages() {
     enabledImages.clear();
-    
-    Serial.println("Loading enabled images...");
     
     // Get list of all images from the images directory
     File dir = LittleFS.open("/images");

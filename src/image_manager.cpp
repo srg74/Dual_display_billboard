@@ -1,19 +1,31 @@
+/**
+ * @file image_manager.cpp
+ * @brief Implementation of comprehensive image management system
+ * 
+ * Handles JPEG image upload, validation, storage, and display rendering
+ * for dual TFT display billboard system with memory management and
+ * hardware-specific optimizations.
+ */
+
 #include "image_manager.h"
 
-// Static members
+// Static configuration constants
 const char* ImageManager::IMAGES_DIR = "/images";
 const char* ImageManager::IMAGE_LIST_FILE = "/images/image_list.json";
-const uint32_t ImageManager::MAX_IMAGE_SIZE = 50000; // 50KB max per image
+const uint32_t ImageManager::MAX_IMAGE_SIZE = 50000; // 50KB per image - optimized for ESP32 memory
+const uint32_t ImageManager::MAX_IMAGE_COUNT = 10;   // Production limit for stable operation
 
+// Singleton pattern support for TJpg_Decoder callbacks
 ImageManager* ImageManager::instance = nullptr;
 ImageManager* g_imageManager = nullptr;
 
 ImageManager::ImageManager(DisplayManager* dm) : displayManager(dm) {
+    // Initialize singleton references for static callback support
     instance = this;
     g_imageManager = this;
-    currentTargetDisplay = 1; // Default to display 1
+    currentTargetDisplay = 1; // Default to primary display
     
-    // Determine display type from build flags
+    // Auto-detect display type from build-time configuration
     #ifdef DISPLAY_TYPE_ST7789
         currentDisplayType = DisplayType::ST7789;
         displayWidth = 240;
@@ -23,35 +35,41 @@ ImageManager::ImageManager(DisplayManager* dm) : displayManager(dm) {
         displayWidth = 160;
         displayHeight = 80;
     #endif
-    
-    // LOG_INFOF("IMAGES", "ImageManager initialized for %s (%dx%d)", 
-    //             getDisplayTypeString().c_str(), displayWidth, displayHeight);
 }
 
 ImageManager::~ImageManager() {
+    // Clean up singleton references
     instance = nullptr;
     g_imageManager = nullptr;
 }
 
+/**
+ * @brief Initializes the image management system
+ * @return true if initialization successful, false otherwise
+ * 
+ * Sets up:
+ * - LittleFS file system
+ * - Image storage directory structure
+ * - TJpg_Decoder library configuration
+ * - Hardware-specific display settings
+ */
 bool ImageManager::begin() {
+    // Initialize LittleFS for persistent storage
     if (!LittleFS.begin()) {
-        // Log message removed for compilation
         return false;
     }
     
-    // Create images directory if it doesn't exist
+    // Ensure image directory exists
     if (!LittleFS.exists(IMAGES_DIR)) {
         if (!LittleFS.mkdir(IMAGES_DIR)) {
-            // Log message removed for compilation
             return false;
         }
-        // Log message removed for compilation
     }
     
-    // Set up TJpg_Decoder
-    TJpgDec.setJpgScale(1); // No scaling
-    TJpgDec.setSwapBytes(true); // ESP32 is little endian
-    TJpgDec.setCallback(tft_output);
+    // Configure TJpg_Decoder for optimal ESP32 performance
+    TJpgDec.setJpgScale(1);        // Full resolution rendering
+    TJpgDec.setSwapBytes(true);    // ESP32 endianness compatibility
+    TJpgDec.setCallback(tft_output); // Route pixels to our display handler
     
     // Log message removed for compilation
     return true;
@@ -113,18 +131,11 @@ bool ImageManager::validateImageFile(const String& filename, uint8_t* data, size
     // Decode JPEG to check dimensions
     uint16_t w, h;
     if (TJpgDec.getJpgSize(&w, &h, data, length) != JDR_OK) {
-        Serial.println("ERROR: Failed to decode JPEG for size check");
         return false;
     }
     
-    Serial.printf("Image dimensions: %dx%d\n", w, h);
-    Serial.printf("Required dimensions for %s: %s\n", 
-                  currentDisplayType == DisplayType::ST7789 ? "ST7789" : "ST7735",
-                  currentDisplayType == DisplayType::ST7789 ? "240x240" : "160x80 or 80x160");
-    
     // Validate dimensions
     if (!validateImageDimensions(w, h)) {
-        Serial.printf("ERROR: Invalid dimensions %dx%d\n", w, h);
         return false;
     }
     
@@ -134,35 +145,22 @@ bool ImageManager::validateImageFile(const String& filename, uint8_t* data, size
 
 bool ImageManager::saveImage(const String& filename, uint8_t* data, size_t length) {
     String filepath = String(IMAGES_DIR) + "/" + filename;
-    Serial.println("=== SAVE IMAGE DEBUG ===");
-    Serial.println("Filepath: " + filepath);
     
     File file = LittleFS.open(filepath, "w");
     if (!file) {
-        Serial.println("ERROR: Failed to open file for writing");
         return false;
     }
-    Serial.println("File opened for writing");
 
     size_t written = file.write(data, length);
     file.close();
-    Serial.println("Written bytes: " + String(written) + " / " + String(length));
 
     if (written != length) {
-        Serial.println("ERROR: Write size mismatch, removing file");
         LittleFS.remove(filepath);
         return false;
     }
 
     // Verify file was saved
-    if (LittleFS.exists(filepath)) {
-        File testFile = LittleFS.open(filepath, "r");
-        if (testFile) {
-            Serial.println("File verified - size: " + String(testFile.size()));
-            testFile.close();
-        }
-    } else {
-        Serial.println("ERROR: File does not exist after save");
+    if (!LittleFS.exists(filepath)) {
         return false;
     }
 
@@ -174,42 +172,61 @@ bool ImageManager::saveImage(const String& filename, uint8_t* data, size_t lengt
     info.isValid = true;
 
     // Get dimensions
+    // Extract image dimensions if possible
     uint16_t w, h;
     if (TJpgDec.getJpgSize(&w, &h, data, length) == JDR_OK) {
         info.width = w;
         info.height = h;
-        Serial.println("Image dimensions: " + String(w) + "x" + String(h));
     }
 
+    // Update persistent metadata
     saveImageInfo(info);
     updateImageList();
 
-    Serial.println("=== SAVE COMPLETE ===");
     return true;
 }
 
+/**
+ * @brief Primary image upload handler with comprehensive validation
+ * @param filename Original filename with extension
+ * @param data Raw JPEG file data
+ * @param length File size in bytes
+ * @return true if upload successful, false with detailed error in lastErrorMessage
+ * 
+ * Validation pipeline:
+ * 1. Image count limit enforcement (MAX_IMAGE_COUNT)
+ * 2. File format and structure validation
+ * 3. Dimension compatibility check
+ * 4. Storage space verification
+ * 5. Atomic file save operation
+ */
 bool ImageManager::handleImageUpload(const String& filename, uint8_t* data, size_t length) {
-    Serial.println("=== IMAGE UPLOAD DEBUG ===");
-    Serial.println("Filename: " + filename);
-    Serial.println("Length: " + String(length));
-    
-    // Validate the image
-    if (!validateImageFile(filename, data, length)) {
-        Serial.println("ERROR: Image validation failed");
+    // Enforce maximum image count for memory management
+    uint32_t currentCount = getImageCount();
+    if (currentCount >= MAX_IMAGE_COUNT) {
+        lastErrorMessage = "Maximum image limit reached (" + String(currentCount) + "/" + String(MAX_IMAGE_COUNT) + " images). Please delete some images first.";
         return false;
     }
-    Serial.println("Image validation passed");
+    
+    // Comprehensive JPEG validation and dimension checking
+    if (!validateImageFile(filename, data, length)) {
+        lastErrorMessage = "Image validation failed - invalid format or dimensions";
+        return false;
+    }
     
     // Check storage space
     if (!isStorageAvailable(length)) {
-        Serial.println("ERROR: Storage not available");
+        lastErrorMessage = "Insufficient storage space available";
         return false;
     }
-    Serial.println("Storage available");
     
     // Save the image
     bool saveResult = saveImage(filename, data, length);
-    Serial.println("Save result: " + String(saveResult ? "SUCCESS" : "FAILED"));
+    if (!saveResult) {
+        lastErrorMessage = "Failed to save image to storage";
+    } else {
+        lastErrorMessage = ""; // Clear error on success
+    }
     return saveResult;
 }
 
@@ -250,15 +267,12 @@ bool ImageManager::displayImage(const String& filename, uint8_t displayNum) {
         TFT_eSPI* tft = displayManager->getTFT(displayNum);
         if (tft) {
             tft->fillScreen(TFT_BLACK);  // Clear screen with black background
-            Serial.printf("Cleared display %d for image %s with rotation 0\n", displayNum, filename.c_str());
         }
         // Keep display selected for TJpg drawing - don't deselect yet
     }
     
     // Decode and display (display should still be selected from above)
-    Serial.printf("Starting TJpg decode for display %d\n", displayNum);
     bool success = (TJpgDec.drawJpg(0, 0, buffer, fileSize) == JDR_OK);
-    Serial.printf("TJpg decode finished for display %d, result: %s\n", displayNum, success ? "SUCCESS" : "FAILED");
     
     // Now deselect the display
     if (displayManager) {
@@ -341,14 +355,6 @@ bool ImageManager::tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint
     // Push the pixels to the display (rotation should already be set)
     tft->pushImage(x, y, w, h, bitmap);
     
-    // Debug output (only for first few pixels to avoid spam)
-    static int pixelCount = 0;
-    if (pixelCount < 5) {
-        Serial.printf("Drawing pixels to display %d at (%d,%d) size %dx%d\n", 
-                     instance->currentTargetDisplay, x, y, w, h);
-        pixelCount++;
-    }
-    
     return true;
 }
 
@@ -378,16 +384,11 @@ bool ImageManager::imageExists(const String& filename) {
 String ImageManager::getImageListJson() {
     String json = "{\"images\":[";
     
-    Serial.println("=== DIRECTORY LISTING DEBUG ===");
-    Serial.println("Directory: " + String(IMAGES_DIR));
-    
     File dir = LittleFS.open(IMAGES_DIR);
     if (!dir || !dir.isDirectory()) {
-        Serial.println("ERROR: Directory not found or not a directory");
         json += "],\"count\":0,\"error\":\"Directory not found\"}";
         return json;
     }
-    Serial.println("Directory opened successfully");
     
     bool first = true;
     int fileCount = 0;
@@ -395,17 +396,14 @@ String ImageManager::getImageListJson() {
     while (file) {
         if (!file.isDirectory()) {
             String filename = file.name();
-            Serial.println("Found file: " + filename + " (size: " + String(file.size()) + ")");
             
             // Remove path prefix if present
             int lastSlash = filename.lastIndexOf('/');
             if (lastSlash >= 0) {
                 filename = filename.substring(lastSlash + 1);
-                Serial.println("Cleaned filename: " + filename);
             }
             
             if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
-                Serial.println("Adding JPEG file to list: " + filename);
                 if (!first) json += ",";
                 
                 json += "{";
@@ -416,15 +414,10 @@ String ImageManager::getImageListJson() {
                 
                 first = false;
                 fileCount++;
-            } else {
-                Serial.println("Skipping non-JPEG file: " + filename);
             }
         }
         file = dir.openNextFile();
     }
-    
-    Serial.println("Total JPEG files found: " + String(fileCount));
-    Serial.println("=== DIRECTORY LISTING COMPLETE ===");
     
     json += "],\"count\":" + String(fileCount);
     json += ",\"displayType\":\"" + getDisplayTypeString() + "\",";
@@ -469,12 +462,17 @@ String ImageManager::getSystemInfo() {
     info += "\"displayType\":\"" + getDisplayTypeString() + "\",";
     info += "\"resolution\":\"" + getRequiredResolution() + "\",";
     info += "\"imageCount\":" + String(getImageCount()) + ",";
+    info += "\"maxImageCount\":" + String(MAX_IMAGE_COUNT) + ",";
     info += "\"storageTotal\":" + String(LittleFS.totalBytes()) + ",";
     info += "\"storageUsed\":" + String(LittleFS.usedBytes()) + ",";
     info += "\"storageFree\":" + String(LittleFS.totalBytes() - LittleFS.usedBytes()) + ",";
     info += "\"maxImageSize\":" + String(MAX_IMAGE_SIZE);
     info += "}";
     return info;
+}
+
+String ImageManager::getLastError() {
+    return lastErrorMessage;
 }
 
 bool ImageManager::saveImageInfo(const ImageInfo& info) {

@@ -429,8 +429,45 @@
             <span id="system-uptime" class="status-value">{{UPTIME}} seconds</span>
         </div>
         <div class="flex-container-gray">
-            <label><strong>Memory:</strong></label>
-            <span id="system-memory" class="status-value">{{FREE_MEMORY}} bytes</span>
+            <label><strong>Memory Health:</strong></label>
+            <span id="memory-health" class="status-value">Loading...</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Heap Free:</strong></label>
+            <span id="heap-free" class="status-value">{{FREE_MEMORY}} bytes</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Heap Total:</strong></label>
+            <span id="heap-total" class="status-value">Loading...</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Heap Usage:</strong></label>
+            <div style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                <div style="flex: 1; background-color: #30363d; border-radius: 4px; height: 8px; overflow: hidden;">
+                    <div id="heap-usage-bar" style="height: 100%; background: linear-gradient(90deg, #2ea043 0%, #fb8500 70%, #d73a49 90%); width: 0%; transition: width 0.3s ease;"></div>
+                </div>
+                <span id="heap-usage-text" class="status-value">0%</span>
+            </div>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Heap Fragmentation:</strong></label>
+            <span id="heap-fragmentation" class="status-value">Loading...</span>
+        </div>
+        <div class="flex-container-gray" id="psram-section" style="display: none;">
+            <label><strong>PSRAM Free:</strong></label>
+            <span id="psram-free" class="status-value">N/A</span>
+        </div>
+        <div class="flex-container-gray" id="psram-total-section" style="display: none;">
+            <label><strong>PSRAM Total:</strong></label>
+            <span id="psram-total" class="status-value">N/A</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Low Memory Events:</strong></label>
+            <span id="low-memory-events" class="status-value">0</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Critical Events:</strong></label>
+            <span id="critical-events" class="status-value">0</span>
         </div>
 
         <h2>NTP Server Configuration</h2>
@@ -591,9 +628,58 @@
                 .then(r => r.json())
                 .then(d => {
                     document.getElementById('system-uptime').textContent = formatTime(d.uptime || 0);
-                    document.getElementById('system-memory').textContent = formatBytes(d.freeMemory || 0);
+                    // Legacy support for basic memory display
+                    if (document.getElementById('system-memory')) {
+                        document.getElementById('system-memory').textContent = formatBytes(d.freeMemory || 0);
+                    }
                 })
                 .catch(() => console.log('System info update failed'));
+
+            // Enhanced memory monitoring
+            fetchWithTimeout('/api/memory-status')
+                .then(r => r.json())
+                .then(d => {
+                    // Update memory health with color coding
+                    const healthElement = document.getElementById('memory-health');
+                    const health = d.overallHealth || 'UNKNOWN';
+                    healthElement.textContent = health;
+                    
+                    // Color code health status
+                    healthElement.style.color = getHealthColor(health);
+                    
+                    // Update heap information
+                    document.getElementById('heap-free').textContent = formatBytes(d.heapFree || 0);
+                    document.getElementById('heap-total').textContent = formatBytes(d.heapTotal || 0);
+                    
+                    // Update heap usage bar and text
+                    const heapUsage = d.heapUsagePercent || 0;
+                    document.getElementById('heap-usage-bar').style.width = heapUsage + '%';
+                    document.getElementById('heap-usage-text').textContent = heapUsage.toFixed(1) + '%';
+                    
+                    // Update fragmentation
+                    document.getElementById('heap-fragmentation').textContent = (d.heapFragmentation || 0).toFixed(1) + '%';
+                    
+                    // Update PSRAM if available
+                    if (d.psramAvailable) {
+                        document.getElementById('psram-section').style.display = 'flex';
+                        document.getElementById('psram-total-section').style.display = 'flex';
+                        document.getElementById('psram-free').textContent = formatBytes(d.psramFree || 0);
+                        document.getElementById('psram-total').textContent = formatBytes(d.psramTotal || 0);
+                    } else {
+                        document.getElementById('psram-section').style.display = 'none';
+                        document.getElementById('psram-total-section').style.display = 'none';
+                    }
+                    
+                    // Update event counters
+                    document.getElementById('low-memory-events').textContent = d.lowMemoryEvents || 0;
+                    document.getElementById('critical-events').textContent = d.criticalEvents || 0;
+                })
+                .catch(() => {
+                    console.log('Memory status update failed');
+                    // Fallback to basic memory info
+                    document.getElementById('memory-health').textContent = 'UNAVAILABLE';
+                    document.getElementById('memory-health').style.color = '#6e7681';
+                });
 
             // Load current settings including DCC state
             fetchWithTimeout('/api/settings')
@@ -620,6 +706,17 @@
             const sizes = ['B', 'KB', 'MB'];
             const i = Math.floor(Math.log(b) / Math.log(k));
             return parseFloat((b / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function getHealthColor(health) {
+            switch(health) {
+                case 'EXCELLENT': return '#2ea043';  // Green
+                case 'GOOD': return '#3fb950';       // Light green
+                case 'WARNING': return '#fb8500';    // Orange
+                case 'CRITICAL': return '#f85149';   // Red
+                case 'EMERGENCY': return '#da3633';  // Dark red
+                default: return '#6e7681';           // Gray
+            }
         }
 
         function activatePortalMode() {

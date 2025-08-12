@@ -5,6 +5,7 @@
 #include "webcontent.h"
 #include "display_manager.h"
 #include "slideshow_manager.h"
+#include "memory_manager.h"
 
 static const String TAG = "WIFI";
 
@@ -109,8 +110,13 @@ void WiFiManager::setupRoutes() {
         String response = "Billboard server is working!\n";
         response += "Time: " + String(millis()) + "\n";
         response += "Mode: " + String(currentMode == MODE_SETUP ? "Setup" : "Normal") + "\n";
-        response += "Free Memory: " + String(ESP.getFreeHeap()) + " bytes\n";
-        response += "\nRotation Tester: /debug/rotation-test\n";
+        response += "Memory Health: " + String(MemoryManager::getHealthStatusString(MemoryManager::getOverallHealth())) + "\n";
+        response += "Free Heap: " + String(MemoryManager::getAvailableMemory(MemoryManager::HEAP_INTERNAL)) + " bytes\n";
+        if (MemoryManager::getAvailableMemory(MemoryManager::PSRAM_EXTERNAL) > 0) {
+            response += "Free PSRAM: " + String(MemoryManager::getAvailableMemory(MemoryManager::PSRAM_EXTERNAL)) + " bytes\n";
+        }
+        response += "\nMemory API: /memory | /memory/health\n";
+        response += "Rotation Tester: /debug/rotation-test\n";
         request->send(200, "text/plain", response);
     });
 
@@ -160,11 +166,14 @@ void WiFiManager::setupRoutes() {
         this->handleConnect(request);
     });
     
-    // Status route
+    // Status route with comprehensive memory monitoring
     server->on("/status", HTTP_GET, [](AsyncWebServerRequest *request){
+        String memoryStats = MemoryManager::getMemoryStatsJson();
         String status = "{";
         status += "\"uptime\":\"" + String(millis() / 1000) + " seconds\",";
-        status += "\"memory\":\"" + String(ESP.getFreeHeap()) + " bytes\"";
+        status += "\"uptimeMs\":" + String(millis()) + ",";
+        status += "\"freeMemory\":" + String(ESP.getFreeHeap()) + ",";
+        status += "\"memory\":" + memoryStats;
         status += "}";
         AsyncWebServerResponse *response = request->beginResponse(200, "application/json", status);
         response->addHeader("Connection", "close");
@@ -182,6 +191,29 @@ void WiFiManager::setupRoutes() {
         status += "\"ap_clients\":" + String(WiFi.softAPgetStationNum());
         status += "}";
         AsyncWebServerResponse *response = request->beginResponse(200, "application/json", status);
+        response->addHeader("Connection", "close");
+        response->addHeader("Cache-Control", "no-cache");
+        request->send(response);
+    });
+    
+    // Memory monitoring endpoint
+    server->on("/memory", HTTP_GET, [](AsyncWebServerRequest *request){
+        AsyncWebServerResponse *response = request->beginResponse(200, "application/json", MemoryManager::getMemoryStatsJson());
+        response->addHeader("Connection", "close");
+        response->addHeader("Cache-Control", "no-cache");
+        request->send(response);
+    });
+    
+    // Memory health endpoint
+    server->on("/memory/health", HTTP_GET, [](AsyncWebServerRequest *request){
+        String healthStatus = "{";
+        healthStatus += "\"overallHealth\":\"" + String(MemoryManager::getHealthStatusString(MemoryManager::getOverallHealth())) + "\",";
+        healthStatus += "\"isLowMemory\":" + String(MemoryManager::isLowMemory() ? "true" : "false") + ",";
+        healthStatus += "\"isCriticalMemory\":" + String(MemoryManager::isCriticalMemory() ? "true" : "false") + ",";
+        healthStatus += "\"heapHealth\":\"" + String(MemoryManager::getHealthStatusString(MemoryManager::getHealthStatus(MemoryManager::HEAP_INTERNAL))) + "\",";
+        healthStatus += "\"psramHealth\":\"" + String(MemoryManager::getHealthStatusString(MemoryManager::getHealthStatus(MemoryManager::PSRAM_EXTERNAL))) + "\"";
+        healthStatus += "}";
+        AsyncWebServerResponse *response = request->beginResponse(200, "application/json", healthStatus);
         response->addHeader("Connection", "close");
         response->addHeader("Cache-Control", "no-cache");
         request->send(response);
@@ -434,15 +466,35 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
 }
 
 void WiFiManager::checkHeapHealth() {
-    size_t freeHeap = ESP.getFreeHeap();
-    size_t minFreeHeap = ESP.getMinFreeHeap();
+    // Use the new memory manager for comprehensive health checking
+    MemoryManager::HealthStatus overallHealth = MemoryManager::getOverallHealth();
     
-    if (freeHeap < 50000) { // Less than 50KB free
-        LOG_WARNF(TAG, "⚠️ Low memory warning: %d bytes free", freeHeap);
+    switch (overallHealth) {
+        case MemoryManager::WARNING:
+            LOG_WARNF(TAG, "⚠️ Memory health: %s - monitoring closely", 
+                     MemoryManager::getHealthStatusString(overallHealth));
+            break;
+        case MemoryManager::CRITICAL:
+            LOG_ERRORF(TAG, "❌ Critical memory condition: %s - cleanup needed", 
+                      MemoryManager::getHealthStatusString(overallHealth));
+            // Trigger immediate cleanup
+            MemoryManager::forceCleanup();
+            break;
+        case MemoryManager::EMERGENCY:
+            LOG_ERRORF(TAG, "🚨 EMERGENCY memory condition: %s - system unstable", 
+                      MemoryManager::getHealthStatusString(overallHealth));
+            // Force immediate cleanup and consider restart
+            MemoryManager::forceCleanup();
+            break;
+        default:
+            // EXCELLENT or GOOD - no action needed
+            break;
     }
     
-    if (minFreeHeap < 30000) { // Minimum ever was less than 30KB
-        LOG_ERRORF(TAG, "❌ Critical memory usage detected: min %d bytes", minFreeHeap);
+    // Additional specific warnings for legacy compatibility
+    size_t freeHeap = MemoryManager::getAvailableMemory(MemoryManager::HEAP_INTERNAL);
+    if (freeHeap < 50000) { // Less than 50KB free
+        LOG_WARNF(TAG, "⚠️ Low heap memory: %d bytes free", freeHeap);
     }
 }
 
@@ -981,7 +1033,8 @@ void WiFiManager::setupNormalModeRoutes() {
     server->on("/api/system-info", HTTP_GET, [](AsyncWebServerRequest *request){
         String response = "{";
         response += "\"uptime\":" + String(millis() / 1000) + ",";
-        response += "\"freeMemory\":" + String(ESP.getFreeHeap());
+        response += "\"freeMemory\":" + String(ESP.getFreeHeap()) + ",";
+        response += "\"memoryDetails\":" + MemoryManager::getMemoryStatsJson();
         response += "}";
         AsyncWebServerResponse *apiResponse = request->beginResponse(200, "application/json", response);
         apiResponse->addHeader("Connection", "close");
@@ -1127,6 +1180,18 @@ void WiFiManager::setupNormalModeRoutes() {
         }
     });
     
+    // Memory monitoring API endpoint
+    server->on("/api/memory-status", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_DEBUG(TAG, "🔍 Memory status API requested");
+        
+        String memoryJson = MemoryManager::getMemoryStatsJson();
+        
+        AsyncWebServerResponse *response = request->beginResponse(200, "application/json", memoryJson);
+        response->addHeader("Connection", "close");
+        response->addHeader("Cache-Control", "no-cache");
+        request->send(response);
+    });
+    
     LOG_INFO(TAG, "✅ Normal mode routes configured");
 }
 
@@ -1200,14 +1265,16 @@ void WiFiManager::setupImageRoutes() {
                 LOG_INFOF(TAG, "📁 Upload complete: %s (%d bytes)", uploadFilename.c_str(), receivedSize);
                 
                 if (uploadBuffer && imageManager) {
-                    Serial.println("Calling handleImageUpload...");
                     // Use the total expected size, not received size for validation
                     bool success = imageManager->handleImageUpload(uploadFilename, uploadBuffer, totalSize);
-                    Serial.println("handleImageUpload result: " + String(success ? "SUCCESS" : "FAILED"));
                     
                     if (!success) {
-                        LOG_ERROR(TAG, "Image validation/save failed");
-                        request->send(400, "text/plain", "Image validation failed - check format and size");
+                        String errorMsg = imageManager->getLastError();
+                        if (errorMsg.length() == 0) {
+                            errorMsg = "Image validation failed - check format and size";
+                        }
+                        LOG_ERRORF(TAG, "Image upload failed: %s", errorMsg.c_str());
+                        request->send(400, "text/plain", errorMsg);
                     }
                 } else {
                     Serial.println("ERROR: Missing buffer or ImageManager");

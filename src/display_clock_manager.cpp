@@ -1,3 +1,15 @@
+/**
+ * @file display_clock_manager.cpp
+ * @brief Advanced clock display system with multiple face styles and dual display support
+ * 
+ * Provides sophisticated clock rendering with:
+ * - Multiple clock face styles (analog, digital, minimalist, modern square)
+ * - Dual display synchronization
+ * - Gallery/clock alternation timing
+ * - Time-based label updates
+ * - Hardware-optimized rendering
+ */
+
 #include "display_clock_manager.h"
 #include "time_manager.h"
 #include <math.h>
@@ -5,13 +17,19 @@
 DisplayClockManager::DisplayClockManager(DisplayManager* dm, TimeManager* tm) {
     displayManager = dm;
     timeManager = tm;
+    
+    // Initialize timing state
     showClock = false;
     clockDisplayStart = 0;
     galleryStartTime = 0;
+    
+    // Initialize display hardware references
     firstScreenCS = -1;
     secondScreenCS = -1;
     enableSecondDisplay = true;
-    currentClockFace = CLOCK_MODERN_SQUARE;  // Default to Modern Square
+    
+    // Set default clock face to most visually appealing option
+    currentClockFace = CLOCK_MODERN_SQUARE;
 }
 
 bool DisplayClockManager::begin() {
@@ -74,50 +92,51 @@ void DisplayClockManager::displayAnalogClockOnBothTFTs(TFT_eSPI& tft) {
     }
 }
 
+/**
+ * @brief Renders clock display on specified hardware display
+ * @param tft TFT_eSPI instance for rendering
+ * @param csPin Chip select pin for target display
+ * 
+ * Complete clock rendering pipeline:
+ * 1. Display selection via CS pin control
+ * 2. Screen preparation and clearing
+ * 3. Time-based label rendering
+ * 4. Clock face rendering based on current style
+ * 5. Display deselection
+ */
 void DisplayClockManager::displayClockOnDisplay(TFT_eSPI& tft, int csPin) {
     if (csPin < 0) return;
     
-    Serial.printf("[DEBUG] Selecting display with CS pin: %d\n", csPin);
+    // Select target display via chip select
     digitalWrite(csPin, LOW);
-    tft.setRotation(0); // Use rotation 0 like the original
-    tft.fillScreen(TFT_BLACK);
-
-    // Draw clock label above the clock
+    tft.setRotation(0);           // Portrait orientation for optimal clock display
+    tft.fillScreen(TFT_BLACK);    // Clear previous content
+    
+    // Render dynamic time-based label
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.setTextFont(1);
     String currentLabel = timeManager ? timeManager->getClockLabel() : "Clock";
-    Serial.printf("[DEBUG] Got clock label: '%s'\n", currentLabel.c_str());
     
+    // Center the label horizontally
     int textWidth = tft.textWidth(currentLabel.c_str());
-    Serial.printf("[DEBUG] Text width calculated: %d\n", textWidth);
-    
-    tft.setCursor(40 - textWidth / 2, 18); // Center the label
+    tft.setCursor(40 - textWidth / 2, 18);
     tft.print(currentLabel);
-    Serial.printf("[DEBUG] Clock label printed, about to start switch statement\n");
 
     // Display the selected clock face type
-    Serial.printf("[DEBUG] Clock face selection - currentClockFace: %d (CLOCK_MODERN_SQUARE=%d)\n", 
-                  currentClockFace, CLOCK_MODERN_SQUARE);
-    
     switch (currentClockFace) {
         case CLOCK_CLASSIC_ANALOG:
-            Serial.printf("[DEBUG] Rendering CLASSIC_ANALOG clock\n");
             displayAnalogClock(tft);
             break;
         case CLOCK_DIGITAL_MODERN:
-            Serial.printf("[DEBUG] Rendering DIGITAL_MODERN clock\n");
             displayDigitalClock(tft);
             break;
         case CLOCK_MINIMALIST:
-            Serial.printf("[DEBUG] Rendering MINIMALIST clock\n");
             displayMinimalistClock(tft);
             break;
         case CLOCK_MODERN_SQUARE:
-            Serial.printf("[DEBUG] Rendering MODERN_SQUARE clock\n");
             displayColorfulClock(tft);
             break;
         default:
-            Serial.printf("[DEBUG] Rendering DEFAULT (fallback analog) clock\n");
             displayAnalogClock(tft); // Fallback to analog
             break;
     }
@@ -207,15 +226,27 @@ void DisplayClockManager::displayMinimalistClock(TFT_eSPI& tft) {
     tft.drawLine(20, 95, 60, 95, TFT_WHITE);
 }
 
+/**
+ * @brief Renders modern square analog clock face with rounded border
+ * @param tft TFT_eSPI instance for rendering
+ * 
+ * Features:
+ * - Rounded square border design
+ * - Color-coded clock hands (blue minute/hour, red center)
+ * - Hour markers with emphasis on quarters (12, 3, 6, 9)
+ * - Time synchronization validation
+ * - Graceful fallback for invalid time states
+ * - Optimized rendering for 160x80 displays
+ */
 void DisplayClockManager::displayColorfulClock(TFT_eSPI& tft) {
-    // Get current time
+    // Obtain current system time
     time_t now = time(nullptr);
     struct tm timeinfo;
     localtime_r(&now, &timeinfo);
     
-    // Check if time is valid (avoid rendering with invalid time)
-    if (now < 1000000000) { // If time is before year 2001, it's likely not synchronized
-        // Clear screen and show only label
+    // Validate time synchronization (avoid displaying incorrect time)
+    if (now < 1000000000) { // Check for reasonable timestamp (post-2001)
+        // Display time sync status instead of incorrect clock
         tft.fillScreen(TFT_BLACK);
         String clockLabel = getClockLabel();
         tft.setTextFont(1);
@@ -236,9 +267,6 @@ void DisplayClockManager::displayColorfulClock(TFT_eSPI& tft) {
     
     // Screen already cleared by displayClockOnDisplay(), no need to clear again
     // tft.fillScreen(TFT_BLACK);
-    
-    // Debug: Add marker to verify we're actually drawing
-    Serial.printf("[DEBUG] Modern Square Clock Rendering - Time: %02d:%02d\n", timeinfo.tm_hour, timeinfo.tm_min);
     
     // Define clock dimensions and center
     int centerX = 40;  // 80/2
@@ -266,8 +294,6 @@ void DisplayClockManager::displayColorfulClock(TFT_eSPI& tft) {
                       clockRadius * 2, clockRadius * 2, 8, TFT_WHITE);
     tft.drawRoundRect(centerX - clockRadius + 1, centerY - clockRadius + 1, 
                       clockRadius * 2 - 2, clockRadius * 2 - 2, 7, TFT_WHITE);
-    
-    Serial.printf("[DEBUG] Drew rounded frame at center (%d,%d) radius %d\n", centerX, centerY, clockRadius);
     
     // Draw hour markers (simplified for performance)
     for (int i = 0; i < 12; i++) {
@@ -328,9 +354,6 @@ void DisplayClockManager::displayColorfulClock(TFT_eSPI& tft) {
     
     // Draw red center dot
     tft.fillCircle(centerX, centerY, 3, TFT_RED);
-    
-    Serial.printf("[DEBUG] Drew hands - Hour: %.2f deg, Minute: %.2f deg\n", 
-                  hourAngle * 180 / PI, minuteAngle * 180 / PI);
     
     // Label is already rendered by displayClockOnDisplay(), no need to render again
     
