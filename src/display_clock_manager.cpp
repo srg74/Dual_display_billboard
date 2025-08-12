@@ -84,7 +84,7 @@ void DisplayClockManager::displayClockOnDisplay(TFT_eSPI& tft, int csPin) {
 
     // Draw clock label above the clock
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setTextFont(2);
+    tft.setTextFont(1);
     String currentLabel = timeManager ? timeManager->getClockLabel() : "Clock";
     Serial.printf("[DEBUG] Got clock label: '%s'\n", currentLabel.c_str());
     
@@ -332,17 +332,7 @@ void DisplayClockManager::displayColorfulClock(TFT_eSPI& tft) {
     Serial.printf("[DEBUG] Drew hands - Hour: %.2f deg, Minute: %.2f deg\n", 
                   hourAngle * 180 / PI, minuteAngle * 180 / PI);
     
-    // Draw "CLOCK LABEL" text at top
-    String clockLabel = getClockLabel();
-    tft.setTextFont(1);
-    tft.setTextSize(1);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    
-    // Center the text
-    int textWidth = clockLabel.length() * 6;  // Approximate width for font 1
-    int textX = (80 - textWidth) / 2;
-    tft.setCursor(textX, 25);
-    tft.print(clockLabel);
+    // Label is already rendered by displayClockOnDisplay(), no need to render again
     
     // No sprite push needed
     // clockSprite.pushSprite(0, 0);
