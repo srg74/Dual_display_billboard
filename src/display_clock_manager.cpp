@@ -114,7 +114,7 @@ void DisplayClockManager::displayClockOnDisplay(TFT_eSPI& tft, int csPin) {
             break;
         case CLOCK_MODERN_SQUARE:
             Serial.printf("[DEBUG] Rendering MODERN_SQUARE clock\n");
-            displayModernSquareClock(tft);
+            displayColorfulClock(tft);
             break;
         default:
             Serial.printf("[DEBUG] Rendering DEFAULT (fallback analog) clock\n");
@@ -207,7 +207,7 @@ void DisplayClockManager::displayMinimalistClock(TFT_eSPI& tft) {
     tft.drawLine(20, 95, 60, 95, TFT_WHITE);
 }
 
-void DisplayClockManager::displayModernSquareClock(TFT_eSPI& tft) {
+void DisplayClockManager::displayColorfulClock(TFT_eSPI& tft) {
     // Get current time
     time_t now = time(nullptr);
     struct tm timeinfo;
