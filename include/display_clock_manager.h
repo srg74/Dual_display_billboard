@@ -30,7 +30,7 @@ private:
     void displayAnalogClock(TFT_eSPI& tft);           // Classic analog
     void displayDigitalClock(TFT_eSPI& tft);          // Digital modern
     void displayMinimalistClock(TFT_eSPI& tft);       // Minimalist
-    void displayColorfulClock(TFT_eSPI& tft);         // Modern Square
+    void displayModernSquareClock(TFT_eSPI& tft);     // Modern Square
 
     void displayClockOnDisplay(TFT_eSPI& tft, int csPin);
 
