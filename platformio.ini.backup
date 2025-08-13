@@ -16,8 +16,8 @@ monitor_filters =
     time
     log2file
 extra_scripts = 
-    pre:tools/generate_build_info.py
     pre:tools/minify.py
+    post:tools/rename_firmware.py
     post:tools/rename_firmware.py
 
 [platformio]
@@ -226,32 +226,21 @@ board = esp32-s3-devkitc-1
 framework = arduino
 upload_speed = 460800
 monitor_speed = 115200
-board_build.partitions = tools/ESP32S3_8MB_1MB_FS.csv
-; ESP32-S3-N8R2 specific PSRAM configuration (2MB PSRAM)
-board_build.arduino.memory_type = qio_qspi
-board_build.psram_type = qspi
+board_build.partitions = tools/ESP32S3_8MB_2MB_PSRAM.csv
+board_build.arduino.memory_type = qio_opi
+board_build.psram_type = opi
 board_build.arduino.stack_size = 8192
-board_upload.flash_size = 8MB
-board_upload.maximum_size = 8388608
 build_flags = 
     -DCORE_DEBUG_LEVEL=0
     -DLOGGER_ENABLED=0
-    -DLOGGER_LEVEL_ERROR=0
-    -DLOGGER_LEVEL_WARN=0
-    -DLOGGER_LEVEL_INFO=0
-    -DLOGGER_LEVEL_DEBUG=0
-    -DLOGGER_LEVEL_VERBOSE=0
     -DDISPLAY_TYPE_ST7735
     -DDUAL_DISPLAY_ENABLED
     -DESP32S3_MODE=1
     -DBOARD_HAS_PSRAM
     ; Force PSRAM detection for N8R2 module with 2MB PSRAM
     -DCONFIG_ESP32S3_SPIRAM_SUPPORT=1
-    -DCONFIG_SPIRAM_MODE_QUAD=1
+    -DCONFIG_SPIRAM_MODE_OCT=1
     -DCONFIG_SPIRAM=1
-    -DCONFIG_SPIRAM_USE_CAPS_ALLOC=1
-    -DCONFIG_SPIRAM_IGNORE_NOTFOUND=1
-    -DCONFIG_SPIRAM_TYPE_ESPPSRAM64=1
     ; ESP32-S3 specific pinout
     -DUSER_SETUP_LOADED=1
     -DST7735_DRIVER
@@ -276,7 +265,7 @@ build_flags =
     -DSPI_FREQUENCY=80000000
     ; PSRAM Beast Features 💪 (2MB PSRAM for N8R2)
     -DPROJECT_PSRAM_ENABLE=1
-    -DPSRAM_BUFFER_SIZE=524288
+    -DPSRAM_BUFFER_SIZE=1048576
     -DENABLE_SPRITE_BUFFERING=1
     -DENABLE_ADVANCED_GRAPHICS=1
 lib_deps = 
@@ -345,11 +334,6 @@ build_flags =
     -DLOAD_GFXFF
     -DSMOOTH_FONT
     -DSPI_FREQUENCY=80000000
-    ; PSRAM Features 💪 (2MB PSRAM for N8R2)
-    -DPROJECT_PSRAM_ENABLE=1
-    -DPSRAM_BUFFER_SIZE=524288
-    -DENABLE_SPRITE_BUFFERING=1
-    -DENABLE_ADVANCED_GRAPHICS=1
 lib_deps = 
     bodmer/TFT_eSPI@^2.5.43
     bodmer/TJpg_Decoder@^1.1.0
@@ -366,32 +350,21 @@ board = esp32-s3-devkitc-1
 framework = arduino
 upload_speed = 460800
 monitor_speed = 115200
-board_build.partitions = tools/ESP32S3_8MB_1MB_FS.csv
-; ESP32-S3-N8R2 specific PSRAM configuration (2MB PSRAM)
-board_build.arduino.memory_type = qio_qspi
-board_build.psram_type = qspi
+board_build.partitions = tools/ESP32S3_8MB_2MB_PSRAM.csv
+board_build.arduino.memory_type = qio_opi
+board_build.psram_type = opi
 board_build.arduino.stack_size = 8192
-board_upload.flash_size = 8MB
-board_upload.maximum_size = 8388608
 build_flags = 
     -DCORE_DEBUG_LEVEL=0
     -DLOGGER_ENABLED=0
-    -DLOGGER_LEVEL_ERROR=0
-    -DLOGGER_LEVEL_WARN=0
-    -DLOGGER_LEVEL_INFO=0
-    -DLOGGER_LEVEL_DEBUG=0
-    -DLOGGER_LEVEL_VERBOSE=0
     -DDISPLAY_TYPE_ST7789
     -DDUAL_DISPLAY_ENABLED
     -DESP32S3_MODE=1
     -DBOARD_HAS_PSRAM
-    ; Force PSRAM detection for N8R2 module with 2MB PSRAM
+    ; ESP32-S3-N8R2 specific PSRAM flags (2MB PSRAM)
     -DCONFIG_ESP32S3_SPIRAM_SUPPORT=1
-    -DCONFIG_SPIRAM_MODE_QUAD=1
+    -DCONFIG_SPIRAM_MODE_OCT=1
     -DCONFIG_SPIRAM=1
-    -DCONFIG_SPIRAM_USE_CAPS_ALLOC=1
-    -DCONFIG_SPIRAM_IGNORE_NOTFOUND=1
-    -DCONFIG_SPIRAM_TYPE_ESPPSRAM64=1
     ; ESP32-S3 specific pinout for ST7789
     -DUSER_SETUP_LOADED=1
     -DST7789_DRIVER
@@ -415,7 +388,7 @@ build_flags =
     -DSPI_FREQUENCY=80000000
     ; PSRAM Beast Features 💪 (2MB PSRAM for N8R2)
     -DPROJECT_PSRAM_ENABLE=1
-    -DPSRAM_BUFFER_SIZE=524288
+    -DPSRAM_BUFFER_SIZE=1048576
     -DENABLE_SPRITE_BUFFERING=1
     -DENABLE_ADVANCED_GRAPHICS=1
 lib_deps = 
@@ -426,4 +399,5 @@ lib_deps =
     esphome/ESPAsyncTCP-esphome@^2.0.0
 extra_scripts = 
     pre:tools/minify.py
+    post:tools/rename_firmware.py
     post:tools/rename_firmware.py

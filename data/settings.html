@@ -597,6 +597,41 @@
             <label><strong>Refresh:</strong></label>
             <button onclick="refreshInfo()">Update Data</button>
         </div>
+
+        <h2>Firmware Update (OTA)</h2>
+        <div class="flex-container-gray">
+            <label><strong>Current Version:</strong></label>
+            <span id="firmware-version" class="status-value">v2.0</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Build Date:</strong></label>
+            <span id="build-date" class="status-value">Loading...</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Build Type:</strong></label>
+            <span id="build-type" class="status-value">Loading...</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Upload Firmware:</strong></label>
+            <input type="file" id="firmwareFile" accept=".bin" onchange="validateFirmwareFile()">
+        </div>
+        <div class="flex-container-gray" id="firmware-info" style="display: none;">
+            <label><strong>File Info:</strong></label>
+            <span id="firmware-details" class="status-value">No file selected</span>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Update Progress:</strong></label>
+            <div style="flex: 1; margin-left: 10px;">
+                <div style="background: #30363d; border-radius: 4px; height: 20px; overflow: hidden;">
+                    <div id="ota-progress-bar" style="height: 100%; background: linear-gradient(90deg, #2ea043 0%, #fb8500 70%, #d73a49 90%); width: 0%; transition: width 0.3s ease;"></div>
+                </div>
+                <span id="ota-progress-text" class="status-value">Ready</span>
+            </div>
+        </div>
+        <div class="flex-container-gray">
+            <label><strong>Action:</strong></label>
+            <button id="upload-firmware-btn" class="btn-warning" onclick="uploadFirmware()" disabled>Upload Firmware</button>
+        </div>
     </div>
 
     <script>
@@ -679,6 +714,20 @@
                     // Fallback to basic memory info
                     document.getElementById('memory-health').textContent = 'UNAVAILABLE';
                     document.getElementById('memory-health').style.color = '#6e7681';
+                });
+
+            // Load build information
+            fetchWithTimeout('/api/build-info')
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('firmware-version').textContent = d.version || 'Unknown';
+                    document.getElementById('build-date').textContent = d.buildDate || 'Unknown';
+                    document.getElementById('build-type').textContent = d.buildType || 'Unknown';
+                })
+                .catch(() => {
+                    console.log('Build info update failed');
+                    document.getElementById('build-date').textContent = 'Unavailable';
+                    document.getElementById('build-type').textContent = 'Unavailable';
                 });
 
             // Load current settings including DCC state
@@ -883,6 +932,139 @@
             loadClockFaceSettings();
             loadDCCSettings();
         });
+
+        // OTA Firmware Update Functions
+        function validateFirmwareFile() {
+            const fileInput = document.getElementById('firmwareFile');
+            const uploadBtn = document.getElementById('upload-firmware-btn');
+            const firmwareInfo = document.getElementById('firmware-info');
+            const firmwareDetails = document.getElementById('firmware-details');
+            
+            if (fileInput.files.length === 0) {
+                uploadBtn.disabled = true;
+                firmwareInfo.style.display = 'none';
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const fileSize = file.size;
+            const fileName = file.name;
+            
+            // Basic validation
+            if (!fileName.endsWith('.bin')) {
+                firmwareDetails.textContent = 'Error: Only .bin files are allowed';
+                firmwareDetails.style.color = '#f85149';
+                firmwareInfo.style.display = 'flex';
+                uploadBtn.disabled = true;
+                return;
+            }
+            
+            // Size validation (expect 1-4MB for ESP32 firmware)
+            if (fileSize < 100000 || fileSize > 4194304) {
+                firmwareDetails.textContent = `Error: File size ${formatBytes(fileSize)} seems invalid for ESP32 firmware`;
+                firmwareDetails.style.color = '#f85149';
+                firmwareInfo.style.display = 'flex';
+                uploadBtn.disabled = true;
+                return;
+            }
+            
+            // Validate firmware filename compatibility
+            fetch(`/api/validate-firmware?filename=${encodeURIComponent(fileName)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.valid) {
+                        // File looks valid
+                        firmwareDetails.textContent = `${fileName} (${formatBytes(fileSize)}) - Ready to upload`;
+                        firmwareDetails.style.color = '#2ea043';
+                        firmwareInfo.style.display = 'flex';
+                        uploadBtn.disabled = false;
+                    } else {
+                        // File is not compatible
+                        firmwareDetails.textContent = `Error: ${data.error}`;
+                        firmwareDetails.style.color = '#f85149';
+                        firmwareInfo.style.display = 'flex';
+                        uploadBtn.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    console.error('Firmware validation error:', error);
+                    // Fall back to showing the file but with a warning
+                    firmwareDetails.textContent = `${fileName} (${formatBytes(fileSize)}) - Warning: Could not validate compatibility`;
+                    firmwareDetails.style.color = '#fb8500';
+                    firmwareInfo.style.display = 'flex';
+                    uploadBtn.disabled = false;
+                });
+        }
+        
+        function uploadFirmware() {
+            const fileInput = document.getElementById('firmwareFile');
+            const uploadBtn = document.getElementById('upload-firmware-btn');
+            const progressBar = document.getElementById('ota-progress-bar');
+            const progressText = document.getElementById('ota-progress-text');
+            
+            if (fileInput.files.length === 0) {
+                alert('Please select a firmware file first');
+                return;
+            }
+            
+            if (!confirm('FIRMWARE UPDATE: This will restart the device. Continue?')) {
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('firmware', file);
+            
+            // Disable upload button and show progress
+            uploadBtn.disabled = true;
+            progressText.textContent = 'Uploading...';
+            progressBar.style.width = '0%';
+            
+            const xhr = new XMLHttpRequest();
+            
+            // Track upload progress
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    progressText.textContent = `Uploading: ${Math.round(percentComplete)}%`;
+                }
+            });
+            
+            // Handle completion
+            xhr.addEventListener('load', function() {
+                if (xhr.status === 200) {
+                    progressBar.style.width = '100%';
+                    progressText.textContent = 'Upload complete - Device restarting...';
+                    
+                    // Show success message and countdown
+                    let countdown = 30;
+                    const countdownInterval = setInterval(() => {
+                        progressText.textContent = `Firmware updated! Device restarting... (${countdown}s)`;
+                        countdown--;
+                        
+                        if (countdown <= 0) {
+                            clearInterval(countdownInterval);
+                            location.reload(); // Refresh page after restart
+                        }
+                    }, 1000);
+                    
+                } else {
+                    progressText.textContent = 'Upload failed: ' + (xhr.responseText || 'Unknown error');
+                    uploadBtn.disabled = false;
+                }
+            });
+            
+            // Handle errors
+            xhr.addEventListener('error', function() {
+                progressText.textContent = 'Upload failed: Network error';
+                uploadBtn.disabled = false;
+            });
+            
+            // Send the file
+            xhr.open('POST', '/ota-update');
+            xhr.send(formData);
+        }
     </script>
 </body>
 </html>

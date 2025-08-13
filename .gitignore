@@ -13,6 +13,8 @@
 *.checksum
 include/webcontent.h
 include/secrets.h
+ethernet_monitor.py
 
 # Project specific folders
 logs/
+firmware/

@@ -22,7 +22,7 @@
  * - ESP32 DevKit (original)
  * - ESP32-S3 DevKitC-1 (with 2MB PSRAM)
  * - ST7735 TFT displays (160x80)
- * - Optional ST7789 displays (240x240)
+ * - ST7789 TFT displays (240x240)
  * 
  * @author Dual Display Billboard Project
  * @version 2.0
@@ -47,20 +47,20 @@ TFT_eSPI tft = TFT_eSPI();
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("🎨 DUAL DISPLAY BILLBOARD - HARDWARE TEST MODE");
+    Serial.println("DUAL DISPLAY BILLBOARD - HARDWARE TEST MODE");
     
     // Configure backlight PWM for optimal visibility
     ledcAttachPin(TFT_BACKLIGHT_PIN, 1); // channel 1
     ledcSetup(1, 5000, 8); // channel 1, 5 KHz, 8-bit
     ledcWrite(1, 255); // Full brightness
-    Serial.println("✅ Backlight ON");
+    Serial.println("Backlight ON");
 
     // CS pins setup (exact copy from working project)
     pinMode(firstScreenCS, OUTPUT);
     digitalWrite(firstScreenCS, HIGH);
     pinMode(secondScreenCS, OUTPUT);
     digitalWrite(secondScreenCS, HIGH);
-    Serial.println("✅ CS pins configured");
+    Serial.println("CS pins configured");
 
     // TFT initialization (EXACT copy from working project)
     digitalWrite(firstScreenCS, LOW);   // Both CS LOW
@@ -68,23 +68,23 @@ void setup() {
     tft.init();                         // Init with both selected
     digitalWrite(firstScreenCS, HIGH);  // Both CS HIGH
     digitalWrite(secondScreenCS, HIGH);
-    Serial.println("✅ TFT initialized with dual CS method");
+    Serial.println("TFT initialized with dual CS method");
 
     // Test first screen (exact copy)
     digitalWrite(firstScreenCS, LOW);
     tft.setRotation(3);  // Working project uses rotation 3!
     tft.fillScreen(TFT_RED);
     digitalWrite(firstScreenCS, HIGH);
-    Serial.println("✅ First screen RED");
+    Serial.println("First screen RED");
 
     // Test second screen (exact copy)
     digitalWrite(secondScreenCS, LOW);
     tft.setRotation(3);  // Working project uses rotation 3!
     tft.fillScreen(TFT_GREEN);
     digitalWrite(secondScreenCS, HIGH);
-    Serial.println("✅ Second screen GREEN");
+    Serial.println("Second screen GREEN");
     
-    Serial.println("🎉 SHOULD BE WORKING NOW!");
+    Serial.println("SHOULD BE WORKING NOW!");
 }
 
 void loop() {
@@ -97,13 +97,13 @@ void loop() {
             tft.setRotation(3);
             tft.fillScreen(TFT_BLUE);
             digitalWrite(firstScreenCS, HIGH);
-            Serial.println("🔵 First screen BLUE");
+            Serial.println("First screen BLUE");
         } else {
             digitalWrite(secondScreenCS, LOW);
             tft.setRotation(3);
             tft.fillScreen(TFT_YELLOW);
             digitalWrite(secondScreenCS, HIGH);
-            Serial.println("🟡 Second screen YELLOW");
+            Serial.println("Second screen YELLOW");
         }
         
         useFirst = !useFirst;
@@ -128,7 +128,7 @@ void setup() {
     Serial.begin(115200);
     startupTime = millis();
     
-    Serial.println("🚨 ULTRA-SAFE MODE - NO LIBRARIES");
+    Serial.println("ULTRA-SAFE MODE - NO LIBRARIES");
     Serial.printf("Free Heap: %d bytes\n", ESP.getFreeHeap());
     Serial.printf("Chip Model: %s\n", ESP.getChipModel());
     Serial.printf("PSRAM Size: %d bytes (should be 0!)\n", ESP.getPsramSize());
@@ -144,14 +144,14 @@ void setup() {
     digitalWrite(5, HIGH);
     digitalWrite(15, HIGH);
     
-    Serial.println("✅ GPIO initialized safely");
+    Serial.println("GPIO initialized safely");
 }
 
 void loop() {
     unsigned long currentTime = millis();
     
     if (!systemInitialized && (currentTime - startupTime >= STARTUP_DELAY)) {
-        Serial.println("🔧 Ultra-safe mode initialization...");
+        Serial.println("Ultra-safe mode initialization...");
         
         // Test PWM without any libraries
         ledcSetup(0, 5000, 8);
@@ -162,7 +162,7 @@ void loop() {
         ledcAttachPin(27, 1);
         ledcWrite(1, 128);
         
-        Serial.println("✅ PWM backlight test successful");
+        Serial.println("PWM backlight test successful");
         systemInitialized = true;
         lastHeartbeat = currentTime;
     }
@@ -174,7 +174,7 @@ void loop() {
         ledcWrite(0, ledState ? 255 : 64);
         ledcWrite(1, ledState ? 64 : 255);
         
-        Serial.printf("💓 Ultra-safe heartbeat - Heap: %d, PSRAM: %d\n", 
+        Serial.printf("Ultra-safe heartbeat - Heap: %d, PSRAM: %d\n", 
                       ESP.getFreeHeap(), ESP.getPsramSize());
         lastHeartbeat = currentTime;
     }
@@ -195,6 +195,7 @@ void loop() {
 #include "display_clock_manager.h"  // ADD: Clock management
 #include "dcc_manager.h"            // ADD: DCC management
 #include "memory_manager.h"         // ADD: Memory monitoring
+#include "platform_detector.h"      // ADD: Multiplatform detection
 #include "config.h"
 
 // Create instances
@@ -235,17 +236,32 @@ void setup() {
     
     startupTime = millis();
     
-    LOG_INFO("MAIN", "🚀 DUAL DISPLAY BILLBOARD SYSTEM v2.0");
+    LOG_INFO("MAIN", "DUAL DISPLAY BILLBOARD SYSTEM v2.0");
     LOG_SYSTEM_INFO();
     
-    LOG_INFO("MAIN", "🎯 System startup initiated");
+    LOG_INFO("MAIN", "System startup initiated");
+    
+    // Detect platform and PSRAM capabilities (multiplatform support)
+    PlatformDetector::PlatformInfo platformInfo = PlatformDetector::detectPlatform();
+    PlatformDetector::printPlatformInfo(platformInfo);
+    
+    // Test PSRAM functionality if available
+    if (platformInfo.psramConfigured) {
+        LOG_INFO("MAIN", "Testing PSRAM functionality...");
+        bool psramTestResult = PlatformDetector::testPSRAMAllocation();
+        if (psramTestResult) {
+            LOG_INFO("MAIN", "PSRAM tests completed successfully");
+        } else {
+            LOG_WARN("MAIN", "PSRAM tests failed - check hardware configuration");
+        }
+    }
     
     // Initialize memory monitoring system first
     if (MemoryManager::initialize(10000, true)) {  // 10 second intervals, auto-cleanup enabled
-        LOG_INFO("MAIN", "✅ Memory monitoring system initialized");
+        LOG_INFO("MAIN", "Memory monitoring system initialized");
         MEMORY_STATUS();  // Show initial memory status
     } else {
-        LOG_ERROR("MAIN", "❌ Memory monitoring system failed to initialize");
+        LOG_ERROR("MAIN", "Memory monitoring system failed to initialize");
     }
     
     // NOTE: WiFi manager will set up appropriate routes based on mode
@@ -257,95 +273,95 @@ void loop() {
     
     // Non-blocking startup sequence
     if (!systemInitialized && (currentTime - startupTime >= STARTUP_DELAY)) {
-        LOG_INFO("MAIN", "🔧 Initializing integrated billboard system...");
+        LOG_INFO("MAIN", "Initializing integrated billboard system...");
         
         LOG_MEMORY_INFO();
         
         // Step 1: Initialize display system
         if (!displayInitialized) {
-            LOG_INFO("MAIN", "📺 Initializing display subsystem...");
+            LOG_INFO("MAIN", "Initializing display subsystem...");
             if (displayManager.begin()) {
-                LOG_INFO("MAIN", "✅ Display manager initialized");
+                LOG_INFO("MAIN", "Display manager initialized");
                 // displayManager.showSystemInfo(); // Commented out to skip startup info
                 displayInitialized = true;
             } else {
-                LOG_ERROR("MAIN", "❌ Display manager failed");
+                LOG_ERROR("MAIN", "Display manager failed");
                 return; // Don't continue if displays fail
             }
         }
         
         // Step 2: Initialize WiFi system
         if (!wifiInitialized && displayInitialized) {
-            LOG_INFO("MAIN", "🌐 Initializing WiFi subsystem...");
+            LOG_INFO("MAIN", "Initializing WiFi subsystem...");
             
             // Initialize credential manager
             if (credentialManager.begin()) {
-                LOG_INFO("MAIN", "✅ Credential manager initialized");
+                LOG_INFO("MAIN", "Credential manager initialized");
             } else {
-                LOG_ERROR("MAIN", "❌ Credential manager failed");
+                LOG_ERROR("MAIN", "Credential manager failed");
             }
             
             // Initialize settings manager
             if (settingsManager.begin()) {
-                LOG_INFO("MAIN", "✅ Settings manager initialized");
+                LOG_INFO("MAIN", "Settings manager initialized");
             } else {
-                LOG_ERROR("MAIN", "❌ Settings manager failed");
+                LOG_ERROR("MAIN", "Settings manager failed");
             }
             
             // Initialize image manager
             if (imageManager.begin()) {
-                LOG_INFO("MAIN", "✅ Image manager initialized");
+                LOG_INFO("MAIN", "Image manager initialized");
                 
                 // Initialize clock manager
                 if (clockManager.begin()) {
-                    LOG_INFO("MAIN", "✅ Clock manager initialized");
+                    LOG_INFO("MAIN", "Clock manager initialized");
                 } else {
-                    LOG_ERROR("MAIN", "❌ Clock manager failed");
+                    LOG_ERROR("MAIN", "Clock manager failed");
                 }
                 
                 // Initialize slideshow manager
                 if (slideshowManager.begin()) {
-                    LOG_INFO("MAIN", "✅ Slideshow manager initialized");
+                    LOG_INFO("MAIN", "Slideshow manager initialized");
                 } else {
-                    LOG_ERROR("MAIN", "❌ Slideshow manager failed");
+                    LOG_ERROR("MAIN", "Slideshow manager failed");
                 }
                 
                 // Initialize DCC manager
                 if (dccManager.begin()) {
-                    LOG_INFO("MAIN", "✅ DCC manager initialized");
+                    LOG_INFO("MAIN", "DCC manager initialized");
                 } else {
-                    LOG_ERROR("MAIN", "❌ DCC manager failed");
+                    LOG_ERROR("MAIN", "DCC manager failed");
                 }
             } else {
-                LOG_ERROR("MAIN", "❌ Image manager failed");
+                LOG_ERROR("MAIN", "Image manager failed");
             }
             
             // Initialize WiFi manager from credentials
             if (wifiManager.initializeFromCredentials()) {
-                LOG_INFO("MAIN", "✅ WiFi manager initialized");
+                LOG_INFO("MAIN", "WiFi manager initialized");
                 wifiInitialized = true;
                 // Configure TCP settings to reduce timeout errors
                 configureTCPSettings();
-                LOG_INFO("MAIN", "🔧 TCP settings configured");
+                LOG_INFO("MAIN", "TCP settings configured");
             } else {
-                LOG_INFO("MAIN", "ℹ️  WiFi starting in setup mode");
+                LOG_INFO("MAIN", "WiFi starting in setup mode");
                 wifiInitialized = true; // Still continue in AP mode
                 // Configure TCP settings to reduce timeout errors
                 configureTCPSettings();
-                LOG_INFO("MAIN", "🔧 TCP settings configured");
+                LOG_INFO("MAIN", "TCP settings configured");
             }
         }
         
         // Step 3: Initialize time system (only in normal mode)
         if (!timeInitialized && wifiInitialized && 
             wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL) {
-            LOG_INFO("MAIN", "🕐 Initializing time subsystem...");
+            LOG_INFO("MAIN", "Initializing time subsystem...");
             
             if (timeManager.begin()) {
-                LOG_INFO("MAIN", "✅ Time manager initialized");
+                LOG_INFO("MAIN", "Time manager initialized");
                 timeInitialized = true;
             } else {
-                LOG_WARN("MAIN", "⚠️ Time manager initialization failed");
+                LOG_WARN("MAIN", "Time manager initialization failed");
                 timeInitialized = true; // Continue without time sync
             }
         }
@@ -361,19 +377,19 @@ void loop() {
             if (secondDisplayEnabled) {
                 // Both displays enabled
                 displayManager.setBrightness(savedBrightness, 0); // 0 = both displays
-                LOG_INFOF("MAIN", "🔆 Initial brightness set to %d for both displays", savedBrightness);
+                LOG_INFOF("MAIN", "Initial brightness set to %d for both displays", savedBrightness);
             } else {
                 // Only first display enabled
                 displayManager.setBrightness(savedBrightness, 1); // 1 = first display only
                 displayManager.setBrightness(0, 2); // Turn off second display backlight
-                LOG_INFOF("MAIN", "🔆 Initial brightness set to %d for first display only", savedBrightness);
+                LOG_INFOF("MAIN", "Initial brightness set to %d for first display only", savedBrightness);
             }
             
             systemInitialized = true;
             lastHeartbeat = currentTime;
             
-            LOG_INFO("MAIN", "🎉 Integrated billboard system ready!");
-            LOG_INFOF("MAIN", "📱 WiFi Mode: %s", 
+            LOG_INFO("MAIN", "Integrated billboard system ready!");
+            LOG_INFOF("MAIN", "WiFi Mode: %s", 
                      wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL ? "Normal" : "Setup");
         }
     }
@@ -428,7 +444,7 @@ void loop() {
         
         // Check for critical memory conditions
         if (MEMORY_IS_CRITICAL()) {
-            LOG_WARNF("MAIN", "⚠️ Critical memory condition detected, running cleanup");
+            LOG_WARNF("MAIN", "Critical memory condition detected, running cleanup");
             MEMORY_CLEANUP();
         }
         
@@ -446,9 +462,9 @@ void loop() {
         
         // Additional system health check
         if (MEMORY_IS_LOW()) {
-            LOG_WARNF("MAIN", "💓 System heartbeat - LOW MEMORY WARNING");
+            LOG_WARNF("MAIN", "System heartbeat - LOW MEMORY WARNING");
         } else {
-            LOG_INFOF("MAIN", "💓 System heartbeat - All systems operational");
+            LOG_INFOF("MAIN", "System heartbeat - All systems operational");
         }
         
         lastHeartbeat = currentTime;

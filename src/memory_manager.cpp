@@ -115,7 +115,8 @@ void MemoryManager::updateHeapStats() {
 }
 
 void MemoryManager::updatePsramStats() {
-    #ifdef BOARD_HAS_PSRAM
+    #ifdef ESP32S3_MODE
+    // Only ESP32-S3 should report PSRAM
     if (psramFound()) {
         currentStats.psramAvailable = true;
         currentStats.psramTotal = ESP.getPsramSize();
@@ -128,6 +129,7 @@ void MemoryManager::updatePsramStats() {
         currentStats.psramUsed = 0;
     }
     #else
+    // ESP32 classic never has PSRAM - don't report false values
     currentStats.psramAvailable = false;
     currentStats.psramTotal = 0;
     currentStats.psramFree = 0;

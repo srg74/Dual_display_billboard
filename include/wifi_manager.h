@@ -1,6 +1,7 @@
 #pragma once
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
+#include <Update.h>          // For OTA firmware updates
 #include "credential_manager.h"
 #include "time_manager.h"
 #include "settings_manager.h"
@@ -70,8 +71,14 @@ public:
     void checkGpio0FactoryReset();
     void setupNormalModeRoutes();
     void setupImageRoutes();  // New method for image API endpoints
+    void setupOTARoutes();    // NEW: OTA firmware update routes
     void checkScheduledRestart();
     void checkPortalModeSwitch();
+    
+    // OTA Functions
+    bool validateFirmwareFilename(const String& filename);
+    bool validateFirmwareBinary(uint8_t* data, size_t length);
+    String getFirmwareVersion();
     
     // Getters - KEEP AS IS
     OperationMode getCurrentMode() const { return currentMode; }

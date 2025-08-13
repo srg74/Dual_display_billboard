@@ -6,6 +6,7 @@
 #include "display_manager.h"
 #include "slideshow_manager.h"
 #include "memory_manager.h"
+#include "platform_detector.h"
 
 static const String TAG = "WIFI";
 
@@ -284,6 +285,9 @@ void WiFiManager::setupRoutes() {
             request->send(200, "text/html", html);
         }
     });
+    
+    // Setup OTA routes for portal mode too
+    setupOTARoutes();
     
     LOG_INFO(TAG, "✅ Web routes configured successfully");
 }
@@ -1034,6 +1038,7 @@ void WiFiManager::setupNormalModeRoutes() {
         String response = "{";
         response += "\"uptime\":" + String(millis() / 1000) + ",";
         response += "\"freeMemory\":" + String(ESP.getFreeHeap()) + ",";
+        response += "\"platform\":\"" + PlatformDetector::getPlatformSummary() + "\",";
         response += "\"memoryDetails\":" + MemoryManager::getMemoryStatsJson();
         response += "}";
         AsyncWebServerResponse *apiResponse = request->beginResponse(200, "application/json", response);
@@ -1135,6 +1140,9 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // Setup image management routes
     setupImageRoutes();
+    
+    // Setup OTA firmware update routes
+    setupOTARoutes();
     
     // Simple inline rotation test for normal mode too
     server->on("/debug/rotation-test", HTTP_GET, [this](AsyncWebServerRequest *request){
@@ -1594,5 +1602,252 @@ void WiFiManager::checkConnectionSuccessDisplay() {
 // NEW: Getter method for connection success display state
 bool WiFiManager::isShowingConnectionSuccess() const {
     return connectionSuccessDisplayed;
+}
+
+// ========================================
+// OTA Firmware Update Implementation
+// ========================================
+
+void WiFiManager::setupOTARoutes() {
+    LOG_INFO(TAG, "🔄 Setting up OTA firmware update routes");
+    
+    // OTA firmware upload endpoint
+    server->on("/ota-update", HTTP_POST, 
+        [this](AsyncWebServerRequest *request) {
+            // This handles the response after OTA upload is complete
+            LOG_INFO(TAG, "🔄 OTA update request completed");
+            
+            if (Update.hasError()) {
+                String errorMsg = "OTA Update failed with error: " + String(Update.getError());
+                LOG_ERRORF(TAG, "❌ %s", errorMsg.c_str());
+                request->send(500, "text/plain", errorMsg);
+            } else {
+                LOG_INFO(TAG, "✅ OTA update successful - restarting device");
+                request->send(200, "text/plain", "OTA Update successful! Device restarting...");
+                
+                // Schedule restart after sending response
+                restartPending = true;
+                restartScheduledTime = millis() + 2000; // 2 seconds
+            }
+        },
+        [this](AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final) {
+            // Handle OTA file upload chunks
+            static size_t totalSize = 0;
+            
+            if (index == 0) {
+                // First chunk - start OTA update
+                totalSize = request->contentLength();
+                LOG_INFOF(TAG, "🔄 Starting OTA update: %s (%d bytes)", filename.c_str(), totalSize);
+                
+                // Validate file extension
+                if (!filename.endsWith(".bin")) {
+                    LOG_ERROR(TAG, "❌ Invalid file type - only .bin files allowed");
+                    request->send(400, "text/plain", "Error: Only .bin firmware files are allowed");
+                    return;
+                }
+                
+                // Basic size validation (ESP32 firmware typically 1-4MB)
+                if (totalSize < 100000 || totalSize > 4194304) {
+                    LOG_ERRORF(TAG, "❌ Invalid firmware size: %d bytes", totalSize);
+                    request->send(400, "text/plain", "Error: Invalid firmware size for ESP32");
+                    return;
+                }
+                
+                // Validate firmware filename compatibility
+                if (!validateFirmwareFilename(filename)) {
+                    // Get current platform info for error message
+                    auto platform = PlatformDetector::detectPlatform();
+                    String expectedPlatform = "";
+                    if (platform.chipModel == PlatformDetector::CHIP_ESP32_CLASSIC) {
+                        expectedPlatform = "ESP32";
+                    } else if (platform.chipModel == PlatformDetector::CHIP_ESP32_S3) {
+                        expectedPlatform = "ESP32-S3";
+                    }
+                    
+                    String expectedDisplay = "";
+                    #ifdef DISPLAY_TYPE_ST7789
+                        expectedDisplay = "ST7789";
+                    #else
+                        expectedDisplay = "ST7735";
+                    #endif
+                    
+                    String errorMsg = "Error: Firmware '" + filename + "' is not compatible with " + expectedPlatform + " " + expectedDisplay;
+                    LOG_ERRORF(TAG, "❌ %s", errorMsg.c_str());
+                    request->send(400, "text/plain", errorMsg);
+                    return;
+                }
+                
+                // Start the update process
+                if (!Update.begin(totalSize)) {
+                    String errorMsg = "OTA begin failed - error: " + String(Update.getError());
+                    LOG_ERRORF(TAG, "❌ %s", errorMsg.c_str());
+                    request->send(500, "text/plain", errorMsg);
+                    return;
+                }
+                
+                LOG_INFO(TAG, "✅ OTA update started successfully");
+            }
+            
+            // Write chunk data
+            if (Update.write(data, len) != len) {
+                LOG_ERRORF(TAG, "❌ OTA write failed at chunk %d", index);
+                request->send(500, "text/plain", "OTA write failed");
+                return;
+            }
+            
+            if (final) {
+                // Final chunk - complete the update
+                LOG_INFOF(TAG, "🔄 OTA upload complete, finalizing update...");
+                
+                if (!Update.end(true)) {
+                    String errorMsg = "OTA end failed - error: " + String(Update.getError());
+                    LOG_ERRORF(TAG, "❌ %s", errorMsg.c_str());
+                    request->send(500, "text/plain", errorMsg);
+                } else {
+                    LOG_INFO(TAG, "✅ OTA update finalized successfully");
+                    // Success response will be sent in the main handler above
+                }
+            }
+        });
+    
+    // Firmware version API endpoint
+    server->on("/api/firmware-version", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        String version = getFirmwareVersion();
+        String response = "{\"version\":\"" + version + "\"}";
+        request->send(200, "application/json", response);
+    });
+    
+    // Build information API endpoint (separate for UI display)
+    server->on("/api/build-info", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        String buildDate = String(BUILD_DATE);
+        String buildType = String(BUILD_TYPE);
+        String firmwareVersion = String(FIRMWARE_VERSION);
+        
+        String response = "{\"buildDate\":\"" + buildDate + 
+                         "\",\"buildType\":\"" + buildType + 
+                         "\",\"version\":\"" + firmwareVersion + "\"}";
+        request->send(200, "application/json", response);
+    });
+    
+    // Firmware filename validation API endpoint
+    server->on("/api/validate-firmware", HTTP_GET, [this](AsyncWebServerRequest *request) {
+        if (!request->hasParam("filename")) {
+            String response = "{\"valid\":false,\"error\":\"Filename parameter required\"}";
+            request->send(400, "application/json", response);
+            return;
+        }
+        
+        String filename = request->getParam("filename")->value();
+        bool isValid = validateFirmwareFilename(filename);
+        
+        if (isValid) {
+            String response = "{\"valid\":true,\"message\":\"Firmware compatible with current device\"}";
+            request->send(200, "application/json", response);
+        } else {
+            // Get current platform info for error message
+            auto platform = PlatformDetector::detectPlatform();
+            String expectedPlatform = "";
+            if (platform.chipModel == PlatformDetector::CHIP_ESP32_CLASSIC) {
+                expectedPlatform = "ESP32";
+            } else if (platform.chipModel == PlatformDetector::CHIP_ESP32_S3) {
+                expectedPlatform = "ESP32-S3";
+            }
+            
+            String expectedDisplay = "";
+            #ifdef DISPLAY_TYPE_ST7789
+                expectedDisplay = "ST7789";
+            #else
+                expectedDisplay = "ST7735";
+            #endif
+            
+            String errorMsg = "Firmware '" + filename + "' is not compatible with " + expectedPlatform + " " + expectedDisplay;
+            String response = "{\"valid\":false,\"error\":\"" + errorMsg + "\"}";
+            request->send(200, "application/json", response);
+        }
+    });
+    
+    LOG_INFO(TAG, "✅ OTA routes configured successfully");
+}
+
+bool WiFiManager::validateFirmwareFilename(const String& filename) {
+    // Get current platform info
+    auto platform = PlatformDetector::detectPlatform();
+    String expectedPlatform = "";
+    
+    // Determine expected platform string
+    if (platform.chipModel == PlatformDetector::CHIP_ESP32_CLASSIC) {
+        expectedPlatform = "esp32";
+    } else if (platform.chipModel == PlatformDetector::CHIP_ESP32_S3) {
+        expectedPlatform = "esp32s3";
+    } else {
+        LOG_WARN(TAG, "⚠️ Unknown platform for firmware validation");
+        return false;
+    }
+    
+    // Get expected display type
+    String expectedDisplay = "";
+    #ifdef DISPLAY_TYPE_ST7789
+        expectedDisplay = "ST7789";
+    #else
+        expectedDisplay = "ST7735";
+    #endif
+    
+    // Build expected filename patterns
+    String expectedDebug = expectedPlatform + "_" + expectedDisplay + "_debug.bin";
+    String expectedProduction = expectedPlatform + "_" + expectedDisplay + "_production.bin";
+    String expectedLatest = expectedPlatform + "_" + expectedDisplay + "_latest.bin";
+    String genericFirmware = "firmware.bin";
+    
+    LOG_INFOF(TAG, "🔍 Validating firmware file: %s", filename.c_str());
+    LOG_INFOF(TAG, "📱 Current platform: %s", expectedPlatform.c_str());
+    LOG_INFOF(TAG, "🖥️ Current display: %s", expectedDisplay.c_str());
+    LOG_INFOF(TAG, "✅ Expected patterns: %s, %s, %s, %s", 
+             expectedDebug.c_str(), expectedProduction.c_str(), 
+             expectedLatest.c_str(), genericFirmware.c_str());
+    
+    // Check if filename matches expected patterns
+    if (filename.equals(expectedDebug) || 
+        filename.equals(expectedProduction) || 
+        filename.equals(expectedLatest) ||
+        filename.equals(genericFirmware)) {
+        LOG_INFO(TAG, "✅ Firmware filename validation passed");
+        return true;
+    }
+    
+    LOG_WARN(TAG, "❌ Firmware filename validation failed!");
+    LOG_WARNF(TAG, "❌ File '%s' is not compatible with %s %s", 
+             filename.c_str(), expectedPlatform.c_str(), expectedDisplay.c_str());
+    return false;
+}
+
+bool WiFiManager::validateFirmwareBinary(uint8_t* data, size_t length) {
+    // Basic ESP32 firmware validation
+    if (length < 100000) {
+        LOG_WARN(TAG, "⚠️ Firmware file too small");
+        return false;
+    }
+    
+    if (length > 4194304) { // 4MB max
+        LOG_WARN(TAG, "⚠️ Firmware file too large");
+        return false;
+    }
+    
+    // Check for ESP32 magic bytes (basic validation)
+    if (length >= 4) {
+        // ESP32 firmware typically starts with 0xE9 (ESP32 magic number)
+        if (data[0] == 0xE9) {
+            LOG_INFO(TAG, "✅ ESP32 firmware signature detected");
+            return true;
+        }
+    }
+    
+    LOG_WARN(TAG, "⚠️ Firmware signature not recognized");
+    return true; // Allow anyway, but warn
+}
+
+String WiFiManager::getFirmwareVersion() {
+    // Return current firmware version with build info
+    String version = String(FIRMWARE_VERSION) + "-" + String(BUILD_TYPE) + "-" + String(BUILD_DATE);
+    return version;
 }
 

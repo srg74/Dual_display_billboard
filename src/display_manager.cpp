@@ -105,12 +105,12 @@ void DisplayManager::deselectAll() {
 void DisplayManager::setBrightness(uint8_t brightness, int displayNum) {
     if (displayNum == 1 || displayNum == 0) {
         brightness1 = brightness;
-        ledcWrite(2, brightness); // Apply to backlight 1 (GPIO 27, Channel 2) - SWAPPED: Blue display is on Channel 2
+        ledcWrite(1, brightness); // Apply to backlight 1 (Channel 1) - FIXED: Display 1 uses Channel 1
         LOG_INFOF("DISPLAY", "🔆 Brightness set - Display 1: %d", brightness);
     }
     if (displayNum == 2 || displayNum == 0) {
         brightness2 = brightness;
-        ledcWrite(1, brightness); // Apply to backlight 2 (GPIO 22, Channel 1) - SWAPPED: Yellow display is on Channel 1
+        ledcWrite(2, brightness); // Apply to backlight 2 (Channel 2) - FIXED: Display 2 uses Channel 2
         LOG_INFOF("DISPLAY", "🔆 Brightness set - Display 2: %d", brightness);
     }
 }

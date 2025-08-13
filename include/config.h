@@ -1,5 +1,26 @@
 #pragma once
 
+// Build Information (auto-generated during compilation)
+#ifndef BUILD_DATE
+#define BUILD_DATE "250812"  // YYMMDD format
+#endif
+
+#ifndef BUILD_TYPE
+#ifdef LOGGER_ENABLED
+#if LOGGER_ENABLED == 1
+#define BUILD_TYPE "debug"
+#else
+#define BUILD_TYPE "production"
+#endif
+#else
+#define BUILD_TYPE "production"
+#endif
+#endif
+
+#ifndef FIRMWARE_VERSION
+#define FIRMWARE_VERSION "2.0.0"
+#endif
+
 // Network Configuration
 #define PORTAL_SSID "Billboard-Portal"
 #define AP_MAX_CONNECTIONS 4
