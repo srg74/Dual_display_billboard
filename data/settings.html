@@ -76,7 +76,15 @@
             color: #fff;
             border: 1px solid #1f6feb;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Professional icon spacing */
+        button i, .btn i {
+            font-size: 14px;
+            line-height: 1;
         }
 
         .btn-success {
@@ -91,6 +99,11 @@
 
         .status-connected { color: #2ea043; font-weight: 600; }
         .status-disconnected { color: #f85149; font-weight: 600; }
+
+        /* Header and label icons */
+        h1 i, h2 i, label i {
+            margin-right: 8px;
+        }
 
         select {
             padding: 8px 12px;

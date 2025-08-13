@@ -310,8 +310,9 @@
         .gallery-row {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-            gap: 12px;
+            gap: 8px;
             margin-top: 10px;
+            margin-bottom: 8px;
         }
 
         .gallery-item {
@@ -507,6 +508,45 @@
                 max-width: 60px;
             }
         }
+
+        /* Text styling classes for cleaner HTML */
+        .text-center-muted {
+            text-align: center;
+            color: #6c757d;
+            padding: 20px;
+        }
+
+        .text-error {
+            text-align: center;
+            color: #dc3545;
+            padding: 20px;
+        }
+
+        .no-images-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .no-images-subtitle {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .preview-unavailable {
+            display: none;
+            color: #8b949e;
+            font-size: 12px;
+        }
+
+        .flex-file-input {
+            flex: 1;
+        }
+
+        .nowrap-button {
+            white-space: nowrap;
+        }
+
     </style>
 </head>
 <body>
@@ -515,7 +555,7 @@
         <div class="flex-container-gray">
             <div class="header-block">
                 <div class="header-left">
-                    <h1 class="billboard-name">BILLBOARD</h1>
+                    <h1 class="billboard-name">BILLBOARD CONTROLLER</h1>
                 </div>
                 <div class="header-center">
                     <a href="settings">Settings</a>
@@ -566,8 +606,8 @@
         <div class="flex-container-white">
             <form id="upload-form" enctype="multipart/form-data" method="post">
                 <div class="form-row">
-                    <input type="file" id="file-input" name="file" accept=".jpg,.jpeg" style="flex: 1;">
-                    <button type="submit" style="white-space: nowrap;">Upload File</button>
+                    <input type="file" id="file-input" name="file" accept=".jpg,.jpeg" class="flex-file-input">
+                    <button type="submit" class="nowrap-button">Upload File</button>
                 </div>
             </form>
         </div>
@@ -577,7 +617,7 @@
             <span id="imageCount" class="status-value">(0 images)</span>
         </h2>
         <div id="galleryContainer" class="gallery-row">
-            <div style="text-align: center; color: #6c757d; padding: 20px;">
+            <div class="text-center-muted">
                 Loading images...
             </div>
         </div>
@@ -716,10 +756,10 @@
                 
                 if (data.images.length === 0) {
                     container.innerHTML = `
-                        <div style="text-align: center; color: #6c757d; padding: 20px;">
-                            <div style="font-size: 18px; margin-bottom: 10px; font-weight: bold;">No Images</div>
+                        <div class="text-center-muted">
+                            <div class="no-images-title">No Images</div>
                             <div>No images uploaded yet</div>
-                            <div style="font-size: 14px; margin-top: 5px;">Upload JPEG images using the form above</div>
+                            <div class="no-images-subtitle">Upload JPEG images using the form above</div>
                         </div>
                     `;
                     return;
@@ -737,7 +777,7 @@
                             <div class="thumbnail">
                                 <img src="/images/${image.filename}" alt="${image.filename}" 
                                      onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                <div style="display: none; color: #8b949e; font-size: 12px;">Preview unavailable</div>
+                                <div class="preview-unavailable">Preview unavailable</div>
                             </div>
                             <div class="controls">
                                 <div class="filename">${image.filename}</div>
@@ -766,7 +806,7 @@
                 console.error('Failed to load gallery:', error);
                 document.getElementById('imageCount').textContent = '(error)';
                 document.getElementById('galleryContainer').innerHTML = `
-                    <div style="text-align: center; color: #dc3545; padding: 20px;">
+                    <div class="text-error">
                         ERROR: Failed to load images<br>
                         <small>${error.message}</small>
                     </div>

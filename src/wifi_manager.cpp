@@ -1276,7 +1276,15 @@ void WiFiManager::setupImageRoutes() {
                     // Use the total expected size, not received size for validation
                     bool success = imageManager->handleImageUpload(uploadFilename, uploadBuffer, totalSize);
                     
-                    if (!success) {
+                    if (success) {
+                        // BUGFIX: Refresh slideshow after successful upload
+                        // This ensures newly uploaded images appear in the slideshow immediately
+                        if (slideshowManager) {
+                            Serial.println("SUCCESS: Image uploaded, refreshing slideshow...");
+                            slideshowManager->refreshImageList();
+                            LOG_INFO(TAG, "📄 Slideshow refreshed after image upload");
+                        }
+                    } else {
                         String errorMsg = imageManager->getLastError();
                         if (errorMsg.length() == 0) {
                             errorMsg = "Image validation failed - check format and size";
