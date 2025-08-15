@@ -1,4 +1,5 @@
 #include "slideshow_manager.h"
+#include "display_timing_config.h"
 
 SlideshowManager::SlideshowManager(ImageManager* im, SettingsManager* sm, DisplayClockManager* cm) 
     : imageManager(im), settingsManager(sm), clockManager(cm) {
@@ -147,12 +148,12 @@ bool SlideshowManager::shouldRetrySlideshow() const {
     // Check if enough time has passed since last "no images" check
     // Use the same interval as image display (default 30 seconds, configurable to 10)
     unsigned long currentTime = millis();
-    uint32_t checkInterval = 10000; // 10 seconds as requested
+    uint32_t checkInterval = SLIDESHOW_DEFAULT_INTERVAL_MS; // 10 seconds as requested
     if (settingsManager) {
         checkInterval = settingsManager->getImageInterval() * 1000; // Convert to ms
         // Minimum 10 seconds to avoid rapid loops
-        if (checkInterval < 10000) {
-            checkInterval = 10000;
+        if (checkInterval < SLIDESHOW_DEFAULT_INTERVAL_MS) {
+            checkInterval = SLIDESHOW_DEFAULT_INTERVAL_MS;
         }
     }
     

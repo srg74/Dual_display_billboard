@@ -1,4 +1,5 @@
 #include "display_manager.h"
+#include "display_timing_config.h"
 #include "secrets.h"
 #include "logger.h"
 #include "splash_screen.h"
@@ -14,6 +15,9 @@ bool DisplayManager::begin() {
     initializeBacklight();
     initializeCS();
     initializeTFT();
+    
+    // IMMEDIATE: Clear both displays to black before any other operations
+    clearBothDisplaysToBlack();
     
     initialized = true;
     LOG_INFO("DISPLAY", "✅ Display Manager initialized successfully");
@@ -55,14 +59,17 @@ void DisplayManager::initializeTFT() {
     digitalWrite(firstScreenCS, LOW);   // Both CS LOW
     digitalWrite(secondScreenCS, LOW);
     tft.init();                         // Init with both selected
+    tft.fillScreen(TFT_BLACK);          // Immediately clear any init flash
     digitalWrite(firstScreenCS, HIGH);  // Both CS HIGH
     digitalWrite(secondScreenCS, HIGH);
     
     // Set correct rotation for both displays immediately after init
     selectDisplay(1);
     tft.setRotation(0);  // Ensure display 1 uses correct rotation
+    tft.fillScreen(TFT_BLACK);  // Clear display 1
     selectDisplay(2); 
     tft.setRotation(0);  // Ensure display 2 uses correct rotation
+    tft.fillScreen(TFT_BLACK);  // Clear display 2
     deselectAll();
     
     LOG_INFO("DISPLAY", "✅ TFT initialized with dual CS method");
@@ -78,10 +85,10 @@ void DisplayManager::selectDisplayForText(int displayNum) {
     
     if (displayNum == 1) {
         digitalWrite(firstScreenCS, LOW);
-        tft.setRotation(TEXT_ROTATION);  // Use text rotation
+        tft.setRotation(DISPLAY_TEXT_ROTATION);  // Use text rotation
     } else if (displayNum == 2) {
         digitalWrite(secondScreenCS, LOW);
-        tft.setRotation(TEXT_ROTATION);  // Use text rotation
+        tft.setRotation(DISPLAY_TEXT_ROTATION);  // Use text rotation
     }
 }
 
@@ -90,10 +97,10 @@ void DisplayManager::selectDisplayForImage(int displayNum) {
     
     if (displayNum == 1) {
         digitalWrite(firstScreenCS, LOW);
-        tft.setRotation(IMAGE_ROTATION);  // Use image rotation (0)
+        tft.setRotation(DISPLAY_IMAGE_ROTATION);  // Use image rotation (0)
     } else if (displayNum == 2) {
         digitalWrite(secondScreenCS, LOW);
-        tft.setRotation(IMAGE_ROTATION);  // Use image rotation (0)
+        tft.setRotation(DISPLAY_IMAGE_ROTATION);  // Use image rotation (0)
     }
 }
 
@@ -102,15 +109,33 @@ void DisplayManager::deselectAll() {
     digitalWrite(secondScreenCS, HIGH);
 }
 
+void DisplayManager::clearBothDisplaysToBlack() {
+    LOG_INFO("DISPLAY", "⚫ Clearing both displays to dark (no light) on startup");
+    
+    // Both displays: Clear to black content AND turn off brightness
+    selectDisplay(1);
+    tft.fillScreen(TFT_BLACK);
+    setBrightness(0, 1);  // Turn off Display 1 brightness
+    
+    selectDisplay(2);
+    tft.fillScreen(TFT_BLACK);
+    setBrightness(0, 2);  // Turn off Display 2 brightness
+    
+    // Deselect all
+    deselectAll();
+    
+    LOG_INFO("DISPLAY", "✅ Both displays cleared to dark (no light)");
+}
+
 void DisplayManager::setBrightness(uint8_t brightness, int displayNum) {
     if (displayNum == 1 || displayNum == 0) {
         brightness1 = brightness;
-        ledcWrite(1, brightness); // Apply to backlight 1 (Channel 1) - FIXED: Display 1 uses Channel 1
+        ledcWrite(2, brightness); // Apply to backlight 1 (GPIO 27, Channel 2) - SWAPPED: Blue display is on Channel 2
         LOG_INFOF("DISPLAY", "🔆 Brightness set - Display 1: %d", brightness);
     }
     if (displayNum == 2 || displayNum == 0) {
         brightness2 = brightness;
-        ledcWrite(2, brightness); // Apply to backlight 2 (Channel 2) - FIXED: Display 2 uses Channel 2
+        ledcWrite(1, brightness); // Apply to backlight 2 (GPIO 22, Channel 1) - SWAPPED: Yellow display is on Channel 1
         LOG_INFOF("DISPLAY", "🔆 Brightness set - Display 2: %d", brightness);
     }
 }
@@ -154,7 +179,7 @@ void DisplayManager::alternateDisplays() {
     static bool useFirst = true;
     static unsigned long lastSwitch = 0;
     
-    if (millis() - lastSwitch > 3000) {
+    if (millis() - lastSwitch > DISPLAY_ALTERNATING_INTERVAL_MS) {
         if (useFirst) {
             selectDisplay(1);
             tft.fillScreen(TFT_BLUE);
@@ -289,46 +314,38 @@ void DisplayManager::showConnectionSuccess(const String& ip) {
     LOG_INFOF("DISPLAY", "✅ Connection success displayed - IP: %s", ip.c_str());
 }
 
-void DisplayManager::drawMonochromeBitmap(int16_t x, int16_t y, const uint8_t *bitmap, 
-                                         int16_t w, int16_t h, uint16_t color, uint16_t bg, int displayNum) {
+void DisplayManager::drawColorBitmap(int16_t x, int16_t y, const uint16_t *bitmap, 
+                                    int16_t w, int16_t h, int displayNum) {
     selectDisplay(displayNum);
     
+    // Draw RGB565 color bitmap pixel by pixel
     for (int16_t j = 0; j < h; j++) {
         for (int16_t i = 0; i < w; i++) {
-            int16_t byteIndex = j * ((w + 7) / 8) + i / 8;
-            int16_t bitIndex = 7 - (i % 8);
-            
-            if (bitmap[byteIndex] & (1 << bitIndex)) {
-                tft.drawPixel(x + i, y + j, color);
-            } else {
-                tft.drawPixel(x + i, y + j, bg);
-            }
+            int16_t pixelIndex = j * w + i;
+            uint16_t color = pgm_read_word(&bitmap[pixelIndex]);
+            tft.drawPixel(x + i, y + j, color);
         }
     }
     
     deselectAll();
 }
 
-void DisplayManager::drawMonochromeBitmapRotated(int16_t x, int16_t y, const uint8_t *bitmap, 
-                                               int16_t w, int16_t h, uint16_t color, uint16_t bg, int displayNum) {
+void DisplayManager::drawColorBitmapRotated(int16_t x, int16_t y, const uint16_t *bitmap, 
+                                          int16_t w, int16_t h, int displayNum) {
     selectDisplay(displayNum);
     
     // Rotate 270 degrees CW (or 90 degrees CCW) to fix upside down issue
     // For each pixel at (i,j) in original, draw at (h-1-j, i) in rotated
     for (int16_t j = 0; j < h; j++) {
         for (int16_t i = 0; i < w; i++) {
-            int16_t byteIndex = j * ((w + 7) / 8) + i / 8;
-            int16_t bitIndex = 7 - (i % 8);
+            int16_t pixelIndex = j * w + i;
+            uint16_t color = pgm_read_word(&bitmap[pixelIndex]);
             
             // Calculate rotated position: 270 degrees CW (fixes upside down)
             int16_t rotatedX = x + (h - 1 - j);
             int16_t rotatedY = y + i;
             
-            if (bitmap[byteIndex] & (1 << bitIndex)) {
-                tft.drawPixel(rotatedX, rotatedY, color);
-            } else {
-                tft.drawPixel(rotatedX, rotatedY, bg);
-            }
+            tft.drawPixel(rotatedX, rotatedY, color);
         }
     }
     
@@ -345,6 +362,9 @@ void DisplayManager::showSplashScreen(int displayNum, unsigned long timeoutMs) {
     
     selectDisplayForImage(displayNum);  // Use image rotation for splash screen
     
+    // SELF-CONTAINED: Ensure display has proper brightness for splash screen
+    setBrightness(255, displayNum);  // Full brightness for splash screen visibility
+    
     // Clear screen with black background
     fillScreen(TFT_BLACK, displayNum);
     
@@ -353,15 +373,15 @@ void DisplayManager::showSplashScreen(int displayNum, unsigned long timeoutMs) {
     int16_t centerX = 0;  // Start at left edge
     int16_t centerY = 0;  // Start at top edge
     
-    // Draw the rotated bitmap (white pixels on black background)
-    drawMonochromeBitmapRotated(centerX, centerY, epd_bitmap_, 80, 160, TFT_WHITE, TFT_BLACK, displayNum);
+    // Draw the rotated color bitmap
+    drawColorBitmapRotated(centerX, centerY, epd_bitmap_, SPLASH_WIDTH, SPLASH_HEIGHT, displayNum);
     
     // Set splash timing
     splashStartTime = millis();
     splashActive = true;
     splashTimeoutMs = timeoutMs;
     
-    LOG_INFOF("DISPLAY", "🖼️ Rotated splash screen displayed on display %d (timeout: %lums)", displayNum, timeoutMs);
+    LOG_INFOF("DISPLAY", "🖼️ Rotated color splash screen displayed on display %d with full brightness (timeout: %lums)", displayNum, timeoutMs);
 }
 
 void DisplayManager::updateSplashScreen() {
@@ -388,10 +408,10 @@ void DisplayManager::showPortalSequence(const String& ssid, const String& ip, co
     pendingStatus = status;
     portalSequenceActive = true;
     
-    // Show splash screen for 5 seconds, then portal info will auto-display
-    showSplashScreen(0, 5000);  // 5 seconds on both displays
+    // Show splash screen for 4 seconds, then portal info will auto-display
+    showSplashScreen(0, DISPLAY_SPLASH_DURATION_MS);  // 4 seconds on both displays
     
-    LOG_INFO("DISPLAY", "🚀 Portal sequence started: 5s splash → portal info");
+    LOG_INFO("DISPLAY", "🚀 Portal sequence started: 4s splash → portal info");
 }
 
 // TFT access for ImageManager

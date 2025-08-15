@@ -4,6 +4,7 @@
 #include "config.h"
 #include "webcontent.h"
 #include "display_manager.h"
+#include "display_timing_config.h"
 #include "slideshow_manager.h"
 #include "memory_manager.h"
 #include "platform_detector.h"
@@ -43,10 +44,6 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     LOG_INFOF(TAG, "SSID: '%s'", ssid.c_str());
     LOG_INFOF(TAG, "Password: '%s'", password.c_str());
     
-    // OPTIMIZATION: Show quick starting indicator (non-blocking)
-    extern DisplayManager displayManager;
-    displayManager.showAPStarting();  // Fast "Starting AP..." message
-    
     // FAST PATH: Do critical WiFi setup without display delays
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
@@ -64,7 +61,7 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     WiFi.mode(WIFI_AP);
     if (!WiFi.softAPConfig(local_IP, gateway, subnet)) {
         LOG_ERROR(TAG, "❌ Failed to configure AP IP");
-        displayManager.showQuickStatus("AP Config Failed", TFT_RED);
+        displayManager->showQuickStatus("AP Config Failed", TFT_RED);
         return;
     }
     
@@ -75,7 +72,7 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     
     if (apStarted) {
         // Quick success feedback
-        displayManager.showAPReady();  // Fast "AP Ready!" message
+        displayManager->showAPReady();  // Fast "AP Ready!" message
         
         IPAddress IP = WiFi.softAPIP();
         LOG_INFOF(TAG, "✅ Access Point started successfully! SSID: %s, IP: %s", 
@@ -84,7 +81,7 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
         currentMode = MODE_SETUP;
         
         // AFTER AP IS READY: Show splash screen (5s) then portal info
-        displayManager.showPortalSequence(
+        displayManager->showPortalSequence(
             PORTAL_SSID,           
             "IP: 4.3.2.1",        
             "Ready to connect"     
@@ -95,7 +92,7 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
         LOG_ERROR(TAG, "Check if another AP is running or SSID is too long");
         
         // Show error status
-        displayManager.showQuickStatus("AP Start Failed", TFT_RED);
+        displayManager->showQuickStatus("AP Start Failed", TFT_RED);
     }
 }
 
@@ -555,8 +552,7 @@ bool WiFiManager::connectToSavedNetwork() {
         connectionRetryCount = 0; // Reset retry counter
         
         // NEW: Show connection success message
-        extern DisplayManager displayManager;
-        displayManager.showConnectionSuccess(WiFi.localIP().toString());
+        displayManager->showConnectionSuccess(WiFi.localIP().toString());
         connectionSuccessDisplayed = true;
         connectionSuccessStartTime = millis();
         
@@ -1597,7 +1593,7 @@ void WiFiManager::checkConnectionSuccessDisplay() {
     if (!connectionSuccessDisplayed) return;
     
     // Check if 5 seconds have passed
-    if (millis() - connectionSuccessStartTime >= 5000) {
+    if (millis() - connectionSuccessStartTime >= DISPLAY_MODE_SWITCH_DURATION_MS) {
         LOG_INFO(TAG, "🕐 5 seconds passed, switching to normal mode display");
         
         // Mark as no longer displaying
