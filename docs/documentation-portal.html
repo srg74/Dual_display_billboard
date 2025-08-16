@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Dual Display Billboard - Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+        
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-item {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        .access-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .method-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 2px solid #eee;
+            transition: all 0.3s ease;
+        }
+        
+        .method-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .method-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .method-description {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        
+        .btn {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+        
+        .features-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .features-list li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .features-list li:before {
+            content: "✓";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+        
+        .code-snippet {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .highlight {
+            background: #fff3cd;
+            padding: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid #ffc107;
+            margin: 1rem 0;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .access-methods {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ESP32 Dual Display Billboard</h1>
+            <p>Professional API Documentation</p>
+            <div class="status-badge">Documentation Complete: 100%</div>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number">235+</div>
+                <div class="stat-label">Documented Methods</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">13</div>
+                <div class="stat-label">Implementation Files</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">19</div>
+                <div class="stat-label">Header Files</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">33</div>
+                <div class="stat-label">Total Documented Files</div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>🚀 Quick Start - Generate Documentation</h2>
+            <div class="highlight">
+                <strong>Perfect for Apple Silicon Macs!</strong> No local installation required.
+            </div>
+            
+            <p>Generate professional HTML documentation from your Doxygen annotations using GitHub Actions:</p>
+            
+            <div class="code-snippet">
+# Run the web documentation generator
+./generate_docs_web.sh
+
+# This will:
+# 1. Push your code to GitHub
+# 2. Trigger automatic documentation generation
+# 3. Provide links to access the generated docs
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>📖 Access Your Documentation</h2>
+            <div class="access-methods">
+                <div class="method-card">
+                    <div class="method-title">🌐 GitHub Actions</div>
+                    <div class="method-description">
+                        Download generated documentation as a ZIP file from GitHub Actions artifacts.
+                    </div>
+                    <a href="https://github.com/srg74/Dual_display_billboard/actions" class="btn" target="_blank">
+                        View Actions
+                    </a>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-title">🌍 GitHub Pages</div>
+                    <div class="method-description">
+                        Live documentation automatically deployed when you push to the main branch.
+                    </div>
+                    <a href="https://srg74.github.io/Dual_display_billboard/api-docs/" class="btn" target="_blank">
+                        View Live Docs
+                    </a>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-title">📱 Build Status</div>
+                    <div class="method-description">
+                        Monitor documentation generation progress and build status.
+                    </div>
+                    <a href="https://github.com/srg74/Dual_display_billboard/actions/workflows/documentation.yml" class="btn btn-secondary" target="_blank">
+                        Check Status
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>✨ Documentation Features</h2>
+            <ul class="features-list">
+                <li>Complete API reference for all 235+ documented methods</li>
+                <li>Professional Doxygen-generated HTML documentation</li>
+                <li>Cross-referenced code with automatic linking</li>
+                <li>Search functionality across all documentation</li>
+                <li>Mobile-friendly responsive design</li>
+                <li>Source code browser with syntax highlighting</li>
+                <li>Class inheritance diagrams</li>
+                <li>File-by-file documentation structure</li>
+                <li>Usage examples and code snippets</li>
+                <li>Automatic updates when code changes</li>
+            </ul>
+        </div>
+        
+        <div class="card">
+            <h2>🎯 Documentation Coverage</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div>
+                    <h3>Core Implementation</h3>
+                    <ul class="features-list">
+                        <li>Logger System</li>
+                        <li>WiFi Manager</li>
+                        <li>Display Manager</li>
+                        <li>Image Manager</li>
+                        <li>Settings Manager</li>
+                        <li>Time Manager</li>
+                        <li>Memory Manager</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Advanced Features</h3>
+                    <ul class="features-list">
+                        <li>Slideshow Manager</li>
+                        <li>Clock Manager</li>
+                        <li>DCC Manager</li>
+                        <li>Config Validator</li>
+                        <li>Credential Manager</li>
+                        <li>Platform Detector</li>
+                    </ul>
+                </div>
+                <div>
+                    <h3>Build Tools</h3>
+                    <ul class="features-list">
+                        <li>Python Build Scripts</li>
+                        <li>Partition Tables</li>
+                        <li>Version Management</li>
+                        <li>Asset Optimization</li>
+                        <li>Firmware Naming</li>
+                        <li>Development Tools</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2>💡 How It Works</h2>
+            <p>This web-based documentation system is perfect for Apple Silicon Macs because:</p>
+            <ul class="features-list">
+                <li><strong>No Local Installation:</strong> Uses GitHub Actions cloud infrastructure</li>
+                <li><strong>Apple Silicon Compatible:</strong> No processor architecture conflicts</li>
+                <li><strong>Automatic Updates:</strong> Documentation regenerates on every push</li>
+                <li><strong>Professional Output:</strong> Same quality as local Doxygen generation</li>
+                <li><strong>Multiple Access Methods:</strong> GitHub Pages, Actions artifacts, and more</li>
+                <li><strong>Zero Configuration:</strong> Works out of the box</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Update GitHub URLs if needed
+        document.addEventListener('DOMContentLoaded', function() {
+            const repoInfo = {
+                owner: 'srg74',
+                repo: 'Dual_display_billboard'
+            };
+            
+            // Update all GitHub links with correct repository information
+            const links = document.querySelectorAll('a[href*="github.com"]');
+            links.forEach(link => {
+                let href = link.getAttribute('href');
+                if (href.includes('srg74/Dual_display_billboard')) {
+                    // Links are already correct
+                    return;
+                }
+                // Update href if needed
+                href = href.replace(/github\.com\/[^\/]+\/[^\/]+/, `github.com/${repoInfo.owner}/${repoInfo.repo}`);
+                link.setAttribute('href', href);
+            });
+        });
+    </script>
+</body>
+</html>
