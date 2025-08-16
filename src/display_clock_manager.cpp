@@ -15,7 +15,7 @@
  * - Clean sans-serif typography for professional appearance
  * 
  * @author Dual Display Billboard Project
- * @version 2.0
+ * @version 0.9
  * @date August 2025
  */
 

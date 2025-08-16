@@ -25,7 +25,7 @@
  * - ST7789 TFT displays (240x240)
  * 
  * @author Dual Display Billboard Project
- * @version 2.0
+ * @version 0.9
  * @date 2025
  */
 
@@ -236,7 +236,7 @@ void setup() {
     
     startupTime = millis();
     
-    LOG_INFO("MAIN", "DUAL DISPLAY BILLBOARD SYSTEM v2.0");
+    LOG_INFO("MAIN", "DUAL DISPLAY BILLBOARD SYSTEM v0.9");
     LOG_SYSTEM_INFO();
     
     LOG_INFO("MAIN", "System startup initiated");
@@ -371,19 +371,9 @@ void loop() {
             // Enable second display based on saved setting
             displayManager.enableSecondDisplay(settingsManager.isSecondDisplayEnabled());
             
-            // Set initial brightness based on saved setting
-            uint8_t savedBrightness = settingsManager.getBrightness();
-            bool secondDisplayEnabled = settingsManager.isSecondDisplayEnabled();
-            if (secondDisplayEnabled) {
-                // Both displays enabled
-                displayManager.setBrightness(savedBrightness, 0); // 0 = both displays
-                LOG_INFOF("MAIN", "Initial brightness set to %d for both displays", savedBrightness);
-            } else {
-                // Only first display enabled
-                displayManager.setBrightness(savedBrightness, 1); // 1 = first display only
-                displayManager.setBrightness(0, 2); // Turn off second display backlight
-                LOG_INFOF("MAIN", "Initial brightness set to %d for first display only", savedBrightness);
-            }
+            // Integrate SettingsManager with DisplayManager for immediate brightness application
+            settingsManager.setDisplayManager(&displayManager);
+            LOG_INFO("MAIN", "🔗 SettingsManager-DisplayManager integration enabled for immediate brightness control");
             
             systemInitialized = true;
             lastHeartbeat = currentTime;

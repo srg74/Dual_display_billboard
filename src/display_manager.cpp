@@ -4,11 +4,50 @@
 #include "logger.h"
 #include "splash_screen.h"
 
+/**
+ * @brief Constructor initializes DisplayManager with uninitialized hardware state.
+ * Sets default brightness values and initialization status flag. Hardware
+ * configuration and actual initialization must be performed by begin() execution.
+ * 
+ * @see begin() for complete hardware initialization sequence
+ * @see initializeBacklight() for PWM brightness configuration
+ * 
+ * @since v0.9
+ */
 DisplayManager::DisplayManager() : initialized(false), brightness1(255), brightness2(255), 
                                    splashStartTime(0), splashActive(false), splashTimeoutMs(2000),
                                    portalSequenceActive(false) {
 }
 
+/**
+ * @brief 🚀 Initializes complete dual display hardware system
+ * 
+ * Performs comprehensive hardware initialization sequence for dual ST7735/ST7789 displays.
+ * Configures PWM backlight control, chip select pins, TFT interface, and immediately
+ * clears both displays to prevent visual artifacts during startup.
+ * 
+ * Initialization Sequence:
+ * 1. 💡 Backlight PWM configuration (5kHz, 8-bit resolution)
+ * 2. 📌 Chip select pin setup with safe deselect state
+ * 3. 🖥️ TFT library initialization with dual CS method
+ * 4. ⚫ Immediate display clearing to prevent startup flash
+ * 
+ * Hardware Requirements:
+ * • ESP32/ESP32-S3 with sufficient GPIO pins
+ * • Dual ST7735 or ST7789 TFT displays
+ * • Independent backlight control circuits
+ * • Proper SPI wiring with shared MOSI/MISO/SCK
+ * 
+ * @return true Always returns true for compatibility
+ * 
+ * @note Sets initialized flag to true upon successful completion
+ * @note Both displays set to maximum brightness (255) by default
+ * @warning Requires proper hardware connections as defined in display_hardware_config.h
+ * 
+ * @see initializeBacklight() for PWM backlight setup details
+ * @see initializeCS() for chip select pin configuration
+ * @see initializeTFT() for TFT library setup process
+ */
 bool DisplayManager::begin() {
     LOG_INFO("DISPLAY", "🎨 Initializing Display Manager with working config");
     
@@ -24,6 +63,26 @@ bool DisplayManager::begin() {
     return true;
 }
 
+/**
+ * @brief Initializes PWM backlight control for both displays
+ * 
+ * Configures hardware PWM channels for independent backlight brightness control.
+ * Each display has its own PWM channel with 5kHz frequency and 8-bit resolution
+ * providing smooth brightness control from 0 to 255.
+ * 
+ * Hardware Configuration:
+ * - Display 1: GPIO 22 on PWM Channel 1 (5kHz, 8-bit, full brightness)
+ * - Display 2: GPIO 27 on PWM Channel 2 (5kHz, 8-bit, full brightness)
+ * 
+ * @note Both displays initialized to maximum brightness (255)
+ * @note Uses ESP32 LEDC peripheral for PWM generation
+ * @note Called automatically during begin() initialization
+ * 
+ * @see setBrightness() for runtime brightness control
+ * @see begin() for complete initialization sequence
+ * 
+ * @since v0.9
+ */
 void DisplayManager::initializeBacklight() {
     LOG_INFO("DISPLAY", "🔧 Setting up backlights...");
     
@@ -40,6 +99,27 @@ void DisplayManager::initializeBacklight() {
     LOG_INFO("DISPLAY", "✅ Both backlights initialized");
 }
 
+/**
+ * @brief Initializes chip select (CS) pins for dual display control
+ * 
+ * Configures GPIO pins for individual display selection in dual display setup.
+ * Both pins are set to OUTPUT mode and initialized to HIGH (deselected state)
+ * to ensure safe starting condition before any display operations.
+ * 
+ * Hardware Pin Mapping:
+ * - First Display CS: GPIO 5 (firstScreenCS)
+ * - Second Display CS: GPIO 15 (secondScreenCS)
+ * 
+ * @note Both CS pins start in deselected state (HIGH)
+ * @note Called automatically during begin() initialization
+ * @note Essential for preventing display conflicts in dual setup
+ * 
+ * @see selectDisplay() for runtime display activation
+ * @see deselectAll() for deactivating all displays
+ * @see begin() for complete initialization sequence
+ * 
+ * @since v0.9
+ */
 void DisplayManager::initializeCS() {
     LOG_INFO("DISPLAY", "🔧 Setting up CS pins...");
     
@@ -52,6 +132,32 @@ void DisplayManager::initializeCS() {
     LOG_INFO("DISPLAY", "✅ CS pins configured");
 }
 
+/**
+ * @brief Initializes TFT library with dual display configuration
+ * 
+ * Performs TFT_eSPI library initialization using dual CS selection method.
+ * Both displays are temporarily selected during initialization to ensure
+ * proper hardware recognition, then immediately cleared and configured
+ * with correct rotation settings.
+ * 
+ * Initialization Sequence:
+ * 1. Select both displays (CS pins LOW)
+ * 2. Initialize TFT library 
+ * 3. Clear initialization flash artifacts
+ * 4. Configure individual display rotations
+ * 5. Clear both displays to black
+ * 6. Deselect all displays
+ * 
+ * @note Uses dual CS method for reliable initialization
+ * @note Immediately clears displays to prevent visual artifacts
+ * @note Sets rotation 0 for both displays as default
+ * @note Called automatically during begin() initialization
+ * 
+ * @see selectDisplay() for runtime display selection
+ * @see begin() for complete initialization sequence
+ * 
+ * @since v0.9
+ */
 void DisplayManager::initializeTFT() {
     LOG_INFO("DISPLAY", "🔧 Initializing TFT...");
     
@@ -75,11 +181,49 @@ void DisplayManager::initializeTFT() {
     LOG_INFO("DISPLAY", "✅ TFT initialized with dual CS method");
 }
 
+/**
+ * 🖥️ Selects the active display for operations
+ * 
+ * This method activates the specified display by controlling chip select (CS) lines
+ * and setting the appropriate rotation for text display. Acts as a convenience
+ * wrapper for backward compatibility, defaulting to text rotation.
+ * 
+ * @param displayNum The display number to select (1 or 2)
+ * 
+ * @warning ⚠️ Deselects all displays first, then selects the target display
+ * @note 📝 Uses text rotation (DISPLAY_TEXT_ROTATION) as default
+ * 
+ * @see selectDisplayForText() for explicit text rotation
+ * @see selectDisplayForImage() for image-specific rotation
+ * @see deselectAll() for deactivating all displays
+ * 
+ * @since v0.9
+ */
 void DisplayManager::selectDisplay(int displayNum) {
     // Default to text rotation for backward compatibility
     selectDisplayForText(displayNum);
 }
 
+/**
+ * 📝 Selects display with text-optimized rotation
+ * 
+ * Activates the specified display and configures it for optimal text rendering
+ * by setting the text rotation (DISPLAY_TEXT_ROTATION). This method ensures
+ * text appears properly oriented for reading.
+ * 
+ * @param displayNum The display number to activate (1 or 2)
+ *                   - 1: First display (firstScreenCS)
+ *                   - 2: Second display (secondScreenCS)
+ * 
+ * @warning ⚠️ Always deselects all displays before selecting target
+ * @note 📌 Text rotation is configured via DISPLAY_TEXT_ROTATION constant
+ * @note 🔄 Invalid display numbers are silently ignored
+ * 
+ * @see selectDisplayForImage() for image-specific rotation
+ * @see deselectAll() for deactivating all displays
+ * 
+ * @since v0.9
+ */
 void DisplayManager::selectDisplayForText(int displayNum) {
     deselectAll();
     
@@ -92,6 +236,26 @@ void DisplayManager::selectDisplayForText(int displayNum) {
     }
 }
 
+/**
+ * @brief Selects display with image-optimized rotation
+ * 
+ * Activates the specified display and configures it for optimal image rendering
+ * by setting the image rotation (DISPLAY_IMAGE_ROTATION). This method ensures
+ * images are displayed in their correct orientation for viewing.
+ * 
+ * @param displayNum The display number to activate (1 or 2)
+ *                   - 1: First display (firstScreenCS)
+ *                   - 2: Second display (secondScreenCS)
+ * 
+ * @warning Always deselects all displays before selecting target
+ * @note Image rotation is configured via DISPLAY_IMAGE_ROTATION constant
+ * @note Invalid display numbers are silently ignored
+ * 
+ * @see selectDisplayForText() for text-specific rotation
+ * @see deselectAll() for deactivating all displays
+ * 
+ * @since v0.9
+ */
 void DisplayManager::selectDisplayForImage(int displayNum) {
     deselectAll();
     
@@ -104,11 +268,50 @@ void DisplayManager::selectDisplayForImage(int displayNum) {
     }
 }
 
+/**
+ * @brief Deactivates all displays by setting chip select lines HIGH
+ * 
+ * Sets both display chip select pins to HIGH state, effectively deselecting
+ * all displays. This ensures no display is active before selecting a new one
+ * and prevents potential conflicts between multiple displays.
+ * 
+ * @note Called automatically by selectDisplay methods before activation
+ * @note Both firstScreenCS and secondScreenCS pins set to HIGH
+ * 
+ * @see selectDisplay() for display selection with automatic deselection
+ * @see selectDisplayForText() for text-optimized display selection
+ * @see selectDisplayForImage() for image-optimized display selection
+ * 
+ * @since v0.9
+ */
 void DisplayManager::deselectAll() {
     digitalWrite(firstScreenCS, HIGH);
     digitalWrite(secondScreenCS, HIGH);
 }
 
+/**
+ * @brief Clears both displays to black and turns off backlight
+ * 
+ * Initializes both displays to a completely dark state by filling the screen
+ * with black pixels and setting brightness to zero. This method is typically
+ * called during system startup or reset to ensure displays start from a
+ * known clean state.
+ * 
+ * The operation sequence:
+ * 1. Activates display 1, fills with black, sets brightness to 0
+ * 2. Activates display 2, fills with black, sets brightness to 0
+ * 3. Deactivates all displays
+ * 
+ * @note Both screen content and backlight are cleared
+ * @note Uses setBrightness(0) to turn off backlight completely
+ * @note Ensures consistent startup state across both displays
+ * 
+ * @see selectDisplay() for individual display activation
+ * @see setBrightness() for backlight control
+ * @see deselectAll() for display deactivation
+ * 
+ * @since v0.9
+ */
 void DisplayManager::clearBothDisplaysToBlack() {
     LOG_INFO("DISPLAY", "⚫ Clearing both displays to dark (no light) on startup");
     
@@ -127,6 +330,33 @@ void DisplayManager::clearBothDisplaysToBlack() {
     LOG_INFO("DISPLAY", "✅ Both displays cleared to dark (no light)");
 }
 
+/**
+ * @brief Sets backlight brightness for specified display(s)
+ * 
+ * Controls the PWM-driven backlight brightness for one or both displays.
+ * Uses hardware PWM channels to provide smooth brightness control from
+ * 0 (completely off) to 255 (maximum brightness).
+ * 
+ * Channel mapping (hardware-specific):
+ * - Display 1: GPIO 27 on PWM Channel 2 (Blue display)
+ * - Display 2: GPIO 22 on PWM Channel 1 (Yellow display)
+ * 
+ * @param brightness PWM duty cycle value (0-255)
+ *                   0 = backlight off, 255 = maximum brightness
+ * @param displayNum Target display number
+ *                   1 = first display only
+ *                   2 = second display only  
+ *                   0 = both displays
+ * 
+ * @note Channel assignment is swapped due to hardware wiring
+ * @note Brightness values are stored in brightness1/brightness2 variables
+ * @note Uses ledcWrite() for hardware PWM control
+ * 
+ * @see clearBothDisplaysToBlack() for setting brightness to 0
+ * @see begin() for PWM channel initialization
+ * 
+ * @since v0.9
+ */
 void DisplayManager::setBrightness(uint8_t brightness, int displayNum) {
     if (displayNum == 1 || displayNum == 0) {
         brightness1 = brightness;
@@ -140,6 +370,30 @@ void DisplayManager::setBrightness(uint8_t brightness, int displayNum) {
     }
 }
 
+/**
+ * @brief Fills entire screen(s) with specified color
+ * 
+ * Clears the display buffer and fills it with a solid color. Can target
+ * individual displays or both simultaneously. Automatically handles
+ * display selection and deselection for safe multi-display operation.
+ * 
+ * @param color 16-bit RGB565 color value
+ *              Common values: TFT_BLACK, TFT_WHITE, TFT_RED, TFT_GREEN, TFT_BLUE
+ * @param displayNum Target display selection
+ *                   0 = both displays (sequential operation)
+ *                   1 = first display only
+ *                   2 = second display only
+ * 
+ * @note For displayNum=0, displays are filled sequentially, not simultaneously
+ * @note Uses selectDisplay() for safe chip select management
+ * @note Automatically calls deselectAll() after operation
+ * 
+ * @see selectDisplay() for individual display activation
+ * @see deselectAll() for display deactivation
+ * @see clearBothDisplaysToBlack() for black fill with brightness control
+ * 
+ * @since v0.9
+ */
 void DisplayManager::fillScreen(uint16_t color, int displayNum) {
     if (displayNum == 0) {
         // Both displays
@@ -155,6 +409,29 @@ void DisplayManager::fillScreen(uint16_t color, int displayNum) {
     }
 }
 
+/**
+ * @brief Draws text on specified display at given coordinates
+ * 
+ * Renders text string at specified pixel coordinates using the TFT library.
+ * Automatically handles display selection and deselection for safe operation.
+ * Uses basic text rendering with standard size and specified color.
+ * 
+ * @param text Null-terminated string to display
+ * @param x Horizontal pixel coordinate (0 = left edge)
+ * @param y Vertical pixel coordinate (0 = top edge) 
+ * @param color 16-bit RGB565 text color
+ * @param displayNum Target display number (1 or 2)
+ * 
+ * @note Uses fixed text size of 1 for consistent rendering
+ * @note Text may wrap or clip if coordinates exceed display bounds
+ * @note Display is automatically selected and deselected
+ * 
+ * @see selectDisplay() for display activation
+ * @see deselectAll() for display deactivation
+ * @see fillScreen() for clearing display before text
+ * 
+ * @since v0.9
+ */
 void DisplayManager::drawText(const char* text, int x, int y, uint16_t color, int displayNum) {
     selectDisplay(displayNum);
     tft.setTextColor(color);
@@ -164,6 +441,25 @@ void DisplayManager::drawText(const char* text, int x, int y, uint16_t color, in
     deselectAll();
 }
 
+/**
+ * @brief Enables or disables the second display
+ * 
+ * Controls the operational state of the second display. When disabled,
+ * the display is cleared to black to provide visual feedback. When enabled,
+ * the display becomes available for normal operations.
+ * 
+ * @param enable True to enable second display, false to disable
+ * 
+ * @note When disabled, second display is filled with black
+ * @note Logging indicates current state change
+ * @note Does not affect display hardware initialization
+ * 
+ * @see selectDisplay() for display activation
+ * @see fillScreen() for display clearing
+ * @see deselectAll() for display deactivation
+ * 
+ * @since v0.9
+ */
 void DisplayManager::enableSecondDisplay(bool enable) {
     if (enable) {
         LOG_INFO("DISPLAY", "✅ Second display enabled");
@@ -175,6 +471,28 @@ void DisplayManager::enableSecondDisplay(bool enable) {
     }
 }
 
+/**
+ * @brief Alternates color display between two screens at timed intervals
+ * 
+ * Automatically switches between displays, filling the first with blue
+ * and the second with yellow at regular intervals. Uses static variables
+ * to maintain state between calls. Primarily used for testing or demo modes.
+ * 
+ * The alternation cycle:
+ * 1. Display 1: Blue background
+ * 2. Display 2: Yellow background
+ * 3. Repeat after DISPLAY_ALTERNATING_INTERVAL_MS milliseconds
+ * 
+ * @note Uses static variables to track timing and current display
+ * @note Logging is commented out to reduce log spam during continuous operation
+ * @note Interval controlled by DISPLAY_ALTERNATING_INTERVAL_MS constant
+ * 
+ * @see selectDisplay() for display activation
+ * @see fillScreen() for color fill operations
+ * @see deselectAll() for display deactivation
+ * 
+ * @since v0.9
+ */
 void DisplayManager::alternateDisplays() {
     static bool useFirst = true;
     static unsigned long lastSwitch = 0;
@@ -197,6 +515,31 @@ void DisplayManager::alternateDisplays() {
     }
 }
 
+/**
+ * @brief Displays quick status message on first display
+ * 
+ * Shows a status message on display 1 with colored background while keeping
+ * display 2 dark. Designed for system notifications, errors, or status updates.
+ * Message is centered on screen with automatic text color selection for contrast.
+ * 
+ * Display behavior:
+ * - Display 1: Shows message with background color
+ * - Display 2: Always kept black with brightness 0
+ * 
+ * @param message Text string to display on screen
+ * @param color Background color (RGB565), also affects text color selection
+ * 
+ * @note Text color automatically chosen: white on red background, black otherwise
+ * @note Display 2 is always cleared and dimmed during status display
+ * @note Returns immediately if DisplayManager not initialized
+ * @note Uses centered text positioning at coordinates (80, 40)
+ * 
+ * @see selectDisplay() for display activation
+ * @see setBrightness() for backlight control
+ * @see deselectAll() for display deactivation
+ * 
+ * @since v0.9
+ */
 // FIXED: Fast status display method - USES DISPLAY 1 FOR MESSAGES
 void DisplayManager::showQuickStatus(const String& message, uint16_t color) {
     if (!initialized) return;
@@ -217,25 +560,117 @@ void DisplayManager::showQuickStatus(const String& message, uint16_t color) {
     deselectAll();
 }
 
+/**
+ * @brief Returns the current splash screen activation state
+ * 
+ * Provides access to the internal splash screen state without modification.
+ * Used by other components to determine if splash screen is currently active
+ * and adjust behavior accordingly.
+ * 
+ * @return True if splash screen is currently active, false otherwise
+ * 
+ * @note This is a read-only state query method
+ * @note Splash state is managed by other display methods
+ * 
+ * @see showSplashScreen() for splash activation
+ * @see hideSplashScreen() for splash deactivation
+ * 
+ * @since v0.9
+ */
 bool DisplayManager::isSplashActive() {
     return splashActive;
 }
 
+/**
+ * @brief Displays AP starting notification on primary display
+ * 
+ * Shows a quick status message indicating that Access Point mode is starting.
+ * Uses orange background color to indicate transition state. Provides immediate
+ * visual feedback during AP initialization process.
+ * 
+ * @note Uses showQuickStatus() with predefined message and color
+ * @note Display 1 shows orange "Starting AP..." message
+ * @note Display 2 remains dark during this status
+ * 
+ * @see showQuickStatus() for underlying display mechanism
+ * @see showAPReady() for AP ready notification
+ * 
+ * @since v0.9
+ */
 // Quick AP starting indicator
 void DisplayManager::showAPStarting() {
     showQuickStatus("Starting AP...", TFT_ORANGE);
 }
 
+/**
+ * @brief Displays AP ready notification on primary display
+ * 
+ * Shows a quick status message confirming that Access Point mode is ready
+ * and accepting connections. Uses blue background to indicate ready state.
+ * Provides clear visual confirmation of successful AP initialization.
+ * 
+ * @note Uses showQuickStatus() with predefined message and color
+ * @note Display 1 shows blue "AP Ready!" message
+ * @note Display 2 remains dark during this status
+ * 
+ * @see showQuickStatus() for underlying display mechanism
+ * @see showAPStarting() for AP starting notification
+ * 
+ * @since v0.9
+ */
 // Quick AP ready indicator  
 void DisplayManager::showAPReady() {
     showQuickStatus("AP Ready!", TFT_BLUE);
 }
 
+/**
+ * @brief Displays WiFi connection attempt notification
+ * 
+ * Shows a quick status message indicating active WiFi connection attempt.
+ * Uses yellow background to indicate pending/in-progress state. Provides
+ * visual feedback during network connection process.
+ * 
+ * @note Uses showQuickStatus() with predefined message and color
+ * @note Display 1 shows yellow "Connecting..." message
+ * @note Display 2 remains dark during this status
+ * 
+ * @see showQuickStatus() for underlying display mechanism
+ * @see showConnectionSuccess() for successful connection notification
+ * 
+ * @since v0.9
+ */
 // Quick connecting indicator
 void DisplayManager::showConnecting() {
     showQuickStatus("Connecting...", TFT_YELLOW);
 }
 
+/**
+ * @brief Displays comprehensive portal configuration information
+ * 
+ * Shows detailed portal information including SSID, IP address, and status
+ * on the primary display with green background. Designed for configuration
+ * portal mode when device acts as access point for initial setup.
+ * 
+ * Display layout uses optimized spacing for 160x80 pixel screen:
+ * - Line 1: SSID (typically "Billboard-Portal")
+ * - Line 2: IP address for portal access
+ * - Line 3: Current status message
+ * 
+ * @param ssid Access point SSID name
+ * @param ip IP address for portal access
+ * @param status Current portal status message
+ * 
+ * @note Display 1 shows green background with black text
+ * @note Display 2 remains dark with brightness set to 0
+ * @note Uses left-aligned text positioning to prevent clipping
+ * @note Returns immediately if DisplayManager not initialized
+ * 
+ * @see showQuickStatus() for simple status messages
+ * @see showConnectionSuccess() for WiFi connection confirmation
+ * @see showPortalSequence() for splash-to-portal transition
+ * 
+ * @since v0.9
+ */
 // FIXED: Portal info method - USES DISPLAY 1 FOR PORTAL INFO
 void DisplayManager::showPortalInfo(const String& ssid, const String& ip, const String& status) {
     if (!initialized) {
@@ -279,7 +714,31 @@ void DisplayManager::showPortalInfo(const String& ssid, const String& ip, const 
     LOG_INFO("DISPLAY", "✅ Portal info displayed - Screen 1: GREEN with text, Screen 2: dark");
 }
 
-// NEW: Show WiFi connection success message
+/**
+ * @brief Displays WiFi connection success confirmation
+ * 
+ * Shows confirmation message for successful WiFi connection including
+ * the assigned IP address. Uses blue background to indicate successful
+ * connection state and provides essential network information.
+ * 
+ * Display layout for 80x160 pixel screen (rotated):
+ * - Line 1: "Connected to Wi-Fi" confirmation
+ * - Line 2: "IP: XXX.XXX.XXX.XXX" address display
+ * 
+ * @param ip The assigned IP address to display
+ * 
+ * @note Display 1 shows blue background with white text
+ * @note Display 2 remains dark with brightness set to 0
+ * @note Uses left-aligned text positioning for readability
+ * @note Returns immediately if DisplayManager not initialized
+ * 
+ * @see showQuickStatus() for simple status messages
+ * @see showPortalInfo() for portal configuration display
+ * @see showConnecting() for connection attempt notification
+ * 
+ * @since v0.9
+ */
+// Show WiFi connection success message
 void DisplayManager::showConnectionSuccess(const String& ip) {
     if (!initialized) {
         LOG_WARN("DISPLAY", "❌ Display not initialized - cannot show connection success");
@@ -319,6 +778,31 @@ void DisplayManager::showConnectionSuccess(const String& ip) {
     LOG_INFOF("DISPLAY", "✅ Connection success displayed - IP: %s", ip.c_str());
 }
 
+/**
+ * @brief Draws RGB565 color bitmap stored in PROGMEM
+ * 
+ * Renders a color bitmap stored in program memory (PROGMEM) pixel by pixel.
+ * Each pixel is read using pgm_read_word() and drawn individually to support
+ * bitmaps that exceed available RAM capacity.
+ * 
+ * @param x Top-left X coordinate for bitmap placement
+ * @param y Top-left Y coordinate for bitmap placement
+ * @param bitmap Pointer to RGB565 bitmap data in PROGMEM
+ * @param w Bitmap width in pixels
+ * @param h Bitmap height in pixels
+ * @param displayNum Target display number (1 or 2)
+ * 
+ * @note Uses pgm_read_word() for PROGMEM access
+ * @note Pixel-by-pixel drawing may be slow for large bitmaps
+ * @note Display is automatically selected and deselected
+ * @note Bitmap must be in RGB565 format
+ * 
+ * @see drawColorBitmapRotated() for rotated bitmap rendering
+ * @see selectDisplay() for display activation
+ * @see deselectAll() for display deactivation
+ * 
+ * @since v0.9
+ */
 void DisplayManager::drawColorBitmap(int16_t x, int16_t y, const uint16_t *bitmap, 
                                     int16_t w, int16_t h, int displayNum) {
     selectDisplay(displayNum);
@@ -335,6 +819,36 @@ void DisplayManager::drawColorBitmap(int16_t x, int16_t y, const uint16_t *bitma
     deselectAll();
 }
 
+/**
+ * @brief Draws RGB565 color bitmap with 270-degree rotation
+ * 
+ * Renders a color bitmap with automatic 270-degree clockwise rotation
+ * to correct orientation issues. Each pixel is transformed during rendering
+ * to achieve the rotation effect without requiring pre-rotated bitmap data.
+ * 
+ * Rotation transformation:
+ * - Original pixel at (i,j) becomes pixel at (h-1-j, i)
+ * - Effectively rotates 270 degrees clockwise
+ * - Corrects upside-down bitmap display issues
+ * 
+ * @param x Top-left X coordinate for rotated bitmap placement
+ * @param y Top-left Y coordinate for rotated bitmap placement
+ * @param bitmap Pointer to RGB565 bitmap data in PROGMEM
+ * @param w Original bitmap width in pixels (before rotation)
+ * @param h Original bitmap height in pixels (before rotation)
+ * @param displayNum Target display number (1 or 2)
+ * 
+ * @note Final bitmap dimensions will be h×w after rotation
+ * @note Uses pgm_read_word() for PROGMEM access
+ * @note Display is automatically selected and deselected
+ * @note Slower than non-rotated version due to coordinate transformation
+ * 
+ * @see drawColorBitmap() for non-rotated bitmap rendering
+ * @see selectDisplay() for display activation
+ * @see deselectAll() for display deactivation
+ * 
+ * @since v0.9
+ */
 void DisplayManager::drawColorBitmapRotated(int16_t x, int16_t y, const uint16_t *bitmap, 
                                           int16_t w, int16_t h, int displayNum) {
     selectDisplay(displayNum);
@@ -357,6 +871,36 @@ void DisplayManager::drawColorBitmapRotated(int16_t x, int16_t y, const uint16_t
     deselectAll();
 }
 
+/**
+ * @brief Displays splash screen on specified display(s) with timeout
+ * 
+ * Shows a rotated color bitmap splash screen with automatic brightness
+ * control and timeout management. Can display on individual displays
+ * or both simultaneously. Uses image rotation for optimal presentation.
+ * 
+ * Features:
+ * - Automatic brightness boost to maximum (255) for visibility
+ * - Black background clearing before splash display
+ * - 270-degree rotation for correct orientation
+ * - Configurable timeout with automatic state management
+ * 
+ * @param displayNum Target display selection
+ *                   0 = both displays (recursive call)
+ *                   1 = first display only
+ *                   2 = second display only
+ * @param timeoutMs Splash screen timeout in milliseconds
+ * 
+ * @note Sets splashActive flag and manages timing automatically
+ * @note Uses selectDisplayForImage() for optimal image rotation
+ * @note Splash bitmap must be defined as epd_bitmap_ constant
+ * @note Portal sequence may follow after splash completion
+ * 
+ * @see drawColorBitmapRotated() for bitmap rendering
+ * @see updateSplashScreen() for timeout management
+ * @see showPortalSequence() for splash-to-portal transition
+ * 
+ * @since v0.9
+ */
 void DisplayManager::showSplashScreen(int displayNum, unsigned long timeoutMs) {
     if (displayNum == 0) {
         // Show on both displays
@@ -406,6 +950,32 @@ void DisplayManager::updateSplashScreen() {
     }
 }
 
+/**
+ * @brief Initiates splash-to-portal sequence with automatic transition
+ * 
+ * Starts a timed sequence showing splash screen followed by portal
+ * configuration information. Stores portal data for delayed display
+ * after splash timeout completes.
+ * 
+ * Sequence timeline:
+ * 1. Immediate: Shows splash screen on both displays
+ * 2. After DISPLAY_SPLASH_DURATION_MS: Automatically shows portal info
+ * 
+ * @param ssid Access point SSID for portal display
+ * @param ip IP address for portal access
+ * @param status Current portal status message
+ * 
+ * @note Portal data is stored in pending variables for delayed display
+ * @note Sets portalSequenceActive flag for updateSplashScreen()
+ * @note Uses DISPLAY_SPLASH_DURATION_MS constant for timing
+ * @note Splash displays on both screens (displayNum = 0)
+ * 
+ * @see showSplashScreen() for splash display
+ * @see updateSplashScreen() for automatic transition handling
+ * @see showPortalInfo() for portal information display
+ * 
+ * @since v0.9
+ */
 void DisplayManager::showPortalSequence(const String& ssid, const String& ip, const String& status) {
     // Store portal info for later display
     pendingSSID = ssid;
@@ -419,7 +989,26 @@ void DisplayManager::showPortalSequence(const String& ssid, const String& ip, co
     LOG_INFO("DISPLAY", "🚀 Portal sequence started: 4s splash → portal info");
 }
 
-// TFT access for ImageManager
+/**
+ * @brief Provides TFT library access for external components
+ * 
+ * Returns a pointer to the internal TFT_eSPI instance for use by other
+ * components like ImageManager. The returned instance is shared between
+ * displays and requires proper display selection before use.
+ * 
+ * @param displayNum Display number for validation (1 or 2)
+ * 
+ * @return Pointer to TFT_eSPI instance if displayNum valid, nullptr otherwise
+ * 
+ * @note Caller must use selectDisplay() before TFT operations
+ * @note Same TFT instance is shared between both displays
+ * @note Display selection controls which screen receives commands
+ * 
+ * @see selectDisplay() for proper display activation
+ * @see selectDisplayForImage() for image-specific operations
+ * 
+ * @since v0.9
+ */
 TFT_eSPI* DisplayManager::getTFT(int displayNum) {
     // Note: This returns the shared TFT instance
     // The display selection is handled by selectDisplay()
@@ -429,7 +1018,23 @@ TFT_eSPI* DisplayManager::getTFT(int displayNum) {
     return nullptr;
 }
 
-// Display type detection
+/**
+ * @brief Returns the hardware display type string
+ * 
+ * Provides compile-time detection of the display hardware type based on
+ * preprocessor definitions. Used for hardware-specific configuration
+ * and debugging information.
+ * 
+ * @return "ST7789" if DISPLAY_TYPE_ST7789 defined, "ST7735" otherwise
+ * 
+ * @note Determined at compile time via preprocessor definitions
+ * @note Used for hardware-specific optimizations and logging
+ * 
+ * @see getDisplayWidth() for display width detection
+ * @see getDisplayHeight() for display height detection
+ * 
+ * @since v0.9
+ */
 String DisplayManager::getDisplayType() const {
     #ifdef DISPLAY_TYPE_ST7789
         return "ST7789";
@@ -438,6 +1043,23 @@ String DisplayManager::getDisplayType() const {
     #endif
 }
 
+/**
+ * @brief Returns the display width in pixels
+ * 
+ * Provides compile-time detection of display width based on hardware type.
+ * Different display types have different resolutions and this method
+ * returns the appropriate width for the configured hardware.
+ * 
+ * @return 240 pixels for ST7789, 160 pixels for ST7735
+ * 
+ * @note Determined at compile time via preprocessor definitions
+ * @note Used for image scaling and layout calculations
+ * 
+ * @see getDisplayHeight() for display height detection
+ * @see getDisplayType() for hardware type identification
+ * 
+ * @since v0.9
+ */
 uint16_t DisplayManager::getDisplayWidth() const {
     #ifdef DISPLAY_TYPE_ST7789
         return 240;
@@ -446,6 +1068,23 @@ uint16_t DisplayManager::getDisplayWidth() const {
     #endif
 }
 
+/**
+ * @brief Returns the display height in pixels
+ * 
+ * Provides compile-time detection of display height based on hardware type.
+ * Different display types have different resolutions and this method
+ * returns the appropriate height for the configured hardware.
+ * 
+ * @return 240 pixels for ST7789, 80 pixels for ST7735
+ * 
+ * @note Determined at compile time via preprocessor definitions
+ * @note Used for image scaling and layout calculations
+ * 
+ * @see getDisplayWidth() for display width detection
+ * @see getDisplayType() for hardware type identification
+ * 
+ * @since v0.9
+ */
 uint16_t DisplayManager::getDisplayHeight() const {
     #ifdef DISPLAY_TYPE_ST7789
         return 240;
@@ -454,6 +1093,31 @@ uint16_t DisplayManager::getDisplayHeight() const {
     #endif
 }
 
+/**
+ * @brief Sets rotation for all displays and TFT instance
+ * 
+ * Configures the display rotation for both displays and the main TFT instance.
+ * This method ensures consistent rotation across all display operations and
+ * is particularly important for image operations that bypass display selection.
+ * 
+ * Rotation values:
+ * - 0: No rotation (default)
+ * - 1: 90 degrees clockwise
+ * - 2: 180 degrees
+ * - 3: 270 degrees clockwise
+ * 
+ * @param rotation Rotation value (0-3)
+ * 
+ * @note Returns immediately if DisplayManager not initialized
+ * @note Sets rotation on main TFT instance first
+ * @note Applies rotation to both individual displays
+ * @note Automatically deselects displays after rotation setting
+ * 
+ * @see selectDisplay() for display activation
+ * @see deselectAll() for display deactivation
+ * 
+ * @since v0.9
+ */
 void DisplayManager::setRotation(uint8_t rotation) {
     if (!initialized) return;
     

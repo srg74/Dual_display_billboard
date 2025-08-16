@@ -1,14 +1,49 @@
 /**
  * @file display_clock_manager.h
- * @brief Professional clock display system for dual display billboard
+ * @brief Professional clock display system with multiple face styles for dual display billboard
  * 
- * Provides sophisticated clock rendering with multiple face styles,
- * dual display synchronization, and gallery integration for the
- * ESP32-based dual display billboard system.
+ * Provides sophisticated clock rendering capabilities with multiple face styles,
+ * dual display synchronization, customizable layouts, and seamless gallery integration
+ * for the ESP32-based dual display billboard system.
+ * 
+ * Key Features:
+ * - Multiple clock face styles (Classic Analog, Digital Modern, Minimalist, Modern Square)
+ * - Dual display synchronization with independent content control
+ * - Real-time update system with configurable refresh intervals
+ * - Customizable labels and timezone-aware time display
+ * - Smooth transitions between clock and gallery modes
+ * - Memory-efficient rendering optimized for embedded systems
+ * - Integration with settings persistence and time management
+ * 
+ * Clock Face Types:
+ * - Classic Analog: Traditional circular clock with hour/minute hands
+ * - Digital Modern: Large digital time display with date information
+ * - Minimalist: Clean, simple design with essential time information
+ * - Modern Square: Contemporary square layout with enhanced readability
+ * 
+ * Display Integration:
+ * - Automatic display type detection (ST7735/ST7789)
+ * - Independent clock content for each display
+ * - Brightness synchronization with display settings
+ * - Rotation handling for optimal clock presentation
+ * - Efficient buffer management for smooth updates
+ * 
+ * Time Management:
+ * - Integration with NTP time synchronization
+ * - Timezone-aware display with automatic DST handling
+ * - Customizable time format (12/24 hour) and date display
+ * - User-configurable clock labels for personalization
+ * 
+ * Performance Optimization:
+ * - Selective update regions to minimize display writes
+ * - Frame rate control for smooth animation without flicker
+ * - Memory pooling for graphic buffers
+ * - Optimized drawing routines for embedded performance
  * 
  * @author Dual Display Billboard Project
  * @version 2.0
  * @date August 2025
+ * @since v0.9
  */
 
 #pragma once
