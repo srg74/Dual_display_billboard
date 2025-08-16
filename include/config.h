@@ -2,7 +2,7 @@
 
 // Build Information (auto-generated during compilation)
 #ifndef BUILD_DATE
-#define BUILD_DATE "250812"  // YYMMDD format
+#define BUILD_DATE "2508163"  // YYMMDDx format x = daily build counter
 #endif
 
 #ifndef BUILD_TYPE
@@ -18,7 +18,7 @@
 #endif
 
 #ifndef FIRMWARE_VERSION
-#define FIRMWARE_VERSION "2.0.0"
+#define FIRMWARE_VERSION "v0.9"
 #endif
 
 // Network Configuration

@@ -297,6 +297,14 @@ void loop() {
             // Initialize credential manager
             if (credentialManager.begin()) {
                 LOG_INFO("MAIN", "Credential manager initialized");
+                
+                // Now that LittleFS is initialized, enable file logging
+                LOG_INFO("MAIN", "Attempting to enable file logging...");
+                if (Logger::enableFileLogging("/logs/system.log")) {
+                    LOG_INFO("MAIN", "📁 File logging enabled to /logs/system.log");
+                } else {
+                    LOG_WARN("MAIN", "⚠️ File logging could not be enabled - continuing with Serial only");
+                }
             } else {
                 LOG_ERROR("MAIN", "Credential manager failed");
             }

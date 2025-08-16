@@ -25,6 +25,8 @@
 #include <stdarg.h>
 
 bool Logger::initialized = false;
+bool Logger::fileLogging = false;
+String Logger::currentLogFile = "";
 static Logger::Level currentLevel = Logger::INFO;
 
 /**
@@ -227,11 +229,16 @@ void Logger::log(Level level, const String& tag, const String& message) {
     }
     
     // Format: [timestamp] [DEBUG] [TAG] Message
-    Serial.printf("[%08lu] %s [%s] %s\n", 
-                  timestamp, 
-                  prefix.c_str(), 
-                  tag.c_str(), 
-                  message.c_str());
+    String formattedMessage = String("[") + String(timestamp, 10) + "] " + 
+                             prefix + "[" + tag + "] " + message;
+    
+    // Output to Serial
+    Serial.println(formattedMessage);
+    
+    // Output to file if file logging is enabled
+    if (fileLogging) {
+        writeToFile(formattedMessage + "\n");
+    }
     #endif
 }
 
@@ -575,6 +582,149 @@ void Logger::verbosef(const String& tag, const char* format, ...) {
     vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
     verbose(tag, String(buffer));
+    #endif
+}
+
+// File logging functions
+
+/**
+ * @brief Enables file logging to specified file path
+ * 
+ * Initializes LittleFS filesystem and enables logging output to be written
+ * to a file in addition to Serial output. Creates the logs directory if
+ * it doesn't exist and sets up the log file for writing.
+ * 
+ * @param filePath Path to log file (default: "/logs/system.log")
+ * @return true if file logging was successfully enabled, false otherwise
+ * 
+ * @note Requires LittleFS to be available and functioning
+ * @note Creates parent directory if it doesn't exist
+ * @note Existing log files will be appended to, not overwritten
+ * @note File logging continues until explicitly disabled
+ * 
+ * @see disableFileLogging() to stop file logging
+ * @see isFileLoggingEnabled() to check current state
+ * 
+ * @since v0.9
+ */
+bool Logger::enableFileLogging(const String& filePath) {
+    #if defined(LOGGER_ENABLED) && LOGGER_ENABLED
+    ensureInitialized();
+    
+    // Initialize LittleFS if not already done
+    if (!LittleFS.begin(true)) {
+        Serial.println("[ERROR] [LOGGER] Failed to initialize LittleFS for file logging");
+        return false;
+    }
+    
+    // Create logs directory if it doesn't exist
+    String dirPath = filePath.substring(0, filePath.lastIndexOf('/'));
+    if (dirPath.length() > 0 && !LittleFS.exists(dirPath)) {
+        // Create directory (LittleFS doesn't have mkdir, so we create a temp file and delete it)
+        File tempFile = LittleFS.open(dirPath + "/.temp", "w");
+        if (tempFile) {
+            tempFile.close();
+            LittleFS.remove(dirPath + "/.temp");
+        }
+    }
+    
+    // Test if we can write to the file
+    File testFile = LittleFS.open(filePath, "a");
+    if (!testFile) {
+        Serial.println("[ERROR] [LOGGER] Cannot open log file for writing: " + filePath);
+        return false;
+    }
+    testFile.close();
+    
+    currentLogFile = filePath;
+    fileLogging = true;
+    
+    // Log successful initialization
+    String timestamp = String(millis());
+    String initMessage = "[" + timestamp + "] [INFO]   [LOGGER] File logging enabled: " + filePath + "\n";
+    writeToFile(initMessage);
+    
+    Serial.println("[INFO] [LOGGER] File logging enabled: " + filePath);
+    return true;
+    #else
+    return false;
+    #endif
+}
+
+/**
+ * @brief Disables file logging
+ * 
+ * Stops writing log messages to file while continuing to output
+ * to Serial. Clears the current log file path and disables the
+ * file logging flag.
+ * 
+ * @note Serial logging continues unaffected
+ * @note Can be re-enabled later with enableFileLogging()
+ * 
+ * @see enableFileLogging() to start file logging
+ * @see isFileLoggingEnabled() to check current state
+ * 
+ * @since v0.9
+ */
+void Logger::disableFileLogging() {
+    #if defined(LOGGER_ENABLED) && LOGGER_ENABLED
+    if (fileLogging) {
+        // Log shutdown message
+        String timestamp = String(millis());
+        String shutdownMessage = "[" + timestamp + "] [INFO]   [LOGGER] File logging disabled\n";
+        writeToFile(shutdownMessage);
+        
+        fileLogging = false;
+        currentLogFile = "";
+        Serial.println("[INFO] [LOGGER] File logging disabled");
+    }
+    #endif
+}
+
+/**
+ * @brief Checks if file logging is currently enabled
+ * 
+ * @return true if file logging is active, false otherwise
+ * 
+ * @see enableFileLogging() to start file logging
+ * @see disableFileLogging() to stop file logging
+ * 
+ * @since v0.9
+ */
+bool Logger::isFileLoggingEnabled() {
+    return fileLogging;
+}
+
+/**
+ * @brief Writes message to log file if file logging is enabled
+ * 
+ * Internal function that handles writing formatted log messages
+ * to the current log file. Includes error handling and automatic
+ * file opening/closing for each write operation.
+ * 
+ * @param message Formatted log message to write to file
+ * 
+ * @note Internal function - not intended for direct use
+ * @note Automatically handles file opening and closing
+ * @note Includes basic error handling for write failures
+ * 
+ * @since v0.9
+ */
+void Logger::writeToFile(const String& message) {
+    #if defined(LOGGER_ENABLED) && LOGGER_ENABLED
+    if (!fileLogging || currentLogFile.length() == 0) {
+        return;
+    }
+    
+    File logFile = LittleFS.open(currentLogFile, "a");
+    if (logFile) {
+        logFile.print(message);
+        logFile.close();
+    } else {
+        // If file write fails, disable file logging to prevent spam
+        fileLogging = false;
+        Serial.println("[ERROR] [LOGGER] Failed to write to log file, disabling file logging");
+    }
     #endif
 }
 

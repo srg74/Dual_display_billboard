@@ -3,423 +3,21 @@
 <head>
     <title>Billboard Settings</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {
-            background-color: #0d1117;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 10px;
-            color: #f0f6fc;
-        }
-
-        .main-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 5px;
-        }
-
-        .flex-container-gray {
-            display: flex;
-            flex-wrap: nowrap;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            border: 1px solid #30363d;
-            box-sizing: border-box;
-            background-color: #161b22;
-            color: #f0f6fc;
-        }
-
-        .flex-container-gray:first-child {
-            background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
-            border: 1px solid #238636;
-            color: #fff;
-        }
-
-        .header-block {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
-
-        .billboard-name {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 0;
-        }
-
-        .status-value {
-            color: #ffffff;
-            font-weight: 500;
-        }
-
-        h2 {
-            color: #f0f6fc;
-            margin: 20px 0 10px 0;
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        button, .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
-            color: #fff;
-            border: 1px solid #1f6feb;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        /* Professional icon spacing */
-        button i, .btn i {
-            font-size: 14px;
-            line-height: 1;
-        }
-
-        .btn-success {
-            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
-            border: 1px solid #238636;
-        }
-
-        .btn-warning {
-            background: linear-gradient(135deg, #da3633 0%, #f85149 100%);
-            border: 1px solid #da3633;
-        }
-
-        .status-connected { color: #2ea043; font-weight: 600; }
-        .status-disconnected { color: #f85149; font-weight: 600; }
-
-        /* Header and label icons */
-        h1 i, h2 i, label i {
-            margin-right: 8px;
-        }
-
-        select {
-            padding: 8px 12px;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            background-color: #21262d;
-            color: #f0f6fc;
-            font-size: 14px;
-            min-width: 120px;
-        }
-
-        /* Clock Face Preview Styles */
-        .clock-face-option {
-            cursor: pointer;
-            padding: 12px;
-            border: 2px solid #30363d;
-            border-radius: 8px;
-            background-color: #161b22;
-            transition: all 0.2s ease;
-            display: block;
-        }
-
-        .clock-face-option:hover {
-            border-color: #58a6ff;
-            background-color: #21262d;
-        }
-
-        .clock-face-option input[type="radio"] {
-            display: none;
-        }
-
-        .clock-face-option input[type="radio"]:checked + .clock-preview {
-            border-color: #58a6ff;
-            background-color: #1c2128;
-        }
-
-        .clock-preview {
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            padding: 16px;
-            background-color: #0d1117;
-            text-align: center;
-            transition: all 0.2s ease;
-        }
-
-        .clock-preview span {
-            display: block;
-            margin-top: 8px;
-            font-size: 12px;
-            color: #f0f6fc;
-            font-weight: 500;
-        }
-
-        /* Analog Clock Preview */
-        .analog-preview {
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .clock-circle {
-            width: 40px;
-            height: 40px;
-            border: 2px solid #58a6ff;
-            border-radius: 50%;
-            position: relative;
-        }
-
-        .hour-hand, .minute-hand {
-            position: absolute;
-            background-color: #ff6b6b;
-            border-radius: 2px;
-            transform-origin: bottom center;
-        }
-
-        .hour-hand {
-            width: 2px;
-            height: 12px;
-            top: 8px;
-            left: 19px;
-            transform: rotate(45deg);
-        }
-
-        .minute-hand {
-            width: 1px;
-            height: 16px;
-            top: 4px;
-            left: 19.5px;
-            transform: rotate(90deg);
-        }
-
-        .center-dot {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background-color: #fff;
-            border-radius: 50%;
-            top: 18px;
-            left: 18px;
-        }
-
-        /* Digital Clock Preview */
-        .digital-preview {
-            height: 60px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .digital-time {
-            font-size: 18px;
-            font-weight: bold;
-            color: #00d4aa;
-            font-family: 'Courier New', monospace;
-        }
-
-        .digital-seconds {
-            font-size: 12px;
-            color: #00d4aa;
-            font-family: 'Courier New', monospace;
-            margin-top: 2px;
-        }
-
-        /* Minimalist Clock Preview */
-        .minimalist-preview {
-            height: 60px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .minimalist-time {
-            font-size: 16px;
-            color: #f0f6fc;
-            font-family: 'Arial', sans-serif;
-        }
-
-        .minimalist-line {
-            width: 30px;
-            height: 1px;
-            background-color: #f0f6fc;
-            margin-top: 8px;
-        }
-
-        /* Modern Square Clock Preview */
-        .colorful-preview {
-            height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            background: #000000;
-            overflow: hidden;
-        }
-
-        .modern-clock-face {
-            position: relative;
-            width: 40px;
-            height: 40px;
-            border-radius: 6px;
-            background: #000000;
-        }
-
-        .modern-hour-marker {
-            position: absolute;
-            background: #ffffff;
-        }
-
-        /* 12 o'clock marker */
-        .modern-hour-marker.h12 {
-            width: 1px;
-            height: 6px;
-            top: 2px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        /* 3 o'clock marker */
-        .modern-hour-marker.h3 {
-            width: 6px;
-            height: 1px;
-            right: 2px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        /* 6 o'clock marker */
-        .modern-hour-marker.h6 {
-            width: 1px;
-            height: 6px;
-            bottom: 2px;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        /* 9 o'clock marker */
-        .modern-hour-marker.h9 {
-            width: 6px;
-            height: 1px;
-            left: 2px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        /* Minor hour markers */
-        .modern-hour-marker.minor {
-            width: 1px;
-            height: 3px;
-            background: #ffffff;
-        }
-
-        .modern-hour-marker.minor.h1 {
-            top: 4px;
-            right: 7px;
-            transform: rotate(30deg);
-        }
-
-        .modern-hour-marker.minor.h2 {
-            top: 9px;
-            right: 4px;
-            transform: rotate(60deg);
-        }
-
-        .modern-hour-marker.minor.h4 {
-            bottom: 9px;
-            right: 4px;
-            transform: rotate(-60deg);
-        }
-
-        .modern-hour-marker.minor.h5 {
-            bottom: 4px;
-            right: 7px;
-            transform: rotate(-30deg);
-        }
-
-        .modern-hour-marker.minor.h7 {
-            bottom: 4px;
-            left: 7px;
-            transform: rotate(30deg);
-        }
-
-        .modern-hour-marker.minor.h8 {
-            bottom: 9px;
-            left: 4px;
-            transform: rotate(60deg);
-        }
-
-        .modern-hour-marker.minor.h10 {
-            top: 9px;
-            left: 4px;
-            transform: rotate(-60deg);
-        }
-
-        .modern-hour-marker.minor.h11 {
-            top: 4px;
-            left: 7px;
-            transform: rotate(-30deg);
-        }
-
-        .modern-hour-hand {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 2px;
-            height: 12px;
-            background: #0066ff;
-            transform-origin: center bottom;
-            transform: translate(-50%, -100%) rotate(45deg);
-            border-radius: 1px;
-        }
-
-        .modern-minute-hand {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 1px;
-            height: 16px;
-            background: #0066ff;
-            transform-origin: center bottom;
-            transform: translate(-50%, -100%) rotate(90deg);
-            border-radius: 0.5px;
-        }
-
-        .modern-center-dot {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 4px;
-            height: 4px;
-            background: #ff0000;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .colorful-time {
-            display: none; /* Hide the text label */
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="main-container">
         <div class="flex-container-gray">
             <div class="header-block">
                 <h1 class="billboard-name">BILLBOARD SETTINGS</h1>
+                <div class="header-center">
+                    <a href="/">Back to Main Page</a>
+                </div>
                 <div>
                     <p><strong>Wi-Fi:</strong> <span class="status-value">{{WIFI_SSID}}</span></p>
                     <p><strong>IP:</strong> <span class="status-value">{{IP_ADDRESS}}</span></p>
                 </div>
             </div>
-        </div>
-
-        <div class="flex-container-gray">
-            <a href="/" class="btn">Back to Main Page</a>
         </div>
 
         <h2>WiFi Information</h2>
@@ -504,72 +102,73 @@
 
         <h2>Clock Settings</h2>
         <div class="flex-container-gray">
-            <label><strong>Clock Face Style:</strong></label>
-            <div style="display: flex; flex-direction: column; gap: 12px; flex: 1;">
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-                    <label class="clock-face-option" for="clockFace0">
-                        <input type="radio" id="clockFace0" name="clockFace" value="0" onchange="changeClockFace()">
-                        <div class="clock-preview">
-                            <div class="analog-preview">
-                                <div class="clock-circle">
-                                    <div class="hour-hand"></div>
-                                    <div class="minute-hand"></div>
-                                    <div class="center-dot"></div>
+            <div class="clock-face-container">
+                <div class="clock-face-label">Clock Face Style:</div>
+                <div class="clock-face-grid">
+                    <div>
+                        <label class="clock-face-option" for="clockFace0">
+                            <input type="radio" id="clockFace0" name="clockFace" value="0" onchange="changeClockFace()">
+                            <div class="clock-preview">
+                                <div class="analog-preview">
+                                    <div class="clock-circle">
+                                        <div class="hour-hand"></div>
+                                        <div class="minute-hand"></div>
+                                        <div class="center-dot"></div>
+                                    </div>
                                 </div>
+                                <span>Classic Analog</span>
                             </div>
-                            <span>Classic Analog</span>
-                        </div>
-                    </label>
-                    <label class="clock-face-option" for="clockFace1">
-                        <input type="radio" id="clockFace1" name="clockFace" value="1" onchange="changeClockFace()">
-                        <div class="clock-preview">
-                            <div class="digital-preview">
-                                <div class="digital-time">12:34</div>
-                                <div class="digital-seconds">:56</div>
-                            </div>
-                            <span>Digital Modern</span>
-                        </div>
-                    </label>
-                    <label class="clock-face-option" for="clockFace2">
-                        <input type="radio" id="clockFace2" name="clockFace" value="2" onchange="changeClockFace()">
-                        <div class="clock-preview">
-                            <div class="minimalist-preview">
-                                <div class="minimalist-time">12:34</div>
-                                <div class="minimalist-line"></div>
-                            </div>
-                            <span>Minimalist</span>
-                        </div>
-                    </label>
-                    <label class="clock-face-option" for="clockFace3">
-                        <input type="radio" id="clockFace3" name="clockFace" value="3" onchange="changeClockFace()">
-                        <div class="clock-preview">
-                            <div class="colorful-preview">
-                                <div class="modern-clock-face">
-                                    <!-- Major hour markers -->
-                                    <div class="modern-hour-marker h12"></div>
-                                    <div class="modern-hour-marker h3"></div>
-                                    <div class="modern-hour-marker h6"></div>
-                                    <div class="modern-hour-marker h9"></div>
-                                    <!-- Minor hour markers -->
-                                    <div class="modern-hour-marker minor h1"></div>
-                                    <div class="modern-hour-marker minor h2"></div>
-                                    <div class="modern-hour-marker minor h4"></div>
-                                    <div class="modern-hour-marker minor h5"></div>
-                                    <div class="modern-hour-marker minor h7"></div>
-                                    <div class="modern-hour-marker minor h8"></div>
-                                    <div class="modern-hour-marker minor h10"></div>
-                                    <div class="modern-hour-marker minor h11"></div>
-                                    <!-- Clock hands showing 3:15 -->
-                                    <div class="modern-minute-hand"></div>
-                                    <div class="modern-hour-hand"></div>
-                                    <!-- Center dot -->
-                                    <div class="modern-center-dot"></div>
+                        </label>
+                        <label class="clock-face-option" for="clockFace1">
+                            <input type="radio" id="clockFace1" name="clockFace" value="1" onchange="changeClockFace()">
+                            <div class="clock-preview">
+                                <div class="digital-preview">
+                                    <div class="digital-time">12:34</div>
+                                    <div class="digital-seconds">:56</div>
                                 </div>
-                                <div class="colorful-time">LABEL</div>
+                                <span>Digital Modern</span>
                             </div>
-                            <span>Modern Square</span>
-                        </div>
-                    </label>
+                        </label>
+                        <label class="clock-face-option" for="clockFace2">
+                            <input type="radio" id="clockFace2" name="clockFace" value="2" onchange="changeClockFace()">
+                            <div class="clock-preview">
+                                <div class="minimalist-preview">
+                                    <div class="minimalist-time">12:34</div>
+                                    <div class="minimalist-line"></div>
+                                </div>
+                                <span>Minimalist</span>
+                            </div>
+                        </label>
+                        <label class="clock-face-option" for="clockFace3">
+                            <input type="radio" id="clockFace3" name="clockFace" value="3" onchange="changeClockFace()">
+                            <div class="clock-preview">
+                                <div class="colorful-preview">
+                                    <div class="modern-clock-face">
+                                        <!-- Major hour markers -->
+                                        <div class="modern-hour-marker h12"></div>
+                                        <div class="modern-hour-marker h3"></div>
+                                        <div class="modern-hour-marker h6"></div>
+                                        <div class="modern-hour-marker h9"></div>
+                                        <!-- Minor hour markers -->
+                                        <div class="modern-hour-marker minor h1"></div>
+                                        <div class="modern-hour-marker minor h2"></div>
+                                        <div class="modern-hour-marker minor h4"></div>
+                                        <div class="modern-hour-marker minor h5"></div>
+                                        <div class="modern-hour-marker minor h7"></div>
+                                        <div class="modern-hour-marker minor h8"></div>
+                                        <div class="modern-hour-marker minor h10"></div>
+                                        <div class="modern-hour-marker minor h11"></div>
+                                        <!-- Clock hands -->
+                                        <div class="modern-hour-hand"></div>
+                                        <div class="modern-minute-hand"></div>
+                                        <div class="modern-center-dot"></div>
+                                    </div>
+                                    <div class="colorful-time">10:15</div>
+                                </div>
+                                <span>Modern Square</span>
+                            </div>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -617,7 +216,7 @@
             <span id="firmware-version" class="status-value">v2.0</span>
         </div>
         <div class="flex-container-gray">
-            <label><strong>Build Date:</strong></label>
+            <label><strong>Build:</strong></label>
             <span id="build-date" class="status-value">Loading...</span>
         </div>
         <div class="flex-container-gray">

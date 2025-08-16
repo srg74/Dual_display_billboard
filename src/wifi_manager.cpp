@@ -103,6 +103,48 @@ WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, Se
     
     // Initialize GPIO0 pin for factory reset
     pinMode(GPIO0_PIN, INPUT_PULLUP);
+    
+    // Smart crash prevention: Only intervene on rapid AUTH_EXPIRE events
+    authFailureCount = 0;
+    lastAuthFailureTime = 0;
+    
+    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info) {
+        if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
+            uint8_t reason = info.wifi_sta_disconnected.reason;
+            
+            // Only handle AUTH_EXPIRE crashes (reason 2)
+            if (reason == WIFI_REASON_AUTH_EXPIRE) {
+                unsigned long now = millis();
+                
+                // Reset counter if more than 5 seconds since last failure
+                if (now - lastAuthFailureTime > 5000) {
+                    authFailureCount = 0;
+                }
+                
+                authFailureCount++;
+                lastAuthFailureTime = now;
+                
+                LOG_WARNF(TAG, "⚠️ AUTH_EXPIRE #%d in sequence", authFailureCount);
+                
+                // Only intervene after 4+ rapid failures (ESP32 usually crashes after 6-8)
+                if (authFailureCount >= 4) {
+                    LOG_WARN(TAG, "🛡️ Preventing crash - immediate WiFi stack reset");
+                    
+                    // Show crash prevention on display  
+                    if (this->displayManager) {
+                        this->displayManager->showQuickStatus("Auth Failed - Protected", TFT_ORANGE);
+                    }
+                    
+                    // CRITICAL: No delays in interrupt context! Use immediate reset
+                    WiFi.disconnect(true);
+                    WiFi.mode(WIFI_OFF);
+                    WiFi.mode(WIFI_AP_STA);
+                    
+                    authFailureCount = 0; // Reset counter
+                }
+            }
+        }
+    });
 }
 
 /**
@@ -576,13 +618,54 @@ String WiFiManager::scanNetworks() {
  * @note Displays connection status on attached displays for user feedback
  * @note Failed connections leave WiFi in disconnected state for retry attempts
  */
+/**
+ * @brief 🌐 Establishes WiFi connection with enhanced crash prevention
+ * 
+ * @details Connects ESP32 to specified WiFi network with comprehensive authentication failure
+ *          handling and crash prevention mechanisms. Implements aggressive timeout management,
+ *          early failure detection, and graceful disconnection to prevent ESP32 WiFi stack
+ *          abort() crashes that occur during prolonged authentication failures.
+ * 
+ * Enhanced Safety Features (v0.9.1):
+ * • 🛡️ Authentication Failure Prevention: Detects and aborts early on auth failures
+ * • ⏱️ Aggressive Timeout Management: Reduced to 8 seconds to prevent prolonged failures
+ * • 🔍 Real-time Status Monitoring: 250ms status checks for rapid failure detection
+ * • 🚫 Early Abort Logic: Stops after 2 quick failures to prevent crash conditions
+ * • 🧹 Aggressive Cleanup: Forces disconnection after failures with delay
+ * • 📊 Visual Feedback: Display integration for connection status and failures
+ * 
+ * Connection Process:
+ * • Pre-connection cleanup with forced disconnect and delay
+ * • Real-time WiFi status monitoring with 250ms granularity
+ * • Authentication failure counting with early abort (max 2 attempts)
+ * • Stuck connection detection (disconnected state > 3 seconds)
+ * • Comprehensive cleanup on failure with forced disconnect and delay
+ * 
+ * Safety Mechanisms:
+ * • Prevents ESP32 WiFi stack abort() crashes during authentication failures
+ * • Detects WL_CONNECT_FAILED and WL_CONNECTION_LOST states early
+ * • Monitors for prolonged WL_DISCONNECTED states indicating stuck connections
+ * • Forces WiFi hardware reset on failure to ensure clean state
+ * 
+ * @param ssid Target network SSID for connection attempt
+ * @param password Network password for WPA/WPA2 authentication
+ * 
+ * @return bool True if connection established successfully with valid IP assignment,
+ *              false if connection failed, timed out, or aborted due to safety mechanisms
+ * 
+ * @note Connection timeout aggressively reduced to 8 seconds to prevent auth crashes
+ * @note Displays connection status on attached displays for user feedback
+ * @note Failed connections leave WiFi in clean disconnected state with hardware reset
+ * @note Multiple quick failures trigger early abort to prevent system crash
+ * 
+ * @see WiFi.onEvent() for complementary event-based crash prevention
+ * @see displayManager->showConnecting() for visual feedback integration
+ * @warning Authentication failures can cause ESP32 WiFi stack crashes if not handled properly
+ * 
+ * @version 0.9.1 - Enhanced crash prevention and authentication failure handling
+ */
 bool WiFiManager::connectToWiFi(const String& ssid, const String& password) {
     LOG_INFOF(TAG, "Attempting to connect to WiFi: %s", ssid.c_str());
-    
-    // Show connecting status on display
-    if (displayManager) {
-        displayManager->showConnecting();
-    }
     
     // Start the connection
     WiFi.begin(ssid.c_str(), password.c_str());
@@ -812,7 +895,8 @@ bool WiFiManager::initializeFromCredentials() {
     
     // Try to connect to saved network
     if (connectToSavedNetwork()) {
-        switchToNormalMode();
+        // CHANGED: Don't immediately switch to normal mode - let connection success display run first
+        // switchToNormalMode() will be called by checkConnectionSuccessDisplay() after 5 seconds
         return true;
     } else {
         LOG_WARN(TAG, "⚠️ Auto-connect failed - falling back to setup mode");
@@ -1049,6 +1133,13 @@ void WiFiManager::setupNormalModeRoutes() {
         html.replace("{{CURRENT_NTP_SERVER}}", timeManager ? timeManager->getNTPServer1() : "pool.ntp.org");
         
         request->send(200, "text/html", html);
+    });
+    
+    // CSS styles
+    server->on("/styles.css", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "🎨 CSS styles requested");
+        String css = getStylesCSS();
+        request->send(200, "text/css", css);
     });
     
     // Time API
@@ -2201,6 +2292,11 @@ void WiFiManager::checkConnectionSuccessDisplay() {
         
         // Mark as no longer displaying
         connectionSuccessDisplayed = false;
+        
+        // ADDED: Switch to normal mode now that connection success display is complete
+        if (currentMode != MODE_NORMAL && WiFi.status() == WL_CONNECTED) {
+            switchToNormalMode();
+        }
         
         LOG_INFO(TAG, "✅ Switched to normal mode display");
     }

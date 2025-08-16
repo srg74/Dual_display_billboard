@@ -74,7 +74,7 @@ const char* SettingsManager::CLOCK_FACE_FILE = "/clock_face.txt";
  */
 SettingsManager::SettingsManager() {
     // Initialize with safe default values - will be overridden by persistent storage in begin()
-    secondDisplayEnabled = false;           // Enable dual display functionality by default
+    secondDisplayEnabled = false;           // Dual display disabled by default (single display mode)
     dccEnabled = false;                    // DCC interface disabled by default for safety
     dccAddress = 101;                      // Standard DCC address range default
     dccPin = 4;                           // Safe GPIO pin choice for DCC input
@@ -130,7 +130,7 @@ bool SettingsManager::begin() {
     LOG_INFO(TAG, "⚙️ Initializing Settings Manager...");
     
     // Load all settings from LittleFS with appropriate defaults
-    secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, true);
+    secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, false);
     dccEnabled = loadBoolean(DCC_ENABLED_FILE, false);
     dccAddress = loadInteger(DCC_ADDRESS_FILE, 101);
     dccPin = loadInteger(DCC_PIN_FILE, 4);

@@ -37,6 +37,7 @@
 
 #pragma once
 #include <Arduino.h>
+#include <LittleFS.h>
 
 // Use build flags directly - don't redefine them
 // The build flags from platformio.ini will be used automatically
@@ -60,6 +61,8 @@
 class Logger {
 private:
     static bool initialized;       ///< Lazy initialization state tracking
+    static bool fileLogging;       ///< File logging enabled state
+    static String currentLogFile;  ///< Current log file path
     
     /**
      * @brief Ensures logger is initialized before use
@@ -73,6 +76,12 @@ private:
      * @see init() for explicit initialization with custom baud rate
      */
     static void ensureInitialized();
+    
+    /**
+     * @brief Writes message to log file if file logging is enabled
+     * @param message Formatted log message to write to file
+     */
+    static void writeToFile(const String& message);
     
 public:
     /**
@@ -109,6 +118,26 @@ public:
      * @return Current minimum log level
      */
     static Level getLevel();
+    
+    // File logging control
+    
+    /**
+     * @brief Enables file logging to specified file path
+     * @param filePath Path to log file (will be created if doesn't exist)
+     * @return true if file logging was successfully enabled
+     */
+    static bool enableFileLogging(const String& filePath = "/logs/system.log");
+    
+    /**
+     * @brief Disables file logging
+     */
+    static void disableFileLogging();
+    
+    /**
+     * @brief Checks if file logging is currently enabled
+     * @return true if file logging is active
+     */
+    static bool isFileLoggingEnabled();
     
     // Core logging functions
     

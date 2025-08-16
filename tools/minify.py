@@ -90,6 +90,15 @@ def process_html_file(path):
     # Open source file
     with open(path, 'r', encoding='utf-8') as f:
         content = f.read()
+    
+    # Special handling for ultra-optimized files
+    if "ultra-optimized" in path:
+        # Ultra-aggressive minification for speed
+        content = re.sub(r'\s+', ' ', content)  # Collapse all whitespace
+        content = re.sub(r'>\s+<', '><', content)  # Remove spaces between tags
+        content = content.strip()
+        return string_to_c_array(content, name=Path(path).name, compress=True)  # Ultra files get compression
+    
     # Minify inline JS
     content = re.sub(
         r'(<script[^>]*>)(.*?)(</script>)',
@@ -138,6 +147,7 @@ def process_misc_file(path):
 
 
 def process_css_file(filepath, filename):
+    print(f"Processing {filepath}")
     with open(filepath, 'r', encoding='utf-8') as f:
         content = f.read()
     
@@ -146,14 +156,7 @@ def process_css_file(filepath, filename):
     content = re.sub(r'\s+', ' ', content)  # Compress whitespace
     content = content.strip()
     
-    # Add to assets
-    var_name = filename.replace('.', '_').replace('-', '_').upper()
-    
-    css_content = f'''
-const char {var_name}[] PROGMEM = R"({content})";
-'''
-    
-    return css_content, filename
+    return string_to_c_array(content, name=filename, compress=False)
 
 
 def make_index():
@@ -203,6 +206,11 @@ inline String getIndexHTML() {
 // Direct access to settings HTML
 inline String getSettingsHTML() {
     return String((char*)settings_html, sizeof(settings_html) - 1);
+}
+
+// Direct access to CSS files
+inline String getStylesCSS() {
+    return String((char*)styles_css, sizeof(styles_css) - 1);
 }
 
 // Get portal HTML size
@@ -261,8 +269,14 @@ with open(output_file, "w", encoding="utf-8") as f:
     f.write("#pragma once\n")
     f.write("#include <cstdint>\n\n")
 
-    # Process all HTML files in the src directory
+    # Define core files to process (avoid duplicates and backups)
+    core_files = ['index.html', 'settings.html', 'portal.html', 'styles.css']
+    
+    # Process only core files in the src directory
     for filename in os.listdir(src_path):
+        if filename not in core_files and not filename.endswith('.backup'):
+            continue  # Skip non-core files and backups
+            
         full_path = os.path.join(src_path, filename)
         # html
         if filename.endswith('.html'):

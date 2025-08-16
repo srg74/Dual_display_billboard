@@ -12,14 +12,17 @@ Generates comprehensive build information including:
 • Build timestamp and environment information
 """
 
-try:
-    Import("env")
-except:
-    pass
-
 import os
 import json
 from datetime import datetime
+
+# Import PlatformIO environment
+try:
+    Import("env")
+    ENV_AVAILABLE = True
+except NameError:
+    ENV_AVAILABLE = False
+    env = None
 
 class BuildInfoGenerator:
     """
@@ -41,9 +44,8 @@ class BuildInfoGenerator:
     def _get_base_version(self):
         """Extract base version from platformio.ini"""
         try:
-            # Try to get from environment current_version
-            # For now, let's use the VERSION define that's already set in build_flags
-            return self.env.GetProjectOption("current_version", "0.9")
+            # Get the base version from the common section in platformio.ini
+            return "0.9"  # Set to current version, can be made dynamic later
         except:
             return "0.9"  # Fallback version
     
@@ -121,12 +123,24 @@ class BuildInfoGenerator:
         # Environment information
         env_name = self.env.get("PIOENV", "unknown")
         
-        # Add all version information to build flags
+        # Determine build type from environment name
+        if "debug" in env_name.lower():
+            build_type = "debug"
+        elif "production" in env_name.lower():
+            build_type = "production"
+        else:
+            build_type = "latest"
+        
+        # Update config.h file with current build information
+        self._update_config_header(version_short, build_type, build_number)
+        
+        # Also add all version information to build flags for compatibility
         self.env.Append(CPPDEFINES=[
             ("FIRMWARE_VERSION", f'\\"{version_short}\\"'),
             ("FIRMWARE_VERSION_FULL", f'\\"{full_version}\\"'),
             ("BUILD_NUMBER", f'\\"{build_number}\\"'),
             ("BUILD_DATE", f'\\"{build_date}\\"'),
+            ("BUILD_TYPE", f'\\"{build_type}\\"'),
             ("BUILD_TIMESTAMP", f'\\"{build_timestamp}\\"'),
             ("BUILD_ENVIRONMENT", f'\\"{env_name}\\"'),
             ("DAILY_BUILD_COUNT", str(daily_counter))
@@ -134,12 +148,57 @@ class BuildInfoGenerator:
         
         # Print build information
         print(f"🏗️  Build Information Generated:")
-        print(f"   📦 Base Version: v{self.base_version}")
-        print(f"   � Build Number: {build_number}")
+        print(f"   📦 Version: {version_short}")
+        print(f"   🔧 Build Type: {build_type}")
+        print(f"   🏗️  Build: {build_number}")
         print(f"   📅 Build Date: {build_date}")
         print(f"   🕐 Daily Build: #{daily_counter}")
         print(f"   ✅ Full Version: {full_version}")
         print(f"   🏷️  Environment: {env_name}")
+    
+    def _update_config_header(self, version, build_type, build_number):
+        """Update the config.h file with current build information"""
+        # Get the project directory from PlatformIO environment
+        project_dir = self.env.get("PROJECT_DIR", os.getcwd())
+        config_path = os.path.join(project_dir, 'include', 'config.h')
+        
+        try:
+            # Read the current config.h file
+            with open(config_path, 'r') as f:
+                content = f.read()
+            
+            # Update the build constants
+            import re
+            
+            # Update BUILD_DATE with the full build number
+            content = re.sub(
+                r'#define BUILD_DATE "[^"]*"',
+                f'#define BUILD_DATE "{build_number}"',
+                content
+            )
+            
+            # Update FIRMWARE_VERSION  
+            content = re.sub(
+                r'#define FIRMWARE_VERSION "[^"]*"',
+                f'#define FIRMWARE_VERSION "{version}"',
+                content
+            )
+            
+            # Update BUILD_TYPE in the debug section
+            content = re.sub(
+                r'#define BUILD_TYPE "debug"',
+                f'#define BUILD_TYPE "{build_type}"',
+                content
+            )
+            
+            # Write the updated content back
+            with open(config_path, 'w') as f:
+                f.write(content)
+                
+            print(f"📝 Updated config.h: {version}, {build_type}, {build_number}")
+            
+        except Exception as e:
+            print(f"⚠️  Warning: Could not update config.h: {e}")
 
 def generate_build_info(source, target, env):
     """Generate build information for the project"""
@@ -151,7 +210,11 @@ def generate_build_info(source, target, env):
     except Exception as e:
         print(f"❌ Build info generation failed: {e}")
 
-# Execute before building
-if 'env' in globals():
+# Execute during PlatformIO build process
+try:
+    Import("env")
     print("📦 Registering build info generator...")
     env.AddPreAction("buildprog", generate_build_info)
+except NameError:
+    # Not running in PlatformIO environment
+    pass

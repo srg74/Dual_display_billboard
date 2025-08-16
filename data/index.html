@@ -3,551 +3,7 @@
 <head>
     <title>Billboard Controller</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body {
-            background-color: #0d1117;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 10px; /* Increased from 5px */
-            color: #f0f6fc;
-        }
-
-        /* Add a main container to ensure proper spacing */
-        .main-container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 5px;
-        }
-
-        .flex-container,
-        .flex-container-gray,
-        .flex-container-white {
-            display: flex;
-            flex-wrap: nowrap;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 8px;
-            border-radius: 8px;
-            border: 1px solid #30363d;
-            box-sizing: border-box;
-        }
-
-        .flex-container-gray {
-            background-color: #161b22;
-            color: #f0f6fc;
-        }
-
-        .flex-container-white {
-            background-color: #0d1117;
-            border: 1px solid #30363d;
-            color: #f0f6fc;
-        }
-
-        /* Header block styling - Green gradient to match portal.html */
-        .flex-container-gray:first-child {
-            background: linear-gradient(135deg, #238636 0%, #2ea043 100%) !important;
-            border: 1px solid #238636;
-            color: #fff;
-        }
-
-        .flex-container-gray:first-child .billboard-name {
-            color: #fff !important;
-        }
-
-        .flex-container-gray:first-child .header-right p {
-            color: #fff !important;
-        }
-
-        .flex-container-gray:first-child .status-value {
-            color: #e6ffed !important;
-        }
-
-        .header-block {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            width: 100%;
-        }
-
-        .header-left {
-            flex: 0 0 auto;
-        }
-
-        .header-center {
-            flex: 1;
-            text-align: center;
-        }
-
-        .header-center a {
-            color: #f0f6fc;
-            text-decoration: none;
-            font-size: 18px;
-            font-weight: 600;
-            padding: 8px 16px;
-            border: 2px solid #f0f6fc;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            display: inline-block;
-        }
-
-        .header-center a:hover {
-            background-color: #f0f6fc;
-            color: #238636;
-        }
-
-        .header-right {
-            flex: 0 0 auto;
-            text-align: right;
-        }
-
-        .header-right p {
-            margin: 0;
-            font-size: 14px;
-        }
-
-        .billboard-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #f0f6fc;
-            margin: 0;
-        }
-
-        .status-value {
-            color: #58a6ff;
-            font-weight: 500;
-        }
-
-        h2 {
-            color: #f0f6fc;
-            margin: 20px 0 10px 0;
-            font-size: 20px;
-            font-weight: 600;
-        }
-
-        label {
-            font-size: 16px;
-            color: #f0f6fc;
-        }
-
-        select, input[type="text"], input[type="number"] {
-            padding: 8px 12px;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            background-color: #21262d;
-            color: #f0f6fc;
-            font-size: 14px;
-            min-width: 120px;
-        }
-
-        select:focus, input:focus {
-            outline: none;
-            border-color: #58a6ff;
-            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
-        }
-
-        /* Button Styles - Portal.html matching */
-        button, .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        /* Primary buttons - Blue gradient like portal.html */
-        button, .btn-primary {
-            background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
-            color: #fff;
-            border: 1px solid #1f6feb;
-        }
-
-        button:hover, .btn-primary:hover {
-            background: linear-gradient(135deg, #388bfd 0%, #4c96ff 100%);
-            border-color: #388bfd;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(31, 111, 235, 0.3);
-        }
-
-        /* Success buttons - Green gradient */
-        .btn-success {
-            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
-            color: #fff;
-            border: 1px solid #238636;
-        }
-
-        .btn-success:hover {
-            background: linear-gradient(135deg, #2ea043 0%, #3fb950 100%);
-            border-color: #2ea043;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(35, 134, 54, 0.3);
-        }
-
-        /* Toggle Switch Styles */
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-        }
-
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #30363d;
-            transition: 0.3s;
-            border-radius: 24px;
-        }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: #f0f6fc;
-            transition: 0.3s;
-            border-radius: 50%;
-        }
-
-        input:checked + .slider {
-            background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(26px);
-        }
-
-        /* NEW Brightness Slider CSS */
-        .brightness-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex: 1;
-            margin: 0 15px;
-        }
-
-        .brightness-slider {
-            flex: 1;
-            height: 8px;
-            border-radius: 5px;
-            background: #30363d;
-            outline: none;
-            border: none;
-            cursor: pointer;
-            -webkit-appearance: none;
-            appearance: none;
-        }
-
-        .brightness-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1f6feb 0%, #388bfd 100%);
-            cursor: pointer;
-            border: 2px solid #fff;
-            box-shadow: 0 3px 8px rgba(31, 111, 235, 0.3);
-        }
-
-        .brightness-slider::-webkit-slider-track {
-            height: 8px;
-            border-radius: 5px;
-            background: #30363d;
-        }
-
-        .brightness-value {
-            min-width: 45px;
-            text-align: center;
-            font-weight: 600;
-            color: #58a6ff;
-            font-size: 14px;
-        }
-
-        /* Form Styles */
-        .form-row {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            width: 100%;
-        }
-
-        .form-row input[type="file"] {
-            flex: 1;
-            padding: 10px;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            background-color: #21262d;
-            color: #f0f6fc;
-            min-width: 0; /* Allow flex shrinking */
-        }
-
-        .form-row button {
-            flex-shrink: 0;
-            white-space: nowrap;
-            min-width: 120px;
-        }
-
-        /* Gallery Styles */
-        .gallery-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-            gap: 8px;
-            margin-top: 10px;
-            margin-bottom: 8px;
-        }
-
-        .gallery-item {
-            position: relative;
-            border: 1px solid #30363d;
-            border-radius: 8px;
-            overflow: hidden;
-            background-color: #21262d;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .gallery-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(31, 111, 235, 0.2);
-        }
-
-        .gallery-item .thumbnail {
-            width: 100%;
-            height: 120px;
-            background-color: #161b22;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-
-        .gallery-item .thumbnail img {
-            width: 160px;  /* ST7735 width */
-            height: 80px;  /* ST7735 height */
-            object-fit: contain;
-            border-radius: 4px;
-            image-rendering: pixelated; /* Preserve sharp pixels */
-        }
-
-        /* For ST7789 displays (240x240) - can be updated dynamically */
-        .gallery-item.st7789 .thumbnail img {
-            width: 120px;  /* Scaled down 240px to fit */
-            height: 120px; /* Scaled down 240px to fit */
-        }
-
-        .gallery-item .controls {
-            padding: 8px;
-            text-align: center;
-        }
-
-        .gallery-item .filename {
-            font-weight: 600;
-            color: #f0f6fc;
-            margin-bottom: 2px;
-            word-break: break-word;
-            font-size: 14px;
-        }
-
-        .gallery-item .filesize {
-            font-size: 12px;
-            color: #8b949e;
-            margin-bottom: 6px;
-        }
-
-        .gallery-item .enable-section {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
-            margin-bottom: 0;
-            padding: 6px 8px;
-            background-color: #161b22;
-            border-radius: 6px;
-        }
-
-        .gallery-item .enable-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .gallery-item .enable-checkbox {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-
-        .gallery-item .enable-label {
-            font-size: 13px;
-            color: #f0f6fc;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .gallery-item .delete-button {
-            background: #da3633 !important;
-            border-color: #da3633 !important;
-            padding: 4px 8px !important;
-            font-size: 11px !important;
-            min-width: auto !important;
-            border-radius: 4px;
-        }
-
-        .gallery-item .button-row {
-            display: none; /* Hide the old button row */
-        }
-
-        .gallery-item button {
-            padding: 6px 10px;
-            font-size: 12px;
-            min-width: 40px;
-            white-space: nowrap;
-        }
-
-        /* Control Section Spacing */
-        .control-section {
-            margin: 5px 0;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .main-container {
-                padding: 0 5px;
-            }
-
-            body {
-                padding: 5px;
-            }
-
-            .flex-container,
-            .flex-container-gray,
-            .flex-container-white {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 12px;
-                padding: 15px;
-            }
-
-            .header-block {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-
-            .header-left,
-            .header-center,
-            .header-right {
-                flex: none;
-                text-align: center;
-            }
-
-            .brightness-wrapper {
-                width: 100%;
-                margin: 0;
-            }
-
-            .form-row {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-
-            .form-row button {
-                min-width: auto;
-                width: 100%;
-            }
-
-            .gallery-row {
-                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-                gap: 10px;
-            }
-
-            .control-section {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                width: 100%;
-            }
-
-            .billboard-name {
-                font-size: 20px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .gallery-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .gallery-item .button-row {
-                justify-content: space-around;
-            }
-            
-            .gallery-item button {
-                flex: 1;
-                max-width: 60px;
-            }
-        }
-
-        /* Text styling classes for cleaner HTML */
-        .text-center-muted {
-            text-align: center;
-            color: #6c757d;
-            padding: 20px;
-        }
-
-        .text-error {
-            text-align: center;
-            color: #dc3545;
-            padding: 20px;
-        }
-
-        .no-images-title {
-            font-size: 18px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
-
-        .no-images-subtitle {
-            font-size: 14px;
-            margin-top: 5px;
-        }
-
-        .preview-unavailable {
-            display: none;
-            color: #8b949e;
-            font-size: 12px;
-        }
-
-        .flex-file-input {
-            flex: 1;
-        }
-
-        .nowrap-button {
-            white-space: nowrap;
-        }
-
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="main-container">
@@ -571,17 +27,18 @@
         <!-- 2. Time Zone Selection -->
         <div class="flex-container-gray">
             <label for="timezone"><strong>Time zone:</strong></label>
-            <select id="timezone" onchange="setTimezone()">
+            <select id="timezone" onchange="autoSaveTimezone()">
                 {{TIMEZONE_OPTIONS}}
             </select>
-            <button onclick="setTimezone()">Set Time Zone</button>
+            <span id="timezoneSaveStatus" class="save-status"></span>
         </div>
 
         <!-- 3. Clock Label -->
         <div class="flex-container-gray">
             <label for="clockLabel"><strong>Clock label:</strong></label>
-            <input type="text" id="clockLabel" value="{{CLOCK_LABEL}}" placeholder="Enter label">
-            <button onclick="setClockLabel()">Set Label</button>
+            <input type="text" id="clockLabel" value="{{CLOCK_LABEL}}" placeholder="Enter label"
+                   oninput="autoSaveClockLabel()" onchange="autoSaveClockLabel()">
+            <span id="clockLabelSaveStatus" class="save-status"></span>
         </div>
 
         <!-- 4. Toggle Controls -->
@@ -625,8 +82,9 @@
         <!-- 7. Image Interval -->
         <div class="flex-container-gray">
             <label for="imageInterval"><strong>Image change interval (seconds):</strong></label>
-            <input type="number" id="imageInterval" value="{{IMAGE_INTERVAL}}" min="1" max="3600">
-            <button onclick="setImageInterval()">Set Interval</button>
+            <input type="number" id="imageInterval" value="{{IMAGE_INTERVAL}}" min="1" max="3600" 
+                   oninput="autoSaveImageInterval()" onchange="autoSaveImageInterval()">
+            <span id="intervalSaveStatus" class="save-status"></span>
         </div>
 
         <!-- 8. Display Brightness -->
@@ -638,9 +96,11 @@
                        min="1" 
                        max="255" 
                        value="200" 
-                       class="brightness-slider">
+                       class="brightness-slider"
+                       oninput="autoSaveBrightness()" onchange="autoSaveBrightness()">
                 <span id="brightnessPercent" class="brightness-value">78%</span>
             </div>
+            <span id="brightnessSaveStatus" class="save-status"></span>
         </div>
     </div>
 
@@ -708,6 +168,109 @@
                 }
             };
             xhr.send("img=" + encodeURIComponent(img) + "&enabled=" + enabled);
+        }
+
+        // Auto-Save Functions with Visual Feedback
+        let saveTimeouts = {};
+
+        function showSaveStatus(elementId, status, message) {
+            const statusElement = document.getElementById(elementId);
+            statusElement.className = `save-status ${status}`;
+            statusElement.textContent = message;
+            
+            if (status === 'success') {
+                setTimeout(() => {
+                    statusElement.style.opacity = '0';
+                }, 2000);
+            }
+        }
+
+        function autoSaveImageInterval() {
+            const interval = document.getElementById('imageInterval').value;
+            
+            if (saveTimeouts.interval) clearTimeout(saveTimeouts.interval);
+            
+            showSaveStatus('intervalSaveStatus', 'saving', 'Saving...');
+            
+            saveTimeouts.interval = setTimeout(() => {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/image-interval", true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        showSaveStatus('intervalSaveStatus', 'success', 'Saved');
+                    } else {
+                        showSaveStatus('intervalSaveStatus', 'error', 'Error');
+                    }
+                };
+                xhr.send("interval=" + interval);
+            }, 1000);
+        }
+
+        function autoSaveBrightness() {
+            const slider = document.getElementById('brightnessSlider');
+            const value = slider.value;
+            const percent = Math.round(value * 100 / 255);
+            
+            document.getElementById('brightnessPercent').textContent = percent + '%';
+            
+            if (saveTimeouts.brightness) clearTimeout(saveTimeouts.brightness);
+            
+            showSaveStatus('brightnessSaveStatus', 'saving', 'Saving...');
+            
+            saveTimeouts.brightness = setTimeout(() => {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/brightness", true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        showSaveStatus('brightnessSaveStatus', 'success', 'Saved');
+                    } else {
+                        showSaveStatus('brightnessSaveStatus', 'error', 'Error');
+                    }
+                };
+                xhr.send("brightness=" + value);
+            }, 500);
+        }
+
+        function autoSaveTimezone() {
+            const timezone = document.getElementById('timezone').value;
+            
+            showSaveStatus('timezoneSaveStatus', 'saving', 'Saving...');
+            
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "/timezone", true);
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    showSaveStatus('timezoneSaveStatus', 'success', 'Saved');
+                } else {
+                    showSaveStatus('timezoneSaveStatus', 'error', 'Error');
+                }
+            };
+            xhr.send("timezone=" + encodeURIComponent(timezone));
+        }
+
+        function autoSaveClockLabel() {
+            const label = document.getElementById('clockLabel').value;
+            
+            if (saveTimeouts.clockLabel) clearTimeout(saveTimeouts.clockLabel);
+            
+            showSaveStatus('clockLabelSaveStatus', 'saving', 'Saving...');
+            
+            saveTimeouts.clockLabel = setTimeout(() => {
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "/clock-label", true);
+                xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+                xhr.onload = function() {
+                    if (xhr.status === 200) {
+                        showSaveStatus('clockLabelSaveStatus', 'success', 'Saved');
+                    } else {
+                        showSaveStatus('clockLabelSaveStatus', 'error', 'Error');
+                    }
+                };
+                xhr.send("label=" + encodeURIComponent(label));
+            }, 1500);
         }
 
         // NEW Brightness Slider JavaScript

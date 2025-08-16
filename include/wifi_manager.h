@@ -114,6 +114,10 @@ private:
     bool connectionSuccessDisplayed;
     unsigned long connectionSuccessStartTime;
     
+    // Crash prevention variables
+    int authFailureCount;
+    unsigned long lastAuthFailureTime;
+    
 public:
     WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager, class SlideshowManager* slideshowManager = nullptr, class DCCManager* dccManager = nullptr);
     
