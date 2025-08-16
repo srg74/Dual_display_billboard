@@ -1,15 +1,15 @@
 # Dual Display Billboard System 🎯
 
-**Professional ESP32/ESP32-S3 Digital Billboard with Advanced Image Management**
+## Professional ESP32/ESP32-S3 Digital Billboard with Advanced Image Management
 
 A sophisticated dual display billboard system designed for scale modelers, featuring WiFi connectivity, image slideshow capabilities, multiple clock faces, and professional-grade code architecture.
 
-## ✨ Key Features
+## Key Features
 
-### 🖥️ **Dual Display Support**
+### **Dual Display Support**
 
 - Independent control of two ST7735 (160x80) displays
-- ST7789 (240x240) compatibility 
+- ST7789 (240x240) compatibility
 - Hardware-specific pin mapping for ESP32 and ESP32-S3
 - Content-aware rotation settings
 
