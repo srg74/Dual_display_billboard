@@ -106,6 +106,7 @@ public:
     void showQuickStatus(const String& message, uint16_t color);  // NEW: Fast status display
     void showAPStarting();  // NEW: Quick AP starting indicator
     void showAPReady();     // NEW: Quick AP ready indicator
+    void showConnecting();  // NEW: Show connecting status during WiFi connection
     void showConnectionSuccess(const String& ip);
     
     // TFT access for ImageManager

@@ -231,6 +231,11 @@ void DisplayManager::showAPReady() {
     showQuickStatus("AP Ready!", TFT_BLUE);
 }
 
+// Quick connecting indicator
+void DisplayManager::showConnecting() {
+    showQuickStatus("Connecting...", TFT_YELLOW);
+}
+
 // FIXED: Portal info method - USES DISPLAY 1 FOR PORTAL INFO
 void DisplayManager::showPortalInfo(const String& ssid, const String& ip, const String& status) {
     if (!initialized) {

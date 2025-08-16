@@ -98,7 +98,7 @@ def main():
         print(f"🔄 Regenerating splash screen: {reason}")
     
     # Run the conversion script
-    converter_script = os.path.join(script_dir, 'png_to_splash_header.py')
+    converter_script = os.path.join(script_dir, 'png_to_splash_header_converter.py')
     
     print(f"🔄 Converting {os.path.basename(png_file)} → splash_screen.h")
     

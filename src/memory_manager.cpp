@@ -20,6 +20,7 @@ MemoryManager::MemoryStats MemoryManager::currentStats = {};
 unsigned long MemoryManager::lastMonitorTime = 0;
 unsigned long MemoryManager::monitorInterval = 10000;  // 10 seconds default
 bool MemoryManager::autoCleanupEnabled = true;
+bool MemoryManager::monitoringEnabled = true;  // NEW: Allow temporary disable
 size_t MemoryManager::heapSampleCount = 0;
 size_t MemoryManager::heapSampleSum = 0;
 
@@ -57,6 +58,11 @@ bool MemoryManager::initialize(unsigned long monitorIntervalMs, bool enableAutoC
 }
 
 void MemoryManager::update() {
+    // Skip update if monitoring is temporarily disabled
+    if (!monitoringEnabled) {
+        return;
+    }
+    
     unsigned long currentTime = millis();
     
     // Check if it's time to update
@@ -90,9 +96,28 @@ void MemoryManager::update() {
 }
 
 void MemoryManager::updateHeapStats() {
-    // Get heap information
-    currentStats.heapTotal = ESP.getHeapSize();
-    currentStats.heapFree = ESP.getFreeHeap();
+    // SAFETY: Add basic validation for heap corruption without exceptions
+    size_t heapTotal = ESP.getHeapSize();
+    size_t heapFree = ESP.getFreeHeap();
+    
+    // Basic sanity check to detect obvious corruption
+    if (heapTotal == 0 || heapFree > heapTotal || heapTotal > 10000000) {
+        Serial.printf("WARNING: Heap corruption detected - total:%d, free:%d\n", heapTotal, heapFree);
+        // Set safe fallback values based on platform
+        #ifdef ESP32S3_MODE
+        currentStats.heapTotal = 500000;  // ESP32-S3 typically has more heap
+        currentStats.heapFree = 100000;   // Conservative estimate
+        #else
+        currentStats.heapTotal = 300000;  // ESP32 classic heap size
+        currentStats.heapFree = 50000;    // Conservative estimate
+        #endif
+        currentStats.heapUsed = currentStats.heapTotal - currentStats.heapFree;
+        return;
+    }
+    
+    // Values seem reasonable, proceed with normal update
+    currentStats.heapTotal = heapTotal;
+    currentStats.heapFree = heapFree;
     currentStats.heapUsed = currentStats.heapTotal - currentStats.heapFree;
     currentStats.heapMinFree = ESP.getMinFreeHeap();
     currentStats.heapMaxAlloc = ESP.getMaxAllocHeap();
@@ -118,10 +143,23 @@ void MemoryManager::updatePsramStats() {
     #ifdef ESP32S3_MODE
     // Only ESP32-S3 should report PSRAM
     if (psramFound()) {
-        currentStats.psramAvailable = true;
-        currentStats.psramTotal = ESP.getPsramSize();
-        currentStats.psramFree = ESP.getFreePsram();
-        currentStats.psramUsed = currentStats.psramTotal - currentStats.psramFree;
+        size_t psramTotal = ESP.getPsramSize();
+        size_t psramFree = ESP.getFreePsram();
+        
+        // Sanity check PSRAM values to detect corruption
+        if (psramTotal == 0 || psramFree > psramTotal || psramTotal > 50000000) {
+            Serial.printf("WARNING: PSRAM corruption detected - total:%d, free:%d\n", psramTotal, psramFree);
+            currentStats.psramAvailable = false;
+            currentStats.psramTotal = 0;
+            currentStats.psramFree = 0;
+            currentStats.psramUsed = 0;
+        } else {
+            // Values seem reasonable
+            currentStats.psramAvailable = true;
+            currentStats.psramTotal = psramTotal;
+            currentStats.psramFree = psramFree;
+            currentStats.psramUsed = currentStats.psramTotal - currentStats.psramFree;
+        }
     } else {
         currentStats.psramAvailable = false;
         currentStats.psramTotal = 0;
@@ -306,6 +344,11 @@ size_t MemoryManager::forceCleanup() {
 void MemoryManager::setAutoCleanup(bool enabled) {
     autoCleanupEnabled = enabled;
     LOG_INFOF(TAG, "Auto cleanup %s", enabled ? "enabled" : "disabled");
+}
+
+void MemoryManager::setMonitoringEnabled(bool enabled) {
+    monitoringEnabled = enabled;
+    LOG_INFOF(TAG, "Memory monitoring %s", enabled ? "enabled" : "disabled");
 }
 
 void MemoryManager::setMonitorInterval(unsigned long intervalMs) {

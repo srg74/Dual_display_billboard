@@ -4,7 +4,7 @@ PNG to Splash Screen Header Converter
 Converts PNG files to RGB565 format for ST7735/ST7789 TFT displays
 
 Usage:
-    python png_to_splash_header.py input.png output.h [display_type]
+    python png_to_splash_header_converter.py input.png output.h [display_type]
 
 Arguments:
     input.png    - Source PNG file
@@ -94,7 +94,7 @@ def convert_png_to_header(input_file, output_file, display_type=None):
             f.write(f" * Target display: {display_type}\n")
             f.write(f" * Image size: {width}x{height} pixels\n")
             f.write(f" * RGB565 color bitmap ({width}x{height}, {total_bytes} bytes)\n")
-            f.write(" * Generated with png_to_splash_header.py\n")
+            f.write(" * Generated with png_to_splash_header_converter.py\n")
             f.write(" */\n\n")
             
             # Write header guards
@@ -157,8 +157,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python png_to_splash_header.py splash_80x160.png splash_screen.h
-  python png_to_splash_header.py splash_240x240.png splash_screen.h ST7789
+  python png_to_splash_header_converter.py splash_80x160.png splash_screen.h
+  python png_to_splash_header_converter.py splash_240x240.png splash_screen.h ST7789
   
 Supported display types:
   ST7735      - 80x160 or 160x80 pixels

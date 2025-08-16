@@ -44,6 +44,11 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     LOG_INFOF(TAG, "SSID: '%s'", ssid.c_str());
     LOG_INFOF(TAG, "Password: '%s'", password.c_str());
     
+    // Show starting AP status on display
+    if (displayManager) {
+        displayManager->showAPStarting();
+    }
+    
     // FAST PATH: Do critical WiFi setup without display delays
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
@@ -387,6 +392,11 @@ String WiFiManager::scanNetworks() {
 bool WiFiManager::connectToWiFi(const String& ssid, const String& password) {
     LOG_INFOF(TAG, "Attempting to connect to WiFi: %s", ssid.c_str());
     
+    // Show connecting status on display
+    if (displayManager) {
+        displayManager->showConnecting();
+    }
+    
     // Start the connection
     WiFi.begin(ssid.c_str(), password.c_str());
     
@@ -410,6 +420,12 @@ bool WiFiManager::connectToWiFi(const String& ssid, const String& password) {
         return true;
     } else {
         LOG_ERRORF(TAG, "❌ Connection failed. Status: %d", WiFi.status());
+        
+        // Show connection failed status on display
+        if (displayManager) {
+            displayManager->showQuickStatus("WiFi Failed", TFT_RED);
+        }
+        
         WiFi.disconnect(); // Clean up failed connection
         return false;
     }
@@ -459,6 +475,11 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
             String response = "{\"status\":\"error\",\"message\":\"Failed to connect to " + ssid + ". Check password and signal strength.\"}";
             request->send(400, "application/json", response);
             LOG_ERROR(TAG, "❌ Connection failed");
+            
+            // Show connection failed status on display
+            if (displayManager) {
+                displayManager->showQuickStatus("Connection Failed", TFT_RED);
+            }
         }
     } else {
         LOG_ERROR(TAG, "Missing SSID or password in request");
@@ -1236,15 +1257,46 @@ void WiFiManager::setupImageRoutes() {
                 
                 LOG_INFOF(TAG, "📁 Starting image upload: %s (%d bytes)", filename.c_str(), totalSize);
                 
+                // SAFETY: Check available memory before allocation
+                size_t freeHeap = ESP.getFreeHeap();
+                #ifdef ESP32S3_MODE
+                size_t minFreeAfterAlloc = 150000; // Keep at least 150KB free on ESP32-S3
+                size_t maxFileSize = 1000000;      // 1MB max on ESP32-S3 (more memory available)
+                #else
+                size_t minFreeAfterAlloc = 100000; // Keep at least 100KB free on ESP32
+                size_t maxFileSize = 500000;       // 500KB max on ESP32 (less memory available)
+                #endif
+                
+                if (totalSize == 0 || totalSize > (freeHeap - minFreeAfterAlloc)) {
+                    Serial.printf("ERROR: Upload too large. Size: %d, Free heap: %d\n", totalSize, freeHeap);
+                    LOG_ERRORF(TAG, "Upload rejected - size %d bytes exceeds available memory", totalSize);
+                    request->send(400, "text/plain", "File too large for available memory");
+                    return;
+                }
+                
+                // Additional safety: Platform-specific file size limits
+                if (totalSize > maxFileSize) {
+                    Serial.printf("ERROR: File too large: %d bytes (max %d bytes)\n", totalSize, maxFileSize);
+                    LOG_ERRORF(TAG, "Upload rejected - file exceeds %d byte limit", maxFileSize);
+                    request->send(400, "text/plain", String("File too large (max ") + String(maxFileSize/1000) + "KB)");
+                    return;
+                }
+                
+                // SAFETY: Temporarily disable memory monitoring during upload
+                MemoryManager::setMonitoringEnabled(false);
+                
                 // Allocate buffer for entire file
                 uploadBuffer = (uint8_t*)malloc(totalSize);
                 if (!uploadBuffer) {
                     Serial.println("ERROR: Failed to allocate upload buffer");
                     LOG_ERROR(TAG, "Failed to allocate upload buffer");
+                    // Re-enable monitoring before returning
+                    MemoryManager::setMonitoringEnabled(true);
                     request->send(500, "text/plain", "Memory allocation failed");
                     return;
                 }
-                Serial.println("Buffer allocated successfully");
+                Serial.printf("Buffer allocated successfully (%d bytes), Free heap now: %d\n", 
+                             totalSize, ESP.getFreeHeap());
             }
             
             // Copy chunk data to buffer
@@ -1301,6 +1353,9 @@ void WiFiManager::setupImageRoutes() {
                 }
                 totalSize = 0;
                 receivedSize = 0;
+                
+                // SAFETY: Re-enable memory monitoring after upload completes
+                MemoryManager::setMonitoringEnabled(true);
             }
         });
     
