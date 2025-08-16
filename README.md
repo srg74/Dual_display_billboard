@@ -42,3 +42,43 @@ A sophisticated dual display billboard system designed for scale modelers, featu
 - Memory management and error handling
 - Modular component design
 - Production-ready code standards
+
+## 📚 Documentation
+
+This project features comprehensive documentation generated from Doxygen-style annotations:
+
+### 🏗️ **Code Documentation**
+
+- **235+ documented methods** across 13 implementation files
+- **19 fully documented header files** with complete API reference
+- **Professional Doxygen formatting** with @brief, @param, @return tags
+- **Cross-references and usage examples** throughout
+
+### 🌐 **Web-Based Documentation (Apple Silicon Compatible)**
+
+Perfect for M1/M2/M3 Macs - no local installation required!
+
+```bash
+# Generate documentation using GitHub Actions
+./generate_docs_web.sh
+
+# Opens documentation portal in browser
+open docs/documentation-portal.html
+```
+
+### 📖 **Access Methods**
+
+- **GitHub Actions**: Download documentation artifacts
+- **GitHub Pages**: Live documentation at `your-repo/api-docs/`
+- **Local Portal**: Open `docs/documentation-portal.html`
+
+### 📂 **Documentation Structure**
+
+```text
+docs/
+├── generated/           # Auto-generated API docs (GitHub Actions)
+│   └── html/           # Professional HTML documentation
+├── documentation-portal.html  # Web-based documentation hub
+├── DOCUMENTATION.md    # Complete setup guide
+└── hardware connections.md
+```
