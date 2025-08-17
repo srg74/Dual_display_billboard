@@ -700,8 +700,10 @@ bool ConfigValidator::validateMemoryConfiguration() {
  * @return true if filesystem is healthy, false otherwise
  */
 bool ConfigValidator::validateFileSystemHealth() {
-    if (!LittleFS.begin()) {
-        addResult(VALIDATION_ERROR, "FileSystem", "Failed to mount LittleFS filesystem",
+    // LittleFS is initialized in main.cpp, so we just need to verify it's working
+    // Attempting to re-mount would create read-only conflicts
+    if (LittleFS.totalBytes() == 0) {
+        addResult(VALIDATION_ERROR, "FileSystem", "LittleFS filesystem not properly initialized",
                  "Check flash partitioning and filesystem integrity");
         return false;
     }

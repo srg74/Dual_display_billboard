@@ -52,7 +52,7 @@ private:
     
     // Internal time synchronization methods
     void configureNTP();
-    bool waitForTimeSync(int maxRetries = 10);
+    bool waitForTimeSync(int maxRetries = 20);
     
     // Persistent storage methods
     bool saveTimezone(const String& timezone);

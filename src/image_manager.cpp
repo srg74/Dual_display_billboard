@@ -54,10 +54,8 @@ ImageManager::~ImageManager() {
  * - Hardware-specific display settings
  */
 bool ImageManager::begin() {
-    // Initialize LittleFS for persistent storage
-    if (!LittleFS.begin()) {
-        return false;
-    }
+    // LittleFS is initialized in main.cpp before managers start
+    // so we can directly proceed with directory creation
     
     // Ensure image directory exists
     if (!LittleFS.exists(IMAGES_DIR)) {

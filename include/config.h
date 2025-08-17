@@ -2,7 +2,7 @@
 
 // Build Information (auto-generated during compilation)
 #ifndef BUILD_DATE
-#define BUILD_DATE "2508163"  // YYMMDDx format x = daily build counter
+#define BUILD_DATE "2508171"  // YYMMDDx format x = daily build counter
 #endif
 
 #ifndef BUILD_TYPE
@@ -12,8 +12,6 @@
 #else
 #define BUILD_TYPE "production"
 #endif
-#else
-#define BUILD_TYPE "production"
 #endif
 #endif
 

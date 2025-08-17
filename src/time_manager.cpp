@@ -159,14 +159,21 @@ bool TimeManager::waitForTimeSync(int maxRetries) {
     LOG_INFO(TAG, "⏳ Waiting for time synchronization...");
     
     int retries = 0;
-    while (time(nullptr) < 100000 && retries < maxRetries) {
+    time_t currentTime;
+    while ((currentTime = time(nullptr)) < 100000 && retries < maxRetries) {
         yield(); // Non-blocking yield instead of delay
-        delayMicroseconds(500000); // 500ms in microseconds - less blocking than delay()
+        delayMicroseconds(1000000); // 1000ms (1 second) for better sync chances
         retries++;
-        LOG_DEBUGF(TAG, "⏳ Time sync attempt %d/%d", retries, maxRetries);
+        LOG_INFOF(TAG, "⏳ Time sync attempt %d/%d (current time: %ld)", retries, maxRetries, currentTime);
     }
     
-    return time(nullptr) > 100000;
+    if (currentTime > 100000) {
+        LOG_INFOF(TAG, "✅ Time synchronized successfully! Current epoch: %ld", currentTime);
+    } else {
+        LOG_ERRORF(TAG, "❌ Time sync failed after %d attempts (current time: %ld)", retries, currentTime);
+    }
+    
+    return currentTime > 100000;
 }
 
 /**
@@ -537,8 +544,13 @@ bool TimeManager::saveNTPServer(const String& server) {
  * @return Saved NTP server address string, or empty string if not found or error
  */
 String TimeManager::loadNTPServer() {
+    // Create default file if it doesn't exist to prevent VFS errors
     if (!LittleFS.exists(NTP_SERVER_FILE)) {
-        return "";
+        File file = LittleFS.open(NTP_SERVER_FILE, "w");
+        if (file) {
+            file.print("pool.ntp.org");  // Default NTP server
+            file.close();
+        }
     }
     
     File file = LittleFS.open(NTP_SERVER_FILE, "r");

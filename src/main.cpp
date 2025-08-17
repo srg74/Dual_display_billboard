@@ -184,6 +184,7 @@ void loop() {
 
 #else
 // Full Billboard System with WiFi + Display Integration
+#include <LittleFS.h>               // ADD: Filesystem for persistent storage
 #include "logger.h"
 #include "display_manager.h"
 #include "wifi_manager.h"           // ADD: WiFi management
@@ -294,17 +295,24 @@ void loop() {
         if (!wifiInitialized && displayInitialized) {
             LOG_INFO("MAIN", "Initializing WiFi subsystem...");
             
+            // Initialize LittleFS filesystem with formatting enabled
+            if (!LittleFS.begin(true)) {
+                LOG_ERROR("MAIN", "LittleFS initialization failed");
+            } else {
+                LOG_INFO("MAIN", "LittleFS filesystem initialized");
+            }
+            
             // Initialize credential manager
             if (credentialManager.begin()) {
                 LOG_INFO("MAIN", "Credential manager initialized");
                 
-                // Now that LittleFS is initialized, enable file logging
-                LOG_INFO("MAIN", "Attempting to enable file logging...");
-                if (Logger::enableFileLogging("/logs/system.log")) {
-                    LOG_INFO("MAIN", "📁 File logging enabled to /logs/system.log");
-                } else {
-                    LOG_WARN("MAIN", "⚠️ File logging could not be enabled - continuing with Serial only");
-                }
+                // File logging disabled for ESP32 - Serial logging is sufficient
+                // This eliminates LittleFS errors and saves flash memory
+                // if (Logger::enableFileLogging("/logs/system.log")) {
+                //     LOG_INFO("MAIN", "📁 File logging enabled to /logs/system.log");
+                // } else {
+                //     LOG_WARN("MAIN", "⚠️ File logging could not be enabled - continuing with Serial only");
+                // }
             } else {
                 LOG_ERROR("MAIN", "Credential manager failed");
             }
@@ -396,6 +404,20 @@ void loop() {
     if (systemInitialized) {
         // Handle splash screen transitions (non-blocking)
         displayManager.updateSplashScreen();
+        
+        // Initialize time system if not already done and now in normal mode
+        if (!timeInitialized && wifiInitialized && 
+            wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL) {
+            LOG_INFO("MAIN", "Initializing time subsystem...");
+            
+            if (timeManager.begin()) {
+                LOG_INFO("MAIN", "Time manager initialized");
+                timeInitialized = true;
+            } else {
+                LOG_WARN("MAIN", "Time manager initialization failed");
+                timeInitialized = true; // Continue without time sync
+            }
+        }
         
         // WiFi management (non-blocking)
         wifiManager.checkConnectionStatus();

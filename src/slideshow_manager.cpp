@@ -401,6 +401,15 @@ void SlideshowManager::updateImageEnabledState(const String& filename, bool enab
 void SlideshowManager::loadImageStatesFromStorage() {
     Serial.println("Loading image enabled states from storage...");
     
+    // Create default file if it doesn't exist to prevent VFS errors
+    if (!LittleFS.exists("/slideshow_states.json")) {
+        File file = LittleFS.open("/slideshow_states.json", "w");
+        if (file) {
+            file.print("{}");  // Empty JSON object
+            file.close();
+        }
+    }
+    
     File file = LittleFS.open("/slideshow_states.json", "r");
     if (!file) {
         Serial.println("No stored image states found - all images will be enabled by default");

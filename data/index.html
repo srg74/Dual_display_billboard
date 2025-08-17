@@ -244,6 +244,8 @@
             xhr.onload = function() {
                 if (xhr.status === 200) {
                     showSaveStatus('timezoneSaveStatus', 'success', 'Saved');
+                    // Immediately update the displayed time after timezone change
+                    setTimeout(updateTime, 100);
                 } else {
                     showSaveStatus('timezoneSaveStatus', 'error', 'Error');
                 }

@@ -44,13 +44,18 @@ const String CredentialManager::TAG = "CRED";                          ///< Logg
 bool CredentialManager::begin() {
     LOG_INFO(TAG, "🗂️ Initializing LittleFS filesystem...");
     
-    // Initialize LittleFS with automatic formatting if mount fails
-    if (!LittleFS.begin(true)) { // true = format if mount fails
-        LOG_ERROR(TAG, "❌ Failed to mount LittleFS filesystem");
-        return false;
+    // Check if LittleFS is already mounted (initialized in main.cpp)
+    if (LittleFS.totalBytes() > 0) {
+        LOG_INFO(TAG, "✅ LittleFS already mounted, skipping initialization");
+    } else {
+        // Initialize LittleFS with automatic formatting if not already mounted
+        if (!LittleFS.begin(true)) { // true = format if mount fails
+            LOG_ERROR(TAG, "❌ Failed to mount LittleFS filesystem");
+            return false;
+        }
+        LOG_INFO(TAG, "✅ LittleFS mounted successfully");
     }
     
-    LOG_INFO(TAG, "✅ LittleFS mounted successfully");
     printFileSystemInfo();  // Report filesystem health and capacity
     return true;
 }

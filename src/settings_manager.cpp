@@ -129,6 +129,35 @@ SettingsManager::SettingsManager() {
 bool SettingsManager::begin() {
     LOG_INFO(TAG, "⚙️ Initializing Settings Manager...");
     
+    // Ensure all configuration files exist with default values to prevent VFS errors
+    if (!LittleFS.exists(SECOND_DISPLAY_FILE)) {
+        saveBoolean(SECOND_DISPLAY_FILE, false);
+    }
+    if (!LittleFS.exists(DCC_ENABLED_FILE)) {
+        saveBoolean(DCC_ENABLED_FILE, false);
+    }
+    if (!LittleFS.exists(DCC_ADDRESS_FILE)) {
+        saveInteger(DCC_ADDRESS_FILE, 101);
+    }
+    if (!LittleFS.exists(DCC_PIN_FILE)) {
+        saveInteger(DCC_PIN_FILE, 4);
+    }
+    if (!LittleFS.exists(IMAGE_INTERVAL_FILE)) {
+        saveInteger(IMAGE_INTERVAL_FILE, 10);
+    }
+    if (!LittleFS.exists(IMAGE_ENABLED_FILE)) {
+        saveBoolean(IMAGE_ENABLED_FILE, true);
+    }
+    if (!LittleFS.exists(BRIGHTNESS_FILE)) {
+        saveInteger(BRIGHTNESS_FILE, 200);
+    }
+    if (!LittleFS.exists(CLOCK_ENABLED_FILE)) {
+        saveBoolean(CLOCK_ENABLED_FILE, false);
+    }
+    if (!LittleFS.exists(CLOCK_FACE_FILE)) {
+        saveInteger(CLOCK_FACE_FILE, CLOCK_MODERN_SQUARE);
+    }
+    
     // Load all settings from LittleFS with appropriate defaults
     secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, false);
     dccEnabled = loadBoolean(DCC_ENABLED_FILE, false);
