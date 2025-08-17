@@ -209,16 +209,14 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     bool apStarted = WiFi.softAP(apSSID.c_str(), apPassword.c_str(), 11, 0, 4);
     
     if (apStarted) {
-        // Quick success feedback
-        displayManager->showAPReady();  // Fast "AP Ready!" message
-        
         IPAddress IP = WiFi.softAPIP();
         LOG_INFOF(TAG, "✅ Access Point started successfully! SSID: %s, IP: %s", 
                   apSSID.c_str(), IP.toString().c_str());
         
         currentMode = MODE_SETUP;
         
-        // AFTER AP IS READY: Show splash screen (5s) then portal info
+        // DIRECT PORTAL SEQUENCE: Show splash screen (4s) then portal info
+        // This ensures identical behavior on ESP32 and ESP32S3
         displayManager->showPortalSequence(
             PORTAL_SSID,           
             "IP: 4.3.2.1",        
@@ -737,6 +735,11 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
         
         LOG_INFOF(TAG, "Starting connection to: %s", ssid.c_str());
         
+        // Show connecting status on display for visual feedback
+        if (displayManager) {
+            displayManager->showConnecting();
+        }
+        
         // Attempt connection
         bool connected = connectToWiFi(ssid, password);
         
@@ -762,6 +765,13 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
             
             request->send(200, "application/json", response);
             LOG_INFOF(TAG, "✅ Connection successful - device will be available at %s", deviceIP.c_str());
+            
+            // Show connection success message
+            if (displayManager) {
+                displayManager->showConnectionSuccess(deviceIP);
+                connectionSuccessDisplayed = true;
+                connectionSuccessStartTime = millis();
+            }
             
             // NON-BLOCKING RESTART: Schedule restart instead of immediate delay
             restartPending = true;
@@ -912,6 +922,11 @@ bool WiFiManager::connectToSavedNetwork() {
     }
     
     LOG_INFOF(TAG, "🔗 Attempting auto-connect to: %s", creds.ssid.c_str());
+    
+    // Show connecting status on display for visual feedback
+    if (displayManager) {
+        displayManager->showConnecting();
+    }
     
     // Stop AP mode and switch to STA mode
     WiFi.softAPdisconnect(true);

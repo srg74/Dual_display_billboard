@@ -22,8 +22,9 @@
  */
 #if defined(ESP32S3_MODE) 
     // ESP32-S3 pinout: Optimized for development board layout
+    // NOTE: GPIO 39 is I/O capable on ESP32-S3 (unlike ESP32 classic where it's input-only)
     #define DISPLAY_CS1_PIN      10     ///< Primary display CS pin (GPIO 10)
-    #define DISPLAY_CS2_PIN      39     ///< Secondary display CS pin (GPIO 39)
+    #define DISPLAY_CS2_PIN      39     ///< Secondary display CS pin (GPIO 39) - I/O capable on ESP32S3
     #define DISPLAY_DC_PIN       14     ///< DC pin (GPIO 14) - shared between displays
     #define DISPLAY_BLK1_PIN     7      ///< Backlight 1 pin (GPIO 7)
     #define DISPLAY_BLK2_PIN     8      ///< Backlight 2 pin (GPIO 8)

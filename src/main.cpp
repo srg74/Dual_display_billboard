@@ -230,6 +230,7 @@ bool systemInitialized = false;
 bool wifiInitialized = false;
 bool displayInitialized = false;
 bool timeInitialized = false;
+bool secondDisplaySettingApplied = false;  // Track if second display setting has been applied post-splash
 
 void setup() {
     // Initialize logging first
@@ -384,8 +385,16 @@ void loop() {
         
         // Step 4: System ready
         if (displayInitialized && wifiInitialized) {
-            // Enable second display based on saved setting
+#ifndef ESP32S3_MODE
+            // ESP32: Apply second display setting immediately (original working behavior)
             displayManager.enableSecondDisplay(settingsManager.isSecondDisplayEnabled());
+            LOG_INFOF("MAIN", "🎯 ESP32: Applied second display setting immediately: %s", 
+                     settingsManager.isSecondDisplayEnabled() ? "enabled" : "disabled");
+#else
+            // ESP32S3: Second display setting will be applied after splash screen completes
+            // This ensures splash shows on both displays regardless of user settings
+            LOG_INFO("MAIN", "🎯 ESP32S3: Deferring second display setting until after splash completion");
+#endif
             
             // Integrate SettingsManager with DisplayManager for immediate brightness application
             settingsManager.setDisplayManager(&displayManager);
@@ -404,6 +413,23 @@ void loop() {
     if (systemInitialized) {
         // Handle splash screen transitions (non-blocking)
         displayManager.updateSplashScreen();
+        
+        // ESP32S3-specific: Apply second display setting after splash completes
+        // This ensures splash shows on both displays regardless of user settings
+#ifdef ESP32S3_MODE
+        if (!secondDisplaySettingApplied && !displayManager.isSplashActive()) {
+            // Splash has completed, now apply the saved second display setting
+            displayManager.enableSecondDisplay(settingsManager.isSecondDisplayEnabled());
+            // Also apply the brightness setting that was deferred during splash
+            if (!settingsManager.isSecondDisplayEnabled()) {
+                displayManager.setBrightness(0, 2);  // Turn off Display 2 brightness
+                LOG_INFO("MAIN", "🎯 ESP32S3: Applied deferred Display 2 brightness setting (turned off)");
+            }
+            secondDisplaySettingApplied = true;
+            LOG_INFOF("MAIN", "🎯 ESP32S3: Applied second display setting after splash completion: %s", 
+                     settingsManager.isSecondDisplayEnabled() ? "enabled" : "disabled");
+        }
+#endif
         
         // Initialize time system if not already done and now in normal mode
         if (!timeInitialized && wifiInitialized && 

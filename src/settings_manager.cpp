@@ -74,7 +74,11 @@ const char* SettingsManager::CLOCK_FACE_FILE = "/clock_face.txt";
  */
 SettingsManager::SettingsManager() {
     // Initialize with safe default values - will be overridden by persistent storage in begin()
-    secondDisplayEnabled = false;           // Dual display disabled by default (single display mode)
+#ifdef DUAL_DISPLAY_ENABLED
+    secondDisplayEnabled = false;           // Dual display disabled by default - user must enable via web interface
+#else
+    secondDisplayEnabled = false;           // Single display mode when dual display not compiled
+#endif
     dccEnabled = false;                    // DCC interface disabled by default for safety
     dccAddress = 101;                      // Standard DCC address range default
     dccPin = 4;                           // Safe GPIO pin choice for DCC input
@@ -159,7 +163,11 @@ bool SettingsManager::begin() {
     }
     
     // Load all settings from LittleFS with appropriate defaults
-    secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, false);
+#ifdef DUAL_DISPLAY_ENABLED
+    secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, false);  // Default to disabled - user must enable via web interface
+#else
+    secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, false);  // Default to disabled when single display compiled
+#endif
     dccEnabled = loadBoolean(DCC_ENABLED_FILE, false);
     dccAddress = loadInteger(DCC_ADDRESS_FILE, 101);
     dccPin = loadInteger(DCC_PIN_FILE, 4);
@@ -237,8 +245,13 @@ void SettingsManager::setDisplayManager(DisplayManager* dm) {
             LOG_DEBUG(TAG, "Applied current brightness to both displays");
         } else {
             dm->setBrightness(brightness, 1); // Main display only
-            dm->setBrightness(0, 2);          // Turn off second display
-            LOG_DEBUG(TAG, "Applied brightness to main display only");
+            // Don't turn off Display 2 if splash screen is active (let splash complete first)
+            if (!dm->isSplashActive()) {
+                dm->setBrightness(0, 2);          // Turn off second display
+                LOG_DEBUG(TAG, "Applied brightness to main display only - second display disabled");
+            } else {
+                LOG_INFO(TAG, "🎯 Splash active - deferring Display 2 brightness setting");
+            }
         }
     } else {
         LOG_INFO(TAG, "🔗 DisplayManager integration disabled");
@@ -293,8 +306,13 @@ void SettingsManager::setSecondDisplayEnabled(bool enabled) {
             LOG_DEBUG(TAG, "🔆 Applied current brightness to both displays");
         } else {
             displayManager->setBrightness(brightness, 1);  // Main display only
-            displayManager->setBrightness(0, 2);           // Turn off second display
-            LOG_DEBUG(TAG, "🔆 Applied brightness to main display only, turned off second");
+            // Don't turn off Display 2 if splash screen is active (let splash complete first)
+            if (!displayManager->isSplashActive()) {
+                displayManager->setBrightness(0, 2);           // Turn off second display
+                LOG_DEBUG(TAG, "🔆 Applied brightness to main display only, turned off second");
+            } else {
+                LOG_INFO(TAG, "🎯 Splash active - deferring Display 2 brightness setting");
+            }
         }
     }
 }
@@ -763,8 +781,13 @@ void SettingsManager::setBrightness(int value) {
             LOG_DEBUG(TAG, "🔆 Applied brightness to both displays immediately");
         } else {
             displayManager->setBrightness(value, 1);  // Main display only
-            displayManager->setBrightness(0, 2);      // Turn off second display
-            LOG_DEBUG(TAG, "🔆 Applied brightness to main display only, turned off second");
+            // Don't turn off Display 2 if splash screen is active (let splash complete first)
+            if (!displayManager->isSplashActive()) {
+                displayManager->setBrightness(0, 2);      // Turn off second display
+                LOG_DEBUG(TAG, "🔆 Applied brightness to main display only, turned off second");
+            } else {
+                LOG_INFO(TAG, "🎯 Splash active - deferring Display 2 brightness setting");
+            }
         }
     }
 }

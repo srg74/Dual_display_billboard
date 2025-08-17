@@ -4,7 +4,7 @@
     #if defined(ESP32S3_MODE) 
         // ESP32-S3 pinout: Optimized for development board layout
         static const int firstScreenCS = 10;     ///< Primary display CS pin (GPIO 10)
-        static const int secondScreenCS = 39;    ///< Secondary display CS pin (GPIO 39)
+        static const int secondScreenCS = 39;    ///< Secondary display CS pin (GPIO 39) - I/O capable on ESP32S3
         static const int TFT_DC_PIN = 14;        // DC = GPIO 14 (shared) ✅
         static const int TFT_BACKLIGHT1_PIN = 7; // BLK1 = GPIO 7
         static const int TFT_BACKLIGHT2_PIN = 8; // BLK2 = GPIO 8
