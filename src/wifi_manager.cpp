@@ -97,7 +97,7 @@ WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, Se
     restartScheduledTime = 0;
     switchToPortalMode = false;
     
-    // FIX: Uncomment these lines
+    // Initialize connection success display tracking
     connectionSuccessDisplayed = false;
     connectionSuccessStartTime = 0;
     

@@ -184,29 +184,24 @@ void loop() {
 
 #else
 // Full Billboard System with WiFi + Display Integration
-#include <LittleFS.h>               // ADD: Filesystem for persistent storage
+#include <LittleFS.h>               // Filesystem for persistent storage
 #include "logger.h"
 #include "display_manager.h"
-#include "wifi_manager.h"           // ADD: WiFi management
-#include "credential_manager.h"     // ADD: Credential storage
-#include "time_manager.h"           // ADD: Time management
-#include "settings_manager.h"       // ADD: Settings management
-#include "image_manager.h"          // ADD: Image management
-#include "slideshow_manager.h"      // ADD: Slideshow management
-#include "display_clock_manager.h"  // ADD: Clock management
-#include "dcc_manager.h"            // ADD: DCC management
-#include "memory_manager.h"         // ADD: Memory monitoring
-#include "platform_detector.h"      // ADD: Multiplatform detection
+#include "wifi_manager.h"           // WiFi management
+#include "credential_manager.h"     // Credential storage
+#include "time_manager.h"           // Time management
+#include "settings_manager.h"       // Settings management
+#include "image_manager.h"          // Image management
+#include "slideshow_manager.h"      // Slideshow management
+#include "display_clock_manager.h"  // Clock management
+#include "dcc_manager.h"            // DCC management
+#include "memory_manager.h"         // Memory monitoring
+#include "platform_detector.h"      // Multiplatform detection
 #include "config.h"
 
-#ifdef ESP32S3_MODE
-#include "esp_wifi.h"
-#include "tcpip_adapter.h"
-#endif
-
-// Create instances
+// Create system component instances
 DisplayManager displayManager;
-AsyncWebServer server(80);          // ADD: Web server
+AsyncWebServer server(80);          // Web server for portal and API
 
 // Configure TCP settings to reduce timeout errors
 void configureTCPSettings() {
@@ -217,14 +212,15 @@ void configureTCPSettings() {
     yield();
 }
 
-TimeManager timeManager;            // ADD: Time manager
-SettingsManager settingsManager;    // ADD: Settings manager
-ImageManager imageManager(&displayManager);  // ADD: Image manager
-DisplayClockManager clockManager(&displayManager, &timeManager);  // ADD: Clock manager
-SlideshowManager slideshowManager(&imageManager, &settingsManager, &clockManager);  // ADD: Slideshow manager
-DCCManager dccManager(&settingsManager, &slideshowManager);  // ADD: DCC manager
-WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager, &imageManager, &slideshowManager, &dccManager);   // ADD: WiFi manager with all components
-CredentialManager credentialManager; // ADD: Credential manager
+// System component instances with dependency injection
+TimeManager timeManager;
+SettingsManager settingsManager;
+ImageManager imageManager(&displayManager);
+DisplayClockManager clockManager(&displayManager, &timeManager);
+SlideshowManager slideshowManager(&imageManager, &settingsManager, &clockManager);
+DCCManager dccManager(&settingsManager, &slideshowManager);
+WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager, &imageManager, &slideshowManager, &dccManager);
+CredentialManager credentialManager;
 
 // Timing variables using config.h constants
 unsigned long lastHeartbeat = 0;

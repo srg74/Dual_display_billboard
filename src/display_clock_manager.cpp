@@ -9,9 +9,10 @@
  * Features:
  * - Multiple clock face styles (analog, digital, minimalist, modern square)
  * - Dual display synchronization with independent control
+ * - Adaptive label positioning for different display sizes (ST7735/ST7789)
  * - Gallery/clock alternation with configurable intervals
  * - Dynamic label updates with time synchronization
- * - Hardware-optimized rendering for ST7735/ST7789 displays
+ * - Hardware-optimized rendering with size-aware layout
  * - Clean sans-serif typography for professional appearance
  * 
  * @author Dual Display Billboard Project
@@ -72,9 +73,13 @@ void DisplayClockManager::begin(int firstCS, int secondCS) {
  * Complete clock rendering pipeline:
  * 1. Display selection via CS pin control
  * 2. Screen preparation and clearing
- * 3. Time-based label rendering
+ * 3. Adaptive label positioning based on display size
  * 4. Clock face rendering based on current style
  * 5. Display deselection
+ * 
+ * Label positioning adapts to display size:
+ * - Small displays (≤80px width): Center at X=40
+ * - Large displays (>80px width): Center at X=120
  */
 void DisplayClockManager::displayClockOnDisplay(TFT_eSPI& tft, int csPin) {
     if (csPin < 0) return;
@@ -84,17 +89,17 @@ void DisplayClockManager::displayClockOnDisplay(TFT_eSPI& tft, int csPin) {
     tft.setRotation(0);           // Portrait orientation for optimal clock display
     tft.fillScreen(TFT_BLACK);    // Clear previous content
     
-    // Render dynamic time-based label with clean sans-serif font
+    // Render clock label with adaptive positioning for display size compatibility
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setTextFont(2);  // Use clean sans-serif font (size 16)
+    tft.setTextFont(2);  // Clean sans-serif font (16px height)
     String currentLabel = timeManager ? timeManager->getClockLabel() : "Clock";
     
-    // Center the label horizontally with adaptive positioning for different display sizes
+    // Calculate adaptive center position based on display width
     int textWidth = tft.textWidth(currentLabel.c_str());
     bool isSmallDisplay = (tft.width() <= 80);
-    int centerX = isSmallDisplay ? 40 : 120;
+    int centerX = isSmallDisplay ? 40 : 120;  // 80px displays: center=40, 240px displays: center=120
     int labelX = centerX - textWidth / 2;
-    int labelY = 20;  // Adjusted Y position for font 2
+    int labelY = 20;  // Fixed Y position for consistent appearance
     tft.setCursor(labelX, labelY);
     tft.print(currentLabel);
 

@@ -31,4 +31,4 @@ doxygen_warnings.log
 
 # Keep source documentation files but ignore temporary artifacts
 .doxygen/
-build_info.json
+.build_info.json
