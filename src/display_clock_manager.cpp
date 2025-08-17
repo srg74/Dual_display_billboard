@@ -89,9 +89,11 @@ void DisplayClockManager::displayClockOnDisplay(TFT_eSPI& tft, int csPin) {
     tft.setTextFont(2);  // Use clean sans-serif font (size 16)
     String currentLabel = timeManager ? timeManager->getClockLabel() : "Clock";
     
-    // Center the label horizontally 
+    // Center the label horizontally with adaptive positioning for different display sizes
     int textWidth = tft.textWidth(currentLabel.c_str());
-    int labelX = 40 - textWidth / 2;
+    bool isSmallDisplay = (tft.width() <= 80);
+    int centerX = isSmallDisplay ? 40 : 120;
+    int labelX = centerX - textWidth / 2;
     int labelY = 20;  // Adjusted Y position for font 2
     tft.setCursor(labelX, labelY);
     tft.print(currentLabel);

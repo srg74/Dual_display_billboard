@@ -199,6 +199,11 @@ void loop() {
 #include "platform_detector.h"      // ADD: Multiplatform detection
 #include "config.h"
 
+#ifdef ESP32S3_MODE
+#include "esp_wifi.h"
+#include "tcpip_adapter.h"
+#endif
+
 // Create instances
 DisplayManager displayManager;
 AsyncWebServer server(80);          // ADD: Web server

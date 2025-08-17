@@ -103,48 +103,6 @@ WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, Se
     
     // Initialize GPIO0 pin for factory reset
     pinMode(GPIO0_PIN, INPUT_PULLUP);
-    
-    // Smart crash prevention: Only intervene on rapid AUTH_EXPIRE events
-    authFailureCount = 0;
-    lastAuthFailureTime = 0;
-    
-    WiFi.onEvent([this](WiFiEvent_t event, WiFiEventInfo_t info) {
-        if (event == ARDUINO_EVENT_WIFI_STA_DISCONNECTED) {
-            uint8_t reason = info.wifi_sta_disconnected.reason;
-            
-            // Only handle AUTH_EXPIRE crashes (reason 2)
-            if (reason == WIFI_REASON_AUTH_EXPIRE) {
-                unsigned long now = millis();
-                
-                // Reset counter if more than 5 seconds since last failure
-                if (now - lastAuthFailureTime > 5000) {
-                    authFailureCount = 0;
-                }
-                
-                authFailureCount++;
-                lastAuthFailureTime = now;
-                
-                LOG_WARNF(TAG, "⚠️ AUTH_EXPIRE #%d in sequence", authFailureCount);
-                
-                // Only intervene after 4+ rapid failures (ESP32 usually crashes after 6-8)
-                if (authFailureCount >= 4) {
-                    LOG_WARN(TAG, "🛡️ Preventing crash - immediate WiFi stack reset");
-                    
-                    // Show crash prevention on display  
-                    if (this->displayManager) {
-                        this->displayManager->showQuickStatus("Auth Failed - Protected", TFT_ORANGE);
-                    }
-                    
-                    // CRITICAL: No delays in interrupt context! Use immediate reset
-                    WiFi.disconnect(true);
-                    WiFi.mode(WIFI_OFF);
-                    WiFi.mode(WIFI_AP_STA);
-                    
-                    authFailureCount = 0; // Reset counter
-                }
-            }
-        }
-    });
 }
 
 /**
