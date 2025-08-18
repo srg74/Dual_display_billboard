@@ -62,7 +62,7 @@ size_t MemoryManager::heapSampleSum = 0;
  * @since v0.9
  */
 bool MemoryManager::initialize(unsigned long monitorIntervalMs, bool enableAutoCleanup) {
-    LOG_INFOF(TAG, "🔧 Initializing memory monitoring system");
+    LOG_INFOF(TAG, "Initializing memory monitoring system");
     
     monitorInterval = monitorIntervalMs;
     autoCleanupEnabled = enableAutoCleanup;
@@ -78,7 +78,7 @@ bool MemoryManager::initialize(unsigned long monitorIntervalMs, bool enableAutoC
     updateHealthStatus();
     updateFragmentation();
     
-    LOG_INFOF(TAG, "✅ Memory manager initialized");
+    LOG_INFOF(TAG, "Memory manager initialized");
     LOG_INFOF(TAG, "   Monitor interval: %lu ms", monitorInterval);
     LOG_INFOF(TAG, "   Auto cleanup: %s", autoCleanupEnabled ? "enabled" : "disabled");
     LOG_INFOF(TAG, "   Initial heap: %d bytes free", currentStats.heapFree);
@@ -473,13 +473,13 @@ MemoryManager::HealthStatus MemoryManager::calculateHealthStatus(size_t free, si
  */
 void MemoryManager::triggerCleanupIfNeeded() {
     if (currentStats.overallHealth >= CRITICAL) {
-        LOG_WARNF(TAG, "🧹 Triggering automatic memory cleanup (health: %s)", 
+        LOG_WARNF(TAG, "Triggering automatic memory cleanup (health: %s)", 
                   getHealthStatusString(currentStats.overallHealth));
         
         size_t freedBytes = forceCleanup();
         currentStats.cleanupTriggers++;
         
-        LOG_INFOF(TAG, "🧹 Cleanup completed, freed %d bytes", freedBytes);
+        LOG_INFOF(TAG, "Cleanup completed, freed %d bytes", freedBytes);
     }
 }
 
@@ -517,7 +517,7 @@ void MemoryManager::recordMemoryEvent(MemoryType type, HealthStatus status) {
     
     if (status >= CRITICAL) {
         currentStats.criticalEvents++;
-        LOG_WARNF(TAG, "⚠️ Critical memory event: %s subsystem in %s condition", 
+        LOG_WARNF(TAG, "Critical memory event: %s subsystem in %s condition", 
                   getMemoryTypeString(type), getHealthStatusString(status));
     }
 }
@@ -755,7 +755,7 @@ size_t MemoryManager::forceCleanup() {
     size_t initialFree = ESP.getFreeHeap();
     size_t freedBytes = 0;
     
-    LOG_INFOF(TAG, "🧹 Starting memory cleanup (initial free: %d bytes)", initialFree);
+    LOG_INFOF(TAG, "Starting memory cleanup (initial free: %d bytes)", initialFree);
     
     // 1. Force garbage collection by yielding
     for (int i = 0; i < 10; i++) {
@@ -782,7 +782,7 @@ size_t MemoryManager::forceCleanup() {
         freedBytes = finalFree - initialFree;
     }
     
-    LOG_INFOF(TAG, "🧹 Cleanup completed: freed %d bytes (final free: %d bytes)", 
+    LOG_INFOF(TAG, "Cleanup completed: freed %d bytes (final free: %d bytes)", 
               freedBytes, finalFree);
     
     // Update statistics immediately
@@ -960,7 +960,7 @@ bool MemoryManager::canAllocate(size_t requestedBytes, MemoryType type) {
  * @since v0.9
  */
 void MemoryManager::printMemoryReport(bool includeHistory) {
-    LOG_INFOF(TAG, "🔍 === COMPREHENSIVE MEMORY REPORT ===");
+    LOG_INFOF(TAG, "=== COMPREHENSIVE MEMORY REPORT ===");
     LOG_INFOF(TAG, "System Uptime: %lu ms (%.1f minutes)", 
               currentStats.uptimeMs, currentStats.uptimeMs / 60000.0f);
     
@@ -1004,7 +1004,7 @@ void MemoryManager::printMemoryReport(bool includeHistory) {
         LOG_INFOF(TAG, "   Cleanup Triggers: %lu", currentStats.cleanupTriggers);
     }
     
-    LOG_INFOF(TAG, "🔍 === END MEMORY REPORT ===");
+    LOG_INFOF(TAG, "=== END MEMORY REPORT ===");
 }
 
 /**
@@ -1015,15 +1015,15 @@ void MemoryManager::printMemoryReport(bool includeHistory) {
  * visual health indicators for quick system assessment.
  * 
  * Status display includes:
- * - Visual health indicator (✅ ⚠️ ❌) based on overall health
+ * - Visual health indicator (icon) based on overall health
  * - Heap memory availability in kilobytes and percentage
  * - Overall health status as readable string
  * - PSRAM availability when present
  * 
  * Visual indicators provide immediate health assessment:
- * - ✅ EXCELLENT/GOOD health status
- * - ⚠️ WARNING health status 
- * - ❌ CRITICAL/EMERGENCY health status
+ * - EXCELLENT/GOOD health status
+ * - WARNING health status 
+ * - CRITICAL/EMERGENCY health status
  * 
  * @note Output formatted for dashboard displays and frequent updates
  * @note Health icons provide immediate visual health assessment
@@ -1037,9 +1037,9 @@ void MemoryManager::printMemoryReport(bool includeHistory) {
  * @since v0.9
  */
 void MemoryManager::printMemoryStatus() {
-    const char* healthIcon = "✅";
-    if (currentStats.overallHealth >= WARNING) healthIcon = "⚠️";
-    if (currentStats.overallHealth >= CRITICAL) healthIcon = "❌";
+    const char* healthIcon = "OK";
+    if (currentStats.overallHealth >= WARNING) healthIcon = "WARN";
+    if (currentStats.overallHealth >= CRITICAL) healthIcon = "CRITICAL";
     
     LOG_INFOF(TAG, "%s Memory: Heap %dKB free (%.1f%%), Health: %s", 
               healthIcon,

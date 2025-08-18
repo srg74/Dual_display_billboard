@@ -43,7 +43,7 @@ INPUT                  = src include
 INPUT_ENCODING         = UTF-8
 FILE_PATTERNS          = *.c *.cpp *.h *.hpp
 RECURSIVE              = YES
-EXCLUDE                = .pio .vscode test logs README.md
+EXCLUDE                = .pio .vscode test logs
 USE_MDFILE_AS_MAINPAGE = 
 
 #---------------------------------------------------------------------------
@@ -68,18 +68,6 @@ GENERATE_HTML          = YES
 HTML_OUTPUT            = html
 HTML_TIMESTAMP         = YES
 GENERATE_TREEVIEW      = YES
-# Force HTML5 output instead of XHTML
-HTML_DYNAMIC_MENUS     = YES
-HTML_DYNAMIC_SECTIONS  = YES
-# Force modern HTML5 DOCTYPE
-HTML_EXTRA_STYLESHEET  = 
-HTML_EXTRA_FILES       = 
-HTML_COLORSTYLE_HUE    = 220
-HTML_COLORSTYLE_SAT    = 100
-HTML_COLORSTYLE_GAMMA  = 80
-# Disable XHTML-specific features
-DISABLE_INDEX          = NO
-ENUM_VALUES_PER_LINE   = 4
 SEARCHENGINE           = YES
 
 #---------------------------------------------------------------------------

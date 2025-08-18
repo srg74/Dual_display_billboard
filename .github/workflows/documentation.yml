@@ -70,3 +70,5 @@ jobs:
         force_orphan: true
         keep_files: false
         enable_jekyll: false
+        # Completely clean deployment - only our generated content
+        cname: false

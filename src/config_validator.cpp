@@ -66,7 +66,7 @@ ConfigValidator::PlatformConstraints ConfigValidator::currentConstraints;
  * for subsequent validation operations with platform-specific rules.
  */
 bool ConfigValidator::initialize() {
-    LOG_INFOF(TAG, "🔧 Initializing Configuration Validator...");
+    LOG_INFOF(TAG, "Initializing Configuration Validator...");
     
     // Detect platform and display hardware
     PlatformType platform = detectPlatform();
@@ -76,10 +76,10 @@ bool ConfigValidator::initialize() {
     loadPlatformConstraints(platform);
     
     // Log detected configuration for debugging
-    LOG_INFOF(TAG, "📱 Platform: %s", getPlatformName(platform).c_str());
-    LOG_INFOF(TAG, "🖥️  Display: %s", getDisplayName(display).c_str());
-    LOG_INFOF(TAG, "📌 GPIO Range: %d-%d", currentConstraints.minGPIO, currentConstraints.maxGPIO);
-    LOG_INFOF(TAG, "💾 PSRAM: %s", currentConstraints.hasPSRAM ? "Available" : "Not Available");
+    LOG_INFOF(TAG, "Platform: %s", getPlatformName(platform).c_str());
+    LOG_INFOF(TAG, " Display: %s", getDisplayName(display).c_str());
+    LOG_INFOF(TAG, "GPIO Range: %d-%d", currentConstraints.minGPIO, currentConstraints.maxGPIO);
+    LOG_INFOF(TAG, "PSRAM: %s", currentConstraints.hasPSRAM ? "Available" : "Not Available");
     
     return true;
 }
@@ -97,14 +97,14 @@ ConfigValidator::PlatformType ConfigValidator::detectPlatform() {
     
     // Perform chip model identification with specific ESP32 variant detection
     if (chip_info.model == CHIP_ESP32S3) {
-        LOG_INFOF(TAG, "✅ Detected ESP32-S3 platform with enhanced capabilities");
+        LOG_INFOF(TAG, "Detected ESP32-S3 platform with enhanced capabilities");
         return PLATFORM_ESP32_S3;
     } else if (chip_info.model == CHIP_ESP32) {
-        LOG_INFOF(TAG, "✅ Detected ESP32-DEV standard platform");
+        LOG_INFOF(TAG, "Detected ESP32-DEV standard platform");
         return PLATFORM_ESP32_DEV;
     }
     
-    LOG_WARNF(TAG, "⚠️ Unknown ESP32 platform detected - using default constraints");
+    LOG_WARNF(TAG, "Unknown ESP32 platform detected - using default constraints");
     return PLATFORM_UNKNOWN;
 }
 
@@ -118,13 +118,13 @@ ConfigValidator::PlatformType ConfigValidator::detectPlatform() {
 ConfigValidator::DisplayType ConfigValidator::detectDisplayType() {
     // Check TFT_eSPI configuration to determine display driver type
     #if defined(ST7789_DRIVER)
-        LOG_INFOF(TAG, "✅ ST7789 240x240 display driver detected");
+        LOG_INFOF(TAG, "ST7789 240x240 display driver detected");
         return DISPLAY_ST7789;
     #elif defined(ST7735_DRIVER)
-        LOG_INFOF(TAG, "✅ ST7735 160x80 display driver detected");
+        LOG_INFOF(TAG, "ST7735 160x80 display driver detected");
         return DISPLAY_ST7735;
     #else
-        LOG_WARNF(TAG, "⚠️ Unknown display driver configuration");
+        LOG_WARNF(TAG, "Unknown display driver configuration");
         return DISPLAY_UNKNOWN;
     #endif
 }
@@ -134,7 +134,7 @@ ConfigValidator::DisplayType ConfigValidator::detectDisplayType() {
 // ============================================================================
 
 /**
- * @brief 🔧 Load platform-specific validation constraints based on detected hardware
+ * @brief Load platform-specific validation constraints based on detected hardware
  * @param platform Detected platform type for constraint configuration
  * 
  * Configures platform-specific GPIO constraints, memory limits, and hardware
@@ -183,7 +183,7 @@ void ConfigValidator::loadPlatformConstraints(PlatformType platform) {
             
         default:
             // Unknown platform - use conservative ESP32 defaults for safety
-            LOG_ERRORF(TAG, "❌ Unknown platform, applying conservative defaults");
+            LOG_ERRORF(TAG, "Unknown platform, applying conservative defaults");
             currentConstraints.minGPIO = 0;
             currentConstraints.maxGPIO = 39;
             currentConstraints.reservedPins = {6, 7, 8, 9, 10, 11};
@@ -210,7 +210,7 @@ void ConfigValidator::loadPlatformConstraints(PlatformType platform) {
  * Optionally applies automatic corrections for recoverable issues.
  */
 ConfigValidator::ValidationReport ConfigValidator::validateSystem(bool autoFix) {
-    LOG_INFOF(TAG, "🔍 Starting comprehensive system validation...");
+    LOG_INFOF(TAG, "Starting comprehensive system validation...");
     
     // Reset validation report for fresh analysis
     lastReport = ValidationReport();
@@ -270,7 +270,7 @@ ConfigValidator::ValidationReport ConfigValidator::validateSystem(bool autoFix) 
               statusIcon.c_str(), lastReport.systemReady ? "READY" : "NOT READY");
     
     if (!lastReport.systemReady) {
-        LOG_WARNF(TAG, "⚠️ System not ready: %d errors, %d fatal issues found", 
+        LOG_WARNF(TAG, "System not ready: %d errors, %d fatal issues found", 
                   lastReport.errorCount, lastReport.fatalCount);
     }
     
@@ -296,7 +296,7 @@ bool ConfigValidator::validateCategory(const String& category) {
     if (category == "display") return validateDisplayHardware();
     if (category == "settings") return validateDisplaySettings();
     
-    LOG_WARNF(TAG, "⚠️ Unknown validation category: %s", category.c_str());
+    LOG_WARNF(TAG, "Unknown validation category: %s", category.c_str());
     return false;
 }
 
@@ -331,15 +331,15 @@ void ConfigValidator::printValidationReport(const ValidationReport* report, bool
     LOG_INFOF(TAG, "╠═══════════════════════════════════════════════╣");
     LOG_INFOF(TAG, "║ Platform: %-35s ║", getPlatformName(rep.detectedPlatform).c_str());
     LOG_INFOF(TAG, "║ Display:  %-35s ║", getDisplayName(rep.detectedDisplay).c_str());
-    LOG_INFOF(TAG, "║ System Ready: %-31s ║", rep.systemReady ? "✅ YES" : "❌ NO");
+    LOG_INFOF(TAG, "║ System Ready: %-31s ║", rep.systemReady ? "YES" : "NO");
     LOG_INFOF(TAG, "╠═══════════════════════════════════════════════╣");
     LOG_INFOF(TAG, "║ VALIDATION RESULTS SUMMARY:                  ║");
-    LOG_INFOF(TAG, "║   ✅ OK:       %-30d ║", rep.okCount);
-    LOG_INFOF(TAG, "║   ⚠️  Warnings: %-30d ║", rep.warningCount);
-    LOG_INFOF(TAG, "║   ❌ Errors:   %-30d ║", rep.errorCount);
+    LOG_INFOF(TAG, "║   OK:       %-30d ║", rep.okCount);
+    LOG_INFOF(TAG, "║    Warnings: %-30d ║", rep.warningCount);
+    LOG_INFOF(TAG, "║   Errors:   %-30d ║", rep.errorCount);
     LOG_INFOF(TAG, "║   💀 Fatal:    %-30d ║", rep.fatalCount);
     if (rep.autoFixedCount > 0) {
-        LOG_INFOF(TAG, "║   🔧 Auto-fixed: %-27d ║", rep.autoFixedCount);
+        LOG_INFOF(TAG, "║   Auto-fixed: %-27d ║", rep.autoFixedCount);
     }
     LOG_INFOF(TAG, "╚═══════════════════════════════════════════════╝");
     

@@ -1,6 +1,6 @@
 /**
  * @file slideshow_manager.cpp
- * @brief 🎯 Advanced slideshow management system with clock integration and DCC control
+ * @brief Advanced slideshow management system with clock integration and DCC control
  * 
  * This module provides comprehensive slideshow functionality for dual display billboards,
  * featuring intelligent image sequencing, clock integration, DCC command response,
@@ -273,7 +273,7 @@ bool SlideshowManager::shouldRetrySlideshow() const {
 
 /**
 /**
- * @brief 🖼️ Display next image in sequence on available displays
+ * @brief Display next image in sequence on available displays
  * 
  * Handles the actual image display operation using ImageManager to show
  * the current image on both displays. Includes validation and error handling
@@ -326,7 +326,7 @@ void SlideshowManager::loadEnabledImages() {
 }
 
 /**
- * @brief ✅ Check if specific image is enabled for slideshow display
+ * @brief Check if specific image is enabled for slideshow display
  * @param filename Image filename to check enable status
  * @return true if image is enabled, false if disabled, defaults to true if not found
  * 
@@ -350,7 +350,7 @@ bool SlideshowManager::isImageEnabled(const String& filename) {
 // ============================================================================
 
 /**
- * @brief 🔧 Update enable/disable state for specific image in slideshow
+ * @brief Update enable/disable state for specific image in slideshow
  * @param filename Image filename to update state for
  * @param enabled New enabled state (true=enabled, false=disabled)
  * 
@@ -391,7 +391,7 @@ void SlideshowManager::updateImageEnabledState(const String& filename, bool enab
 }
 
 /**
- * @brief 💾 Load image enable/disable states from persistent storage
+ * @brief Load image enable/disable states from persistent storage
  * 
  * Reads image enabled states from JSON file stored in LittleFS filesystem.
  * Handles missing file gracefully by defaulting all images to enabled state.

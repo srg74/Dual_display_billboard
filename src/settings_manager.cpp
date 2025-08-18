@@ -131,7 +131,7 @@ SettingsManager::SettingsManager() {
  * @since v0.9
  */
 bool SettingsManager::begin() {
-    LOG_INFO(TAG, "⚙️ Initializing Settings Manager...");
+    LOG_INFO(TAG, "Initializing Settings Manager...");
     
     // Ensure all configuration files exist with default values to prevent VFS errors
     if (!LittleFS.exists(SECOND_DISPLAY_FILE)) {
@@ -190,12 +190,12 @@ bool SettingsManager::begin() {
         LOG_INFOF(TAG, "🚂 DCC Address: %d", dccAddress);
         LOG_INFOF(TAG, "🚂 DCC GPIO Pin: %d", dccPin);
     }
-    LOG_INFOF(TAG, "⏱️ Image Interval: %d seconds", imageInterval);
-    LOG_INFOF(TAG, "🖼️ Image Display: %s", imageEnabled ? "enabled" : "disabled");
+    LOG_INFOF(TAG, "Image Interval: %d seconds", imageInterval);
+    LOG_INFOF(TAG, "Image Display: %s", imageEnabled ? "enabled" : "disabled");
     LOG_INFOF(TAG, "🔆 Brightness: %d (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
     LOG_INFOF(TAG, "🕒 Clock Display: %s", clockEnabled ? "enabled" : "disabled");
     
-    LOG_INFO(TAG, "✅ Settings Manager initialized successfully");
+    LOG_INFO(TAG, "Settings Manager initialized successfully");
     return true;
 }
 
@@ -250,7 +250,7 @@ void SettingsManager::setDisplayManager(DisplayManager* dm) {
                 dm->setBrightness(0, 2);          // Turn off second display
                 LOG_DEBUG(TAG, "Applied brightness to main display only - second display disabled");
             } else {
-                LOG_INFO(TAG, "🎯 Splash active - deferring Display 2 brightness setting");
+                LOG_INFO(TAG, "Splash active - deferring Display 2 brightness setting");
             }
         }
     } else {
@@ -294,9 +294,9 @@ void SettingsManager::setDisplayManager(DisplayManager* dm) {
 void SettingsManager::setSecondDisplayEnabled(bool enabled) {
     secondDisplayEnabled = enabled;
     if (saveBoolean(SECOND_DISPLAY_FILE, enabled)) {
-        LOG_INFOF(TAG, "💾 Second display setting saved: %s", enabled ? "enabled" : "disabled");
+        LOG_INFOF(TAG, "Second display setting saved: %s", enabled ? "enabled" : "disabled");
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save second display setting to persistent storage");
+        LOG_WARN(TAG, "Failed to save second display setting to persistent storage");
     }
     
     // Apply current brightness to appropriate displays when second display setting changes
@@ -311,7 +311,7 @@ void SettingsManager::setSecondDisplayEnabled(bool enabled) {
                 displayManager->setBrightness(0, 2);           // Turn off second display
                 LOG_DEBUG(TAG, "🔆 Applied brightness to main display only, turned off second");
             } else {
-                LOG_INFO(TAG, "🎯 Splash active - deferring Display 2 brightness setting");
+                LOG_INFO(TAG, "Splash active - deferring Display 2 brightness setting");
             }
         }
     }
@@ -380,9 +380,9 @@ bool SettingsManager::isSecondDisplayEnabled() {
 void SettingsManager::setDCCEnabled(bool enabled) {
     dccEnabled = enabled;
     if (saveBoolean(DCC_ENABLED_FILE, enabled)) {
-        LOG_INFOF(TAG, "💾 DCC interface setting saved: %s", enabled ? "enabled" : "disabled");
+        LOG_INFOF(TAG, "DCC interface setting saved: %s", enabled ? "enabled" : "disabled");
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save DCC interface setting to persistent storage");
+        LOG_WARN(TAG, "Failed to save DCC interface setting to persistent storage");
     }
 }
 
@@ -450,15 +450,15 @@ bool SettingsManager::isDCCEnabled() {
 void SettingsManager::setDCCAddress(int address) {
     // Validate DCC address range (1-10239 per NMRA standards, with 1-127 most common)
     if (address < 1 || address > 10239) {
-        LOG_WARNF(TAG, "⚠️ DCC address %d out of range (1-10239), clamping to valid range", address);
+        LOG_WARNF(TAG, "DCC address %d out of range (1-10239), clamping to valid range", address);
         address = (address < 1) ? 1 : 10239;
     }
     
     dccAddress = address;
     if (saveInteger(DCC_ADDRESS_FILE, address)) {
-        LOG_INFOF(TAG, "💾 DCC address saved: %d", address);
+        LOG_INFOF(TAG, "DCC address saved: %d", address);
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save DCC address to persistent storage");
+        LOG_WARN(TAG, "Failed to save DCC address to persistent storage");
     }
 }
 
@@ -525,15 +525,15 @@ int SettingsManager::getDCCAddress() {
 void SettingsManager::setDCCPin(int pin) {
     // Validate GPIO pin range for ESP32 (0-39, but some pins have restrictions)
     if (pin < 0 || pin > 39) {
-        LOG_WARNF(TAG, "⚠️ DCC GPIO pin %d out of valid range (0-39), clamping", pin);
+        LOG_WARNF(TAG, "DCC GPIO pin %d out of valid range (0-39), clamping", pin);
         pin = (pin < 0) ? 4 : 39;  // Default to pin 4 if invalid
     }
     
     dccPin = pin;
     if (saveInteger(DCC_PIN_FILE, pin)) {
-        LOG_INFOF(TAG, "💾 DCC GPIO pin saved: %d", pin);
+        LOG_INFOF(TAG, "DCC GPIO pin saved: %d", pin);
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save DCC GPIO pin to persistent storage");
+        LOG_WARN(TAG, "Failed to save DCC GPIO pin to persistent storage");
     }
 }
 
@@ -604,15 +604,15 @@ int SettingsManager::getDCCPin() {
 void SettingsManager::setImageInterval(int seconds) {
     // Validate image interval range (minimum 1 second, maximum 3600 seconds/1 hour)
     if (seconds < 1 || seconds > 3600) {
-        LOG_WARNF(TAG, "⚠️ Image interval %d seconds out of range (1-3600), clamping", seconds);
+        LOG_WARNF(TAG, "Image interval %d seconds out of range (1-3600), clamping", seconds);
         seconds = (seconds < 1) ? 1 : 3600;
     }
     
     imageInterval = seconds;
     if (saveInteger(IMAGE_INTERVAL_FILE, seconds)) {
-        LOG_INFOF(TAG, "💾 Image interval saved: %d seconds", seconds);
+        LOG_INFOF(TAG, "Image interval saved: %d seconds", seconds);
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save image interval to persistent storage");
+        LOG_WARN(TAG, "Failed to save image interval to persistent storage");
     }
 }
 
@@ -679,9 +679,9 @@ int SettingsManager::getImageInterval() {
 void SettingsManager::setImageEnabled(bool enabled) {
     imageEnabled = enabled;
     if (saveBoolean(IMAGE_ENABLED_FILE, enabled)) {
-        LOG_INFOF(TAG, "💾 Image slideshow setting saved: %s", enabled ? "enabled" : "disabled");
+        LOG_INFOF(TAG, "Image slideshow setting saved: %s", enabled ? "enabled" : "disabled");
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save image slideshow setting to persistent storage");
+        LOG_WARN(TAG, "Failed to save image slideshow setting to persistent storage");
     }
 }
 
@@ -759,19 +759,19 @@ bool SettingsManager::isImageEnabled() {
 void SettingsManager::setBrightness(int value) {
     // Clamp brightness value to valid PWM range (0-255)
     if (value < 0) {
-        LOG_WARNF(TAG, "⚠️ Brightness value %d below minimum, setting to 0", value);
+        LOG_WARNF(TAG, "Brightness value %d below minimum, setting to 0", value);
         value = 0;
     }
     if (value > 255) {
-        LOG_WARNF(TAG, "⚠️ Brightness value %d above maximum, setting to 255", value);
+        LOG_WARNF(TAG, "Brightness value %d above maximum, setting to 255", value);
         value = 255;
     }
     
     brightness = value;
     if (saveInteger(BRIGHTNESS_FILE, value)) {
-        LOG_INFOF(TAG, "💾 Brightness saved: %d (%.1f%%)", value, (value / 255.0f) * 100.0f);
+        LOG_INFOF(TAG, "Brightness saved: %d (%.1f%%)", value, (value / 255.0f) * 100.0f);
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save brightness setting to persistent storage");
+        LOG_WARN(TAG, "Failed to save brightness setting to persistent storage");
     }
     
     // Apply brightness immediately to hardware if DisplayManager is available
@@ -786,7 +786,7 @@ void SettingsManager::setBrightness(int value) {
                 displayManager->setBrightness(0, 2);      // Turn off second display
                 LOG_DEBUG(TAG, "🔆 Applied brightness to main display only, turned off second");
             } else {
-                LOG_INFO(TAG, "🎯 Splash active - deferring Display 2 brightness setting");
+                LOG_INFO(TAG, "Splash active - deferring Display 2 brightness setting");
             }
         }
     }
@@ -858,9 +858,9 @@ int SettingsManager::getBrightness() {
 void SettingsManager::setClockEnabled(bool enabled) {
     clockEnabled = enabled;
     if (saveBoolean(CLOCK_ENABLED_FILE, enabled)) {
-        LOG_INFOF(TAG, "💾 Clock display setting saved: %s", enabled ? "enabled" : "disabled");
+        LOG_INFOF(TAG, "Clock display setting saved: %s", enabled ? "enabled" : "disabled");
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save clock display setting to persistent storage");
+        LOG_WARN(TAG, "Failed to save clock display setting to persistent storage");
     }
 }
 
@@ -931,7 +931,7 @@ void SettingsManager::setClockFace(ClockFaceType faceType) {
     if (saveInteger(CLOCK_FACE_FILE, static_cast<int>(faceType))) {
         LOG_INFOF(TAG, "� Clock face type saved: %d", static_cast<int>(faceType));
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save clock face setting to persistent storage");
+        LOG_WARN(TAG, "Failed to save clock face setting to persistent storage");
     }
 }
 
@@ -1006,8 +1006,8 @@ void SettingsManager::printSettings() {
         LOG_INFOF(TAG, "  🚂 DCC Address: %d", dccAddress);
         LOG_INFOF(TAG, "  🚂 DCC GPIO Pin: %d", dccPin);
     }
-    LOG_INFOF(TAG, "  ⏱️ Image Interval: %d seconds", imageInterval);
-    LOG_INFOF(TAG, "  🖼️ Image Slideshow: %s", imageEnabled ? "enabled" : "disabled");
+    LOG_INFOF(TAG, "  Image Interval: %d seconds", imageInterval);
+    LOG_INFOF(TAG, "  Image Slideshow: %s", imageEnabled ? "enabled" : "disabled");
     LOG_INFOF(TAG, "  🔆 Brightness: %d (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
     LOG_INFOF(TAG, "  🕒 Clock Display: %s", clockEnabled ? "enabled" : "disabled");
     if (clockEnabled) {
@@ -1069,7 +1069,7 @@ void SettingsManager::resetToDefaults() {
     setClockEnabled(false);
     setClockFace(CLOCK_MODERN_SQUARE);
     
-    LOG_INFO(TAG, "✅ All settings reset to factory defaults and saved");
+    LOG_INFO(TAG, "All settings reset to factory defaults and saved");
 }
 
 // ============================================================================
@@ -1111,7 +1111,7 @@ void SettingsManager::resetToDefaults() {
 bool SettingsManager::saveBoolean(const char* filename, bool value) {
     File file = LittleFS.open(filename, "w");
     if (!file) {
-        LOG_ERRORF(TAG, "❌ Failed to open file for writing: %s", filename);
+        LOG_ERRORF(TAG, "Failed to open file for writing: %s", filename);
         return false;
     }
     
@@ -1156,13 +1156,13 @@ bool SettingsManager::saveBoolean(const char* filename, bool value) {
  */
 bool SettingsManager::loadBoolean(const char* filename, bool defaultValue) {
     if (!LittleFS.exists(filename)) {
-        LOG_DEBUGF(TAG, "📁 Settings file not found, using default: %s", filename);
+        LOG_DEBUGF(TAG, "Settings file not found, using default: %s", filename);
         return defaultValue;
     }
     
     File file = LittleFS.open(filename, "r");
     if (!file) {
-        LOG_WARNF(TAG, "⚠️ Failed to open settings file for reading: %s", filename);
+        LOG_WARNF(TAG, "Failed to open settings file for reading: %s", filename);
         return defaultValue;
     }
     
@@ -1211,7 +1211,7 @@ bool SettingsManager::loadBoolean(const char* filename, bool defaultValue) {
 bool SettingsManager::saveInteger(const char* filename, int value) {
     File file = LittleFS.open(filename, "w");
     if (!file) {
-        LOG_ERRORF(TAG, "❌ Failed to open file for writing: %s", filename);
+        LOG_ERRORF(TAG, "Failed to open file for writing: %s", filename);
         return false;
     }
     
@@ -1258,13 +1258,13 @@ bool SettingsManager::saveInteger(const char* filename, int value) {
  */
 int SettingsManager::loadInteger(const char* filename, int defaultValue) {
     if (!LittleFS.exists(filename)) {
-        LOG_DEBUGF(TAG, "📁 Settings file not found, using default: %s", filename);
+        LOG_DEBUGF(TAG, "Settings file not found, using default: %s", filename);
         return defaultValue;
     }
     
     File file = LittleFS.open(filename, "r");
     if (!file) {
-        LOG_WARNF(TAG, "⚠️ Failed to open settings file for reading: %s", filename);
+        LOG_WARNF(TAG, "Failed to open settings file for reading: %s", filename);
         return defaultValue;
     }
     
@@ -1275,7 +1275,7 @@ int SettingsManager::loadInteger(const char* filename, int defaultValue) {
     // Use toInt() which returns 0 for invalid strings, check for this case
     int result = value.toInt();
     if (result == 0 && value != "0") {
-        LOG_WARNF(TAG, "⚠️ Invalid integer value in file %s: '%s', using default", filename, value.c_str());
+        LOG_WARNF(TAG, "Invalid integer value in file %s: '%s', using default", filename, value.c_str());
         return defaultValue;
     }
     
@@ -1388,7 +1388,7 @@ int SettingsManager::validateAndCorrectSettings() {
     
     // Validate DCC address range
     if (dccAddress < 1 || dccAddress > 10239) {
-        LOG_WARNF(TAG, "🔧 Correcting DCC address %d to valid range", dccAddress);
+        LOG_WARNF(TAG, "Correcting DCC address %d to valid range", dccAddress);
         dccAddress = (dccAddress < 1) ? 1 : 10239;
         saveInteger(DCC_ADDRESS_FILE, dccAddress);
         correctionCount++;
@@ -1396,7 +1396,7 @@ int SettingsManager::validateAndCorrectSettings() {
     
     // Validate DCC pin range
     if (dccPin < 0 || dccPin > 39) {
-        LOG_WARNF(TAG, "🔧 Correcting DCC pin %d to valid range", dccPin);
+        LOG_WARNF(TAG, "Correcting DCC pin %d to valid range", dccPin);
         dccPin = (dccPin < 0) ? 4 : 39;
         saveInteger(DCC_PIN_FILE, dccPin);
         correctionCount++;
@@ -1412,7 +1412,7 @@ int SettingsManager::validateAndCorrectSettings() {
     
     // Validate brightness range
     if (brightness < 0 || brightness > 255) {
-        LOG_WARNF(TAG, "🔧 Correcting brightness %d to valid range", brightness);
+        LOG_WARNF(TAG, "Correcting brightness %d to valid range", brightness);
         brightness = (brightness < 0) ? 0 : 255;
         saveInteger(BRIGHTNESS_FILE, brightness);
         correctionCount++;
@@ -1477,10 +1477,10 @@ bool SettingsManager::areAllSettingsFilesPersistent() {
         if (LittleFS.exists(files[i])) {
             existingFiles++;
         } else {
-            LOG_DEBUGF(TAG, "📁 Missing settings file: %s", files[i]);
+            LOG_DEBUGF(TAG, "Missing settings file: %s", files[i]);
         }
     }
     
-    LOG_INFOF(TAG, "📁 Settings persistence: %d/%d files exist", existingFiles, totalFiles);
+    LOG_INFOF(TAG, "Settings persistence: %d/%d files exist", existingFiles, totalFiles);
     return (existingFiles == totalFiles);
 }

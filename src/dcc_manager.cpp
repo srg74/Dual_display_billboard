@@ -72,7 +72,7 @@ DCCManager::DCCManager(SettingsManager* sm, SlideshowManager* slideshow) {
 bool DCCManager::begin() {
     // Validate settings manager dependency
     if (!settingsManager) {
-        LOG_ERROR(TAG, "❌ SettingsManager not available - cannot load DCC configuration");
+        LOG_ERROR(TAG, "SettingsManager not available - cannot load DCC configuration");
         return false;
     }
     
@@ -94,7 +94,7 @@ bool DCCManager::begin() {
     }
     
     // Report successful initialization even when disabled
-    LOG_INFO(TAG, "✅ DCC Manager initialized (disabled)");
+    LOG_INFO(TAG, "DCC Manager initialized (disabled)");
     return true;
 }
 
@@ -145,11 +145,11 @@ void DCCManager::restart() {
         LOG_INFOF(TAG, "🚂 Setting DCC accessory address to %d", address);
         initialized = true;
     } else {
-        LOG_ERRORF(TAG, "❌ Invalid DCC address: %d (must be 1-2048)", address);
+        LOG_ERRORF(TAG, "Invalid DCC address: %d (must be 1-2048)", address);
         return;
     }
     
-    LOG_INFO(TAG, "✅ DCC decoder started successfully");
+    LOG_INFO(TAG, "DCC decoder started successfully");
 }
 
 /**
@@ -317,7 +317,7 @@ void DCCManager::switchToGallery() {
         slideshowManager->startSlideshow();
         LOG_INFO(TAG, "🚂 Gallery mode activated - slideshow started");
     } else {
-        LOG_WARN(TAG, "⚠️ SlideshowManager not available for gallery mode");
+        LOG_WARN(TAG, "SlideshowManager not available for gallery mode");
     }
 }
 
@@ -335,7 +335,7 @@ void DCCManager::switchToClock() {
         slideshowManager->showClock();
         LOG_INFO(TAG, "🚂 Clock mode activated - clock displayed");
     } else {
-        LOG_WARN(TAG, "⚠️ SlideshowManager not available for clock mode");
+        LOG_WARN(TAG, "SlideshowManager not available for clock mode");
     }
 }
 

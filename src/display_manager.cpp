@@ -29,8 +29,8 @@ DisplayManager::DisplayManager() : initialized(false), brightness1(255), brightn
  * 
  * Initialization Sequence:
  * 1. 💡 Backlight PWM configuration (5kHz, 8-bit resolution)
- * 2. 📌 Chip select pin setup with safe deselect state
- * 3. 🖥️ TFT library initialization with dual CS method
+ * 2. Chip select pin setup with safe deselect state
+ * 3. TFT library initialization with dual CS method
  * 4. ⚫ Immediate display clearing to prevent startup flash
  * 
  * Hardware Requirements:
@@ -60,7 +60,7 @@ bool DisplayManager::begin() {
     clearBothDisplaysToBlack();
     
     initialized = true;
-    LOG_INFO("DISPLAY", "✅ Display Manager initialized successfully");
+    LOG_INFO("DISPLAY", "Display Manager initialized successfully");
     return true;
 }
 
@@ -85,7 +85,7 @@ bool DisplayManager::begin() {
  * @since v0.9
  */
 void DisplayManager::initializeBacklight() {
-    LOG_INFO("DISPLAY", "🔧 Setting up backlights...");
+    LOG_INFO("DISPLAY", "Setting up backlights...");
     
 #ifdef ESP32S3_MODE
     // ESP32S3: Use PWM channels 3,4 to avoid conflict with ESP32 channels 1,2
@@ -97,7 +97,7 @@ void DisplayManager::initializeBacklight() {
     ledcSetup(4, 5000, 8); // Channel 4, 5 KHz, 8-bit
     ledcWrite(4, 255); // Full brightness
     
-    LOG_INFO("DISPLAY", "✅ ESP32S3 backlights initialized (PWM channels 3,4, 8-bit)");
+    LOG_INFO("DISPLAY", "ESP32S3 backlights initialized (PWM channels 3,4, 8-bit)");
 #else
     // ESP32 original setup (working) - keep PWM
     ledcAttachPin(TFT_BACKLIGHT1_PIN, 1); // GPIO 22 → Channel 1
@@ -108,7 +108,7 @@ void DisplayManager::initializeBacklight() {
     ledcSetup(2, 5000, 8); // Channel 2, 5 KHz, 8-bit
     ledcWrite(2, 255); // Full brightness
     
-    LOG_INFO("DISPLAY", "✅ ESP32 backlights initialized (channels 1,2, 8-bit)");
+    LOG_INFO("DISPLAY", "ESP32 backlights initialized (channels 1,2, 8-bit)");
 #endif
 }
 
@@ -134,7 +134,7 @@ void DisplayManager::initializeBacklight() {
  * @since v0.9
  */
 void DisplayManager::initializeCS() {
-    LOG_INFO("DISPLAY", "🔧 Setting up CS pins...");
+    LOG_INFO("DISPLAY", "Setting up CS pins...");
     
     // CS pins setup (exact copy from working project)
     pinMode(firstScreenCS, OUTPUT);     // GPIO 10/5 = OUTPUT
@@ -142,7 +142,7 @@ void DisplayManager::initializeCS() {
     pinMode(secondScreenCS, OUTPUT);    // GPIO 21/15 = OUTPUT
     digitalWrite(secondScreenCS, HIGH); // GPIO 21/15 = HIGH (deselected)
 
-    LOG_INFO("DISPLAY", "✅ CS pins configured");
+    LOG_INFO("DISPLAY", "CS pins configured");
 }
 
 /**
@@ -172,12 +172,12 @@ void DisplayManager::initializeCS() {
  * @since v0.9
  */
 void DisplayManager::initializeTFT() {
-    LOG_INFO("DISPLAY", "🔧 Initializing TFT...");
+    LOG_INFO("DISPLAY", "Initializing TFT...");
     
 #ifdef ESP32S3_MODE
     // ESP32S3: Explicit SPI initialization since TFT_CS=-1
     SPI.begin(12, -1, 11, -1); // SCLK=12, MISO=-1, MOSI=11, SS=-1
-    LOG_INFO("DISPLAY", "✅ ESP32S3: SPI bus initialized");
+    LOG_INFO("DISPLAY", "ESP32S3: SPI bus initialized");
 #endif
     
     // TFT initialization (EXACT copy from working project)
@@ -189,25 +189,25 @@ void DisplayManager::initializeTFT() {
     digitalWrite(secondScreenCS, HIGH);
     
     // Set correct rotation for both displays immediately after init
-    LOG_INFO("DISPLAY", "🔧 Configuring Display 1...");
+    LOG_INFO("DISPLAY", "Configuring Display 1...");
     selectDisplay(1);
     tft.setRotation(0);  // Ensure display 1 uses correct rotation
     tft.fillScreen(TFT_BLACK);  // Clear display 1
-    LOG_INFO("DISPLAY", "✅ Display 1 configured");
+    LOG_INFO("DISPLAY", "Display 1 configured");
     
-    LOG_INFO("DISPLAY", "🔧 Configuring Display 2...");
+    LOG_INFO("DISPLAY", "Configuring Display 2...");
     selectDisplay(2); 
     tft.setRotation(0);  // Ensure display 2 uses correct rotation
     tft.fillScreen(TFT_BLACK);  // Clear display 2
-    LOG_INFO("DISPLAY", "✅ Display 2 configured");
+    LOG_INFO("DISPLAY", "Display 2 configured");
     
     deselectAll();
     
-    LOG_INFO("DISPLAY", "✅ TFT initialized with dual CS method");
+    LOG_INFO("DISPLAY", "TFT initialized with dual CS method");
 }
 
 /**
- * 🖥️ Selects the active display for operations
+ * Selects the active display for operations
  * 
  * This method activates the specified display by controlling chip select (CS) lines
  * and setting the appropriate rotation for text display. Acts as a convenience
@@ -215,7 +215,7 @@ void DisplayManager::initializeTFT() {
  * 
  * @param displayNum The display number to select (1 or 2)
  * 
- * @warning ⚠️ Deselects all displays first, then selects the target display
+ * @warning Deselects all displays first, then selects the target display
  * @note 📝 Uses text rotation (DISPLAY_TEXT_ROTATION) as default
  * 
  * @see selectDisplayForText() for explicit text rotation
@@ -240,8 +240,8 @@ void DisplayManager::selectDisplay(int displayNum) {
  *                   - 1: First display (firstScreenCS)
  *                   - 2: Second display (secondScreenCS)
  * 
- * @warning ⚠️ Always deselects all displays before selecting target
- * @note 📌 Text rotation is configured via DISPLAY_TEXT_ROTATION constant
+ * @warning Always deselects all displays before selecting target
+ * @note Text rotation is configured via DISPLAY_TEXT_ROTATION constant
  * @note 🔄 Invalid display numbers are silently ignored
  * 
  * @see selectDisplayForImage() for image-specific rotation
@@ -354,12 +354,12 @@ void DisplayManager::clearBothDisplaysToBlack() {
     // ESP32S3: Keep backlights ON (simple GPIO control) - don't turn off like ESP32
     setBrightness(255, 1);  // Keep Display 1 brightness ON
     setBrightness(255, 2);  // Keep Display 2 brightness ON
-    LOG_INFO("DISPLAY", "✅ ESP32S3: Both displays cleared to black with backlights ON");
+    LOG_INFO("DISPLAY", "ESP32S3: Both displays cleared to black with backlights ON");
 #else
     // ESP32: Turn off brightness for complete darkness during startup
     setBrightness(0, 1);  // Turn off Display 1 brightness
     setBrightness(0, 2);  // Turn off Display 2 brightness
-    LOG_INFO("DISPLAY", "✅ ESP32: Both displays cleared to dark (no light)");
+    LOG_INFO("DISPLAY", "ESP32: Both displays cleared to dark (no light)");
 #endif
 }
 
@@ -510,7 +510,7 @@ void DisplayManager::drawText(const char* text, int x, int y, uint16_t color, in
  */
 void DisplayManager::enableSecondDisplay(bool enable) {
     if (enable) {
-        LOG_INFO("DISPLAY", "✅ Second display enabled");
+        LOG_INFO("DISPLAY", "Second display enabled");
     } else {
         selectDisplay(2);
         tft.fillScreen(TFT_BLACK);
@@ -717,7 +717,7 @@ void DisplayManager::showConnecting() {
 // FIXED: Portal info method - USES DISPLAY 1 FOR PORTAL INFO
 void DisplayManager::showPortalInfo(const String& ssid, const String& ip, const String& status) {
     if (!initialized) {
-        LOG_WARN("DISPLAY", "❌ Display not initialized - cannot show portal info");
+        LOG_WARN("DISPLAY", "Display not initialized - cannot show portal info");
         return;
     }
     
@@ -749,7 +749,7 @@ void DisplayManager::showPortalInfo(const String& ssid, const String& ip, const 
     
     deselectAll();
     
-    LOG_INFO("DISPLAY", "✅ Portal info displayed - Screen 1: GREEN with text");
+    LOG_INFO("DISPLAY", "Portal info displayed - Screen 1: GREEN with text");
 }
 
 /**
@@ -779,7 +779,7 @@ void DisplayManager::showPortalInfo(const String& ssid, const String& ip, const 
 // Show WiFi connection success message
 void DisplayManager::showConnectionSuccess(const String& ip) {
     if (!initialized) {
-        LOG_WARN("DISPLAY", "❌ Display not initialized - cannot show connection success");
+        LOG_WARN("DISPLAY", "Display not initialized - cannot show connection success");
         return;
     }
     
@@ -808,7 +808,7 @@ void DisplayManager::showConnectionSuccess(const String& ip) {
     
     deselectAll();
     
-    LOG_INFOF("DISPLAY", "✅ Connection success displayed - IP: %s", ip.c_str());
+    LOG_INFOF("DISPLAY", "Connection success displayed - IP: %s", ip.c_str());
 }
 
 /**
@@ -963,7 +963,7 @@ void DisplayManager::showSplashScreen(int displayNum, unsigned long timeoutMs) {
     splashActive = true;
     splashTimeoutMs = timeoutMs;
     
-    LOG_INFOF("DISPLAY", "🖼️ Rotated color splash screen displayed on display %d with full brightness (timeout: %lums)", displayNum, timeoutMs);
+    LOG_INFOF("DISPLAY", "Rotated color splash screen displayed on display %d with full brightness (timeout: %lums)", displayNum, timeoutMs);
 }
 
 void DisplayManager::updateSplashScreen() {
@@ -977,11 +977,11 @@ void DisplayManager::updateSplashScreen() {
         if (portalSequenceActive) {
             portalSequenceActive = false;
             showPortalInfo(pendingSSID, pendingIP, pendingStatus);
-            LOG_INFO("DISPLAY", "✅ Splash completed, showing portal info");
+            LOG_INFO("DISPLAY", "Splash completed, showing portal info");
         } else {
             // Just clear screen
             fillScreen(TFT_BLACK);
-            LOG_INFO("DISPLAY", "✅ Splash screen auto-cleared");
+            LOG_INFO("DISPLAY", "Splash screen auto-cleared");
         }
     }
 }

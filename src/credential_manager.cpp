@@ -42,18 +42,18 @@ const String CredentialManager::TAG = "CRED";                          ///< Logg
  * @return true if initialization successful, false on failure
  */
 bool CredentialManager::begin() {
-    LOG_INFO(TAG, "🗂️ Initializing LittleFS filesystem...");
+    LOG_INFO(TAG, "Initializing LittleFS filesystem...");
     
     // Check if LittleFS is already mounted (initialized in main.cpp)
     if (LittleFS.totalBytes() > 0) {
-        LOG_INFO(TAG, "✅ LittleFS already mounted, skipping initialization");
+        LOG_INFO(TAG, "LittleFS already mounted, skipping initialization");
     } else {
         // Initialize LittleFS with automatic formatting if not already mounted
         if (!LittleFS.begin(true)) { // true = format if mount fails
-            LOG_ERROR(TAG, "❌ Failed to mount LittleFS filesystem");
+            LOG_ERROR(TAG, "Failed to mount LittleFS filesystem");
             return false;
         }
-        LOG_INFO(TAG, "✅ LittleFS mounted successfully");
+        LOG_INFO(TAG, "LittleFS mounted successfully");
     }
     
     printFileSystemInfo();  // Report filesystem health and capacity
@@ -71,12 +71,12 @@ bool CredentialManager::begin() {
  * @return true if credentials saved successfully, false on failure
  */
 bool CredentialManager::saveCredentials(const String& ssid, const String& password) {
-    LOG_INFOF(TAG, "💾 Saving WiFi credentials for: %s", ssid.c_str());
+    LOG_INFOF(TAG, "Saving WiFi credentials for: %s", ssid.c_str());
     
     // Open credentials file for writing (overwrites existing)
     File file = LittleFS.open(CREDENTIALS_FILE, "w");
     if (!file) {
-        LOG_ERROR(TAG, "❌ Failed to open credentials file for writing");
+        LOG_ERROR(TAG, "Failed to open credentials file for writing");
         return false;
     }
     
@@ -95,10 +95,10 @@ bool CredentialManager::saveCredentials(const String& ssid, const String& passwo
     
     // Validate write operation success
     if (bytesWritten > 0) {
-        LOG_INFOF(TAG, "✅ Credentials saved successfully (%d bytes)", bytesWritten);
+        LOG_INFOF(TAG, "Credentials saved successfully (%d bytes)", bytesWritten);
         return true;
     } else {
-        LOG_ERROR(TAG, "❌ Failed to write credentials to filesystem");
+        LOG_ERROR(TAG, "Failed to write credentials to filesystem");
         return false;
     }
 }
@@ -119,7 +119,7 @@ CredentialManager::WiFiCredentials CredentialManager::loadCredentials() {
     // Open credentials file for reading
     File file = LittleFS.open(CREDENTIALS_FILE, "r");
     if (!file) {
-        LOG_ERROR(TAG, "❌ Failed to open credentials file for reading");
+        LOG_ERROR(TAG, "Failed to open credentials file for reading");
         return creds;
     }
     
@@ -147,9 +147,9 @@ CredentialManager::WiFiCredentials CredentialManager::loadCredentials() {
         // Mark credentials as valid if SSID is non-empty
         creds.isValid = (creds.ssid.length() > 0);
         
-        LOG_INFOF(TAG, "✅ Loaded credentials for SSID: %s", creds.ssid.c_str());
+        LOG_INFOF(TAG, "Loaded credentials for SSID: %s", creds.ssid.c_str());
     } else {
-        LOG_ERROR(TAG, "❌ Invalid credentials file format - JSON parsing failed");
+        LOG_ERROR(TAG, "Invalid credentials file format - JSON parsing failed");
     }
     
     return creds;
@@ -160,20 +160,20 @@ CredentialManager::WiFiCredentials CredentialManager::loadCredentials() {
  * @return true if credentials cleared successfully or no credentials existed, false on failure
  */
 bool CredentialManager::clearCredentials() {
-    LOG_INFO(TAG, "🗑️ Clearing stored WiFi credentials");
+    LOG_INFO(TAG, "Clearing stored WiFi credentials");
     
     // Check if credentials file exists before attempting removal
     if (LittleFS.exists(CREDENTIALS_FILE)) {
         bool success = LittleFS.remove(CREDENTIALS_FILE);
         if (success) {
-            LOG_INFO(TAG, "✅ Credentials file removed successfully");
+            LOG_INFO(TAG, "Credentials file removed successfully");
         } else {
-            LOG_ERROR(TAG, "❌ Failed to remove credentials file");
+            LOG_ERROR(TAG, "Failed to remove credentials file");
         }
         return success;
     }
     
-    LOG_INFO(TAG, "ℹ️ No credentials file to clear - operation successful");
+    LOG_INFO(TAG, "No credentials file to clear - operation successful");
     return true;
 }
 

@@ -10,14 +10,14 @@
  * Key Features:
  * • 🏗️ Dual-Mode Operation: Setup mode for initial configuration, Normal mode for operations
  * • 🌐 Advanced Network Management: Auto-connection, retry logic, connection health monitoring
- * • 📱 Comprehensive Web Interface: Settings management, image upload/control, system status
- * • 🖼️ Image Management: Upload, enable/disable, preview, slideshow control via web interface
+ * • Comprehensive Web Interface: Settings management, image upload/control, system status
+ * • Image Management: Upload, enable/disable, preview, slideshow control via web interface
  * • 🚂 DCC Integration: Web-based DCC command interface for model railroad control
- * • 🔧 System Monitoring: Real-time memory health, WiFi status, platform information
+ * • System Monitoring: Real-time memory health, WiFi status, platform information
  * • 🔄 Factory Reset: GPIO0-based factory reset with configurable timing
  * • 📊 RESTful API: JSON endpoints for system status, image management, settings control
  * • 🛡️ Robust Error Handling: Connection timeout management, automatic mode switching
- * • 💾 Persistent Configuration: Credential storage, connection state management
+ * • Persistent Configuration: Credential storage, connection state management
  * 
  * Architecture:
  * - Setup Mode: Access Point for initial WiFi configuration and system setup
@@ -156,7 +156,7 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     // Set AP mode and configure IP (fastest path)
     WiFi.mode(WIFI_AP);
     if (!WiFi.softAPConfig(local_IP, gateway, subnet)) {
-        LOG_ERROR(TAG, "❌ Failed to configure AP IP");
+        LOG_ERROR(TAG, "Failed to configure AP IP");
         displayManager->showQuickStatus("AP Config Failed", TFT_RED);
         return;
     }
@@ -168,7 +168,7 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     
     if (apStarted) {
         IPAddress IP = WiFi.softAPIP();
-        LOG_INFOF(TAG, "✅ Access Point started successfully! SSID: %s, IP: %s", 
+        LOG_INFOF(TAG, "Access Point started successfully! SSID: %s, IP: %s", 
                   apSSID.c_str(), IP.toString().c_str());
         
         currentMode = MODE_SETUP;
@@ -182,7 +182,7 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
         );
         
     } else {
-        LOG_ERROR(TAG, "❌ Failed to start Access Point!");
+        LOG_ERROR(TAG, "Failed to start Access Point!");
         LOG_ERROR(TAG, "Check if another AP is running or SSID is too long");
         
         // Show error status
@@ -202,11 +202,11 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
  *          credential management, and robust error handling for setup mode operations.
  * 
  * Route Categories:
- * • 🔧 System Diagnostics: /test, /status, /memory endpoints for health monitoring
+ * • System Diagnostics: /test, /status, /memory endpoints for health monitoring
  * • 🌐 Network Management: /, /portal for main interface, /scan for network discovery
  * • 📡 Connection Control: /connect for WiFi credential submission and validation
- * • 🖼️ Visual Interface: Portal HTML with responsive design and status feedback
- * • 💾 Memory Management: Dynamic content serving based on available heap memory
+ * • Visual Interface: Portal HTML with responsive design and status feedback
+ * • Memory Management: Dynamic content serving based on available heap memory
  * • 📊 Real-time Status: Live system information including memory health and connectivity
  * 
  * Key Features:
@@ -250,7 +250,7 @@ void WiFiManager::setupRoutes() {
         // Check available memory before serving large content
         size_t freeHeap = ESP.getFreeHeap();
         if (freeHeap < 50000) {  // Less than 50KB free
-            LOG_WARNF(TAG, "⚠️ Low memory (%d bytes), serving minimal page", freeHeap);
+            LOG_WARNF(TAG, "Low memory (%d bytes), serving minimal page", freeHeap);
             request->send(200, "text/html", 
                 "<html><body style='font-family:Arial;padding:2rem;'>"
                 "<h1>Billboard Portal</h1>"
@@ -263,12 +263,12 @@ void WiFiManager::setupRoutes() {
         // Get portal HTML with error checking
         String html = getPortalHTML();
         if (html.length() == 0) {
-            LOG_ERROR(TAG, "❌ Portal HTML not available!");
+            LOG_ERROR(TAG, "Portal HTML not available!");
             request->send(500, "text/plain", "Portal HTML generation failed");
             return;
         }
         
-        LOG_INFOF(TAG, "✅ Serving portal HTML (%d bytes), Free heap: %d", 
+        LOG_INFOF(TAG, "Serving portal HTML (%d bytes), Free heap: %d", 
                   html.length(), freeHeap);
         
         // Use chunked response for large content
@@ -360,7 +360,7 @@ void WiFiManager::setupRoutes() {
     
     // Handle any other requests
     server->onNotFound([](AsyncWebServerRequest *request){
-        LOG_WARNF(TAG, "⚠️ 404 - Not found: %s", request->url().c_str());
+        LOG_WARNF(TAG, "404 - Not found: %s", request->url().c_str());
         request->redirect("/");
     });
     
@@ -411,7 +411,7 @@ void WiFiManager::setupRoutes() {
     // Setup OTA routes for portal mode too
     setupOTARoutes();
     
-    LOG_INFO(TAG, "✅ Web routes configured successfully");
+    LOG_INFO(TAG, "Web routes configured successfully");
 }
 
 /**
@@ -428,7 +428,7 @@ void WiFiManager::setupRoutes() {
 void WiFiManager::startServer() {
     LOG_INFO(TAG, "🚀 Starting web server...");
     server->begin();
-    LOG_INFO(TAG, "✅ Web server started and listening on port 80");
+    LOG_INFO(TAG, "Web server started and listening on port 80");
 }
 
 // ============================================================================
@@ -584,10 +584,10 @@ String WiFiManager::scanNetworks() {
  * 
  * Enhanced Safety Features (v0.9.1):
  * • 🛡️ Authentication Failure Prevention: Detects and aborts early on auth failures
- * • ⏱️ Aggressive Timeout Management: Reduced to 8 seconds to prevent prolonged failures
- * • 🔍 Real-time Status Monitoring: 250ms status checks for rapid failure detection
+ * • Aggressive Timeout Management: Reduced to 8 seconds to prevent prolonged failures
+ * • Real-time Status Monitoring: 250ms status checks for rapid failure detection
  * • 🚫 Early Abort Logic: Stops after 2 quick failures to prevent crash conditions
- * • 🧹 Aggressive Cleanup: Forces disconnection after failures with delay
+ * • Aggressive Cleanup: Forces disconnection after failures with delay
  * • 📊 Visual Feedback: Display integration for connection status and failures
  * 
  * Connection Process:
@@ -641,11 +641,11 @@ bool WiFiManager::connectToWiFi(const String& ssid, const String& password) {
     }
     
     if (WiFi.status() == WL_CONNECTED) {
-        LOG_INFOF(TAG, "✅ Connected successfully! IP: %s", WiFi.localIP().toString().c_str());
-        LOG_INFOF(TAG, "✅ Signal strength: %d dBm", WiFi.RSSI());
+        LOG_INFOF(TAG, "Connected successfully! IP: %s", WiFi.localIP().toString().c_str());
+        LOG_INFOF(TAG, "Signal strength: %d dBm", WiFi.RSSI());
         return true;
     } else {
-        LOG_ERRORF(TAG, "❌ Connection failed. Status: %d", WiFi.status());
+        LOG_ERRORF(TAG, "Connection failed. Status: %d", WiFi.status());
         
         // Show connection failed status on display
         if (displayManager) {
@@ -704,9 +704,9 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
         if (connected) {
             // Save credentials
             if (CredentialManager::saveCredentials(ssid, password)) {
-                LOG_INFO(TAG, "✅ Credentials saved successfully");
+                LOG_INFO(TAG, "Credentials saved successfully");
             } else {
-                LOG_WARN(TAG, "⚠️ Failed to save credentials, but connection succeeded");
+                LOG_WARN(TAG, "Failed to save credentials, but connection succeeded");
             }
             
             // Get the IP address for user instructions
@@ -722,7 +722,7 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
             response += "}";
             
             request->send(200, "application/json", response);
-            LOG_INFOF(TAG, "✅ Connection successful - device will be available at %s", deviceIP.c_str());
+            LOG_INFOF(TAG, "Connection successful - device will be available at %s", deviceIP.c_str());
             
             // Show connection success message
             if (displayManager) {
@@ -739,7 +739,7 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
         } else {
             String response = "{\"status\":\"error\",\"message\":\"Failed to connect to " + ssid + ". Check password and signal strength.\"}";
             request->send(400, "application/json", response);
-            LOG_ERROR(TAG, "❌ Connection failed");
+            LOG_ERROR(TAG, "Connection failed");
             
             // Show connection failed status on display
             if (displayManager) {
@@ -753,11 +753,11 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
 }
 
 // ============================================================================
-// 💾 MEMORY & SYSTEM HEALTH MONITORING
+// MEMORY & SYSTEM HEALTH MONITORING
 // ============================================================================
 
 /**
- * @brief 💾 Monitors system memory health and triggers automatic cleanup
+ * @brief Monitors system memory health and triggers automatic cleanup
  * 
  * @details Continuously monitors ESP32 memory health using MemoryManager integration.
  *          Provides proactive memory management with automatic cleanup triggers and
@@ -786,17 +786,17 @@ void WiFiManager::checkHeapHealth() {
     
     switch (overallHealth) {
         case MemoryManager::WARNING:
-            LOG_WARNF(TAG, "⚠️ Memory health: %s - monitoring closely", 
+            LOG_WARNF(TAG, "Memory health: %s - monitoring closely", 
                      MemoryManager::getHealthStatusString(overallHealth));
             break;
         case MemoryManager::CRITICAL:
-            LOG_ERRORF(TAG, "❌ Critical memory condition: %s - cleanup needed", 
+            LOG_ERRORF(TAG, "Critical memory condition: %s - cleanup needed", 
                       MemoryManager::getHealthStatusString(overallHealth));
             // Trigger immediate cleanup
             MemoryManager::forceCleanup();
             break;
         case MemoryManager::EMERGENCY:
-            LOG_ERRORF(TAG, "🚨 EMERGENCY memory condition: %s - system unstable", 
+            LOG_ERRORF(TAG, "EMERGENCY memory condition: %s - system unstable", 
                       MemoryManager::getHealthStatusString(overallHealth));
             // Force immediate cleanup and consider restart
             MemoryManager::forceCleanup();
@@ -809,7 +809,7 @@ void WiFiManager::checkHeapHealth() {
     // Additional specific warnings for legacy compatibility
     size_t freeHeap = MemoryManager::getAvailableMemory(MemoryManager::HEAP_INTERNAL);
     if (freeHeap < 50000) { // Less than 50KB free
-        LOG_WARNF(TAG, "⚠️ Low heap memory: %d bytes free", freeHeap);
+        LOG_WARNF(TAG, "Low heap memory: %d bytes free", freeHeap);
     }
 }
 
@@ -844,7 +844,7 @@ void WiFiManager::checkHeapHealth() {
  * @note Credential validation prevents connection attempts with corrupted data
  */
 bool WiFiManager::initializeFromCredentials() {
-    LOG_INFO(TAG, "🔍 Checking for saved WiFi credentials...");
+    LOG_INFO(TAG, "Checking for saved WiFi credentials...");
     
     if (!CredentialManager::hasCredentials()) {
         LOG_INFO(TAG, "📄 No saved credentials found - starting setup mode");
@@ -854,12 +854,12 @@ bool WiFiManager::initializeFromCredentials() {
     
     CredentialManager::WiFiCredentials creds = CredentialManager::loadCredentials();
     if (!creds.isValid) {
-        LOG_ERROR(TAG, "❌ Invalid credentials found - starting setup mode");
+        LOG_ERROR(TAG, "Invalid credentials found - starting setup mode");
         switchToSetupMode();
         return false;
     }
     
-    LOG_INFOF(TAG, "✅ Found credentials for: %s", creds.ssid.c_str());
+    LOG_INFOF(TAG, "Found credentials for: %s", creds.ssid.c_str());
     
     // Try to connect to saved network
     if (connectToSavedNetwork()) {
@@ -867,7 +867,7 @@ bool WiFiManager::initializeFromCredentials() {
         // switchToNormalMode() will be called by checkConnectionSuccessDisplay() after 5 seconds
         return true;
     } else {
-        LOG_WARN(TAG, "⚠️ Auto-connect failed - falling back to setup mode");
+        LOG_WARN(TAG, "Auto-connect failed - falling back to setup mode");
         switchToSetupMode();
         return false;
     }
@@ -894,7 +894,7 @@ bool WiFiManager::connectToSavedNetwork() {
     bool connected = connectToWiFi(creds.ssid, creds.password);
     
     if (connected) {
-        LOG_INFOF(TAG, "✅ Auto-connected successfully! IP: %s", WiFi.localIP().toString().c_str());
+        LOG_INFOF(TAG, "Auto-connected successfully! IP: %s", WiFi.localIP().toString().c_str());
         connectionRetryCount = 0; // Reset retry counter
         
         // NEW: Show connection success message
@@ -904,7 +904,7 @@ bool WiFiManager::connectToSavedNetwork() {
         
         return true;
     } else {
-        LOG_ERROR(TAG, "❌ Auto-connect failed");
+        LOG_ERROR(TAG, "Auto-connect failed");
         return false;
     }
 }
@@ -948,7 +948,7 @@ void WiFiManager::switchToNormalMode() {
     // Start server again
     startServer();
     
-    LOG_INFOF(TAG, "✅ Normal mode active - server running on WiFi IP: %s", WiFi.localIP().toString().c_str());
+    LOG_INFOF(TAG, "Normal mode active - server running on WiFi IP: %s", WiFi.localIP().toString().c_str());
 }
 
 /**
@@ -983,7 +983,7 @@ void WiFiManager::switchToSetupMode() {
     currentMode = MODE_SETUP;
     
     unsigned long startTime = millis();
-    LOG_INFOF(TAG, "⏱️ Setup mode start time: %lu ms", startTime);
+    LOG_INFOF(TAG, "Setup mode start time: %lu ms", startTime);
     
     // Stop current server
     LOG_INFO(TAG, "🛑 Stopping current server...");
@@ -1005,9 +1005,9 @@ void WiFiManager::switchToSetupMode() {
     startServer();
     
     unsigned long endTime = millis();
-    LOG_INFOF(TAG, "⏱️ Setup mode completed in: %lu ms", endTime - startTime);
+    LOG_INFOF(TAG, "Setup mode completed in: %lu ms", endTime - startTime);
     
-    LOG_INFO(TAG, "✅ Setup mode active - portal running at http://4.3.2.1");
+    LOG_INFO(TAG, "Setup mode active - portal running at http://4.3.2.1");
 }
 
 /**
@@ -1087,7 +1087,7 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // Settings page
     server->on("/settings", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "⚙️ Settings page requested");
+        LOG_INFO(TAG, "Settings page requested");
         
         String html = getSettingsHTML();
         
@@ -1153,7 +1153,7 @@ void WiFiManager::setupNormalModeRoutes() {
         if (request->hasParam("interval", true)) {
             String interval = request->getParam("interval", true)->value();
             int intervalValue = interval.toInt();
-            LOG_INFOF(TAG, "⏱️ Image interval set to: %d seconds", intervalValue);
+            LOG_INFOF(TAG, "Image interval set to: %d seconds", intervalValue);
             
             // Send response immediately to prevent timeout
             request->send(200, "text/plain", "OK");
@@ -1182,7 +1182,7 @@ void WiFiManager::setupNormalModeRoutes() {
             settingsManager->setSecondDisplayEnabled(isEnabled);
             LOG_INFOF(TAG, "📺 Second display setting saved and brightness applied automatically, current value: %s", settingsManager->isSecondDisplayEnabled() ? "true" : "false");
         } else {
-            LOG_WARN(TAG, "⚠️ Missing second_display parameter");
+            LOG_WARN(TAG, "Missing second_display parameter");
             request->send(400, "text/plain", "Missing parameter");
         }
     });
@@ -1208,7 +1208,7 @@ void WiFiManager::setupNormalModeRoutes() {
             }
             LOG_INFOF(TAG, "🚂 DCC setting saved, current value: %s", settingsManager->isDCCEnabled() ? "true" : "false");
         } else {
-            LOG_WARN(TAG, "⚠️ Missing dcc parameter");
+            LOG_WARN(TAG, "Missing dcc parameter");
             request->send(400, "text/plain", "Missing parameter");
         }
     });
@@ -1236,11 +1236,11 @@ void WiFiManager::setupNormalModeRoutes() {
                 }
                 LOG_INFOF(TAG, "🚂 DCC address saved: %d", address);
             } else {
-                LOG_WARNF(TAG, "⚠️ Invalid DCC address: %d", address);
+                LOG_WARNF(TAG, "Invalid DCC address: %d", address);
                 request->send(400, "text/plain", "Invalid address (must be 1-2048)");
             }
         } else {
-            LOG_WARN(TAG, "⚠️ Missing address parameter");
+            LOG_WARN(TAG, "Missing address parameter");
             request->send(400, "text/plain", "Missing address parameter");
         }
     });
@@ -1268,11 +1268,11 @@ void WiFiManager::setupNormalModeRoutes() {
                 }
                 LOG_INFOF(TAG, "🚂 DCC pin saved: %d", pin);
             } else {
-                LOG_WARNF(TAG, "⚠️ Invalid DCC pin: %d", pin);
+                LOG_WARNF(TAG, "Invalid DCC pin: %d", pin);
                 request->send(400, "text/plain", "Invalid pin (must be 0-39)");
             }
         } else {
-            LOG_WARN(TAG, "⚠️ Missing pin parameter");
+            LOG_WARN(TAG, "Missing pin parameter");
             request->send(400, "text/plain", "Missing pin parameter");
         }
     });
@@ -1291,11 +1291,11 @@ void WiFiManager::setupNormalModeRoutes() {
                 LOG_INFOF(TAG, "🚂 DCC address set to: %d", address);
                 request->send(200, "text/plain", "DCC address updated");
             } else {
-                LOG_WARNF(TAG, "⚠️ Invalid DCC address: %d", address);
+                LOG_WARNF(TAG, "Invalid DCC address: %d", address);
                 request->send(400, "text/plain", "Invalid DCC address (1-2048)");
             }
         } else {
-            LOG_WARN(TAG, "⚠️ Missing address parameter");
+            LOG_WARN(TAG, "Missing address parameter");
             request->send(400, "text/plain", "Missing parameter");
         }
     });
@@ -1314,11 +1314,11 @@ void WiFiManager::setupNormalModeRoutes() {
                 LOG_INFOF(TAG, "🚂 DCC GPIO pin set to: %d", pin);
                 request->send(200, "text/plain", "DCC pin updated");
             } else {
-                LOG_WARNF(TAG, "⚠️ Invalid GPIO pin: %d", pin);
+                LOG_WARNF(TAG, "Invalid GPIO pin: %d", pin);
                 request->send(400, "text/plain", "Invalid GPIO pin (0-39)");
             }
         } else {
-            LOG_WARN(TAG, "⚠️ Missing pin parameter");
+            LOG_WARN(TAG, "Missing pin parameter");
             request->send(400, "text/plain", "Missing parameter");
         }
     });
@@ -1328,7 +1328,7 @@ void WiFiManager::setupNormalModeRoutes() {
         if (request->hasParam("image_enable", true)) {
             String enabled = request->getParam("image_enable", true)->value();
             bool isEnabled = (enabled == "true");
-            LOG_INFOF(TAG, "🖼️ Image display: %s", isEnabled ? "enabled" : "disabled");
+            LOG_INFOF(TAG, "Image display: %s", isEnabled ? "enabled" : "disabled");
             
             // Send response immediately to prevent timeout
             request->send(200, "text/plain", "OK");
@@ -1375,7 +1375,7 @@ void WiFiManager::setupNormalModeRoutes() {
             settingsManager->setClockEnabled(isEnabled);
             LOG_INFOF(TAG, "🕒 Clock setting saved, current value: %s", settingsManager->isClockEnabled() ? "true" : "false");
         } else {
-            LOG_WARN(TAG, "⚠️ Missing clock parameter");
+            LOG_WARN(TAG, "Missing clock parameter");
             request->send(400, "text/plain", "Missing parameter");
         }
     });
@@ -1398,11 +1398,11 @@ void WiFiManager::setupNormalModeRoutes() {
                 settingsManager->setClockFace(static_cast<ClockFaceType>(faceType));
                 LOG_INFOF(TAG, "🎨 Clock face setting saved, current value: %d", static_cast<int>(settingsManager->getClockFace()));
             } else {
-                LOG_WARN(TAG, "⚠️ Invalid clock face type");
+                LOG_WARN(TAG, "Invalid clock face type");
                 request->send(400, "text/plain", "Invalid face type");
             }
         } else {
-            LOG_WARN(TAG, "⚠️ Missing face parameter");
+            LOG_WARN(TAG, "Missing face parameter");
             request->send(400, "text/plain", "Missing parameter");
         }
     });
@@ -1475,10 +1475,10 @@ void WiFiManager::setupNormalModeRoutes() {
             // Update NTP server using TimeManager
             if (timeManager) {
                 timeManager->setNTPServer(ntpServer);
-                LOG_INFOF(TAG, "✅ NTP server updated to: %s", ntpServer.c_str());
+                LOG_INFOF(TAG, "NTP server updated to: %s", ntpServer.c_str());
                 request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"NTP server updated successfully\"}");
             } else {
-                LOG_ERROR(TAG, "❌ TimeManager not available");
+                LOG_ERROR(TAG, "TimeManager not available");
                 request->send(500, "application/json", "{\"status\":\"error\",\"message\":\"TimeManager not available\"}");
             }
         } else {
@@ -1598,7 +1598,7 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // Memory monitoring API endpoint
     server->on("/api/memory-status", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_DEBUG(TAG, "🔍 Memory status API requested");
+        LOG_DEBUG(TAG, "Memory status API requested");
         
         String memoryJson = MemoryManager::getMemoryStatsJson();
         
@@ -1608,11 +1608,11 @@ void WiFiManager::setupNormalModeRoutes() {
         request->send(response);
     });
     
-    LOG_INFO(TAG, "✅ Normal mode routes configured");
+    LOG_INFO(TAG, "Normal mode routes configured");
 }
 
 /**
- * @brief 🖼️ Sets up image management HTTP routes for file upload and manipulation
+ * @brief Sets up image management HTTP routes for file upload and manipulation
  * 
  * Configures comprehensive image handling endpoints including:
  * • File upload with chunk processing and validation
@@ -1647,7 +1647,7 @@ void WiFiManager::setupImageRoutes() {
         return;
     }
     
-    LOG_INFO(TAG, "🖼️ Setting up image management routes");
+    LOG_INFO(TAG, "Setting up image management routes");
     
     // Enhanced upload endpoint to work with existing index.html
     server->on("/upload", HTTP_POST, 
@@ -1676,7 +1676,7 @@ void WiFiManager::setupImageRoutes() {
                 Serial.println("Filename: " + filename);
                 Serial.println("Total size: " + String(totalSize));
                 
-                LOG_INFOF(TAG, "📁 Starting image upload: %s (%d bytes)", filename.c_str(), totalSize);
+                LOG_INFOF(TAG, "Starting image upload: %s (%d bytes)", filename.c_str(), totalSize);
                 
                 // SAFETY: Check available memory before allocation
                 size_t freeHeap = ESP.getFreeHeap();
@@ -1739,7 +1739,7 @@ void WiFiManager::setupImageRoutes() {
                 Serial.println("Buffer available: " + String(uploadBuffer ? "YES" : "NO"));
                 Serial.println("ImageManager available: " + String(imageManager ? "YES" : "NO"));
                 
-                LOG_INFOF(TAG, "📁 Upload complete: %s (%d bytes)", uploadFilename.c_str(), receivedSize);
+                LOG_INFOF(TAG, "Upload complete: %s (%d bytes)", uploadFilename.c_str(), receivedSize);
                 
                 if (uploadBuffer && imageManager) {
                     // Use the total expected size, not received size for validation
@@ -1959,11 +1959,11 @@ void WiFiManager::setupImageRoutes() {
         request->send(LittleFS, imagePath, "image/jpeg");
     });
     
-    LOG_INFO(TAG, "✅ Image management routes configured");
+    LOG_INFO(TAG, "Image management routes configured");
 }
 
 /**
- * @brief 🔍 Monitors WiFi connection status and handles automatic reconnection
+ * @brief Monitors WiFi connection status and handles automatic reconnection
  * 
  * Continuously monitors the WiFi connection health in normal mode and implements
  * intelligent reconnection strategies to maintain network connectivity.
@@ -2001,7 +2001,7 @@ void WiFiManager::checkConnectionStatus() {
     
     if (WiFi.status() != WL_CONNECTED) {
         connectionRetryCount++;
-        LOG_WARNF(TAG, "⚠️ WiFi connection lost - retry attempt %d/%d", connectionRetryCount, MAX_RETRY_ATTEMPTS);
+        LOG_WARNF(TAG, "WiFi connection lost - retry attempt %d/%d", connectionRetryCount, MAX_RETRY_ATTEMPTS);
         
         if (connectionRetryCount <= MAX_RETRY_ATTEMPTS) {
             // Attempt reconnection with increasing delays
@@ -2010,14 +2010,14 @@ void WiFiManager::checkConnectionStatus() {
                 lastConnectionAttempt = currentTime;
                 
                 if (connectToSavedNetwork()) {
-                    LOG_INFO(TAG, "✅ WiFi reconnected successfully");
+                    LOG_INFO(TAG, "WiFi reconnected successfully");
                     connectionRetryCount = 0;
                 } else {
-                    LOG_ERRORF(TAG, "❌ Reconnection attempt %d failed", connectionRetryCount);
+                    LOG_ERRORF(TAG, "Reconnection attempt %d failed", connectionRetryCount);
                 }
             }
         } else {
-            LOG_WARN(TAG, "⚠️ Max retry attempts reached - staying in normal mode, background retries continue");
+            LOG_WARN(TAG, "Max retry attempts reached - staying in normal mode, background retries continue");
             // Reset counter for background retries every 60 seconds
             if (currentTime - lastConnectionAttempt >= 60000) {
                 connectionRetryCount = 0;
@@ -2028,11 +2028,11 @@ void WiFiManager::checkConnectionStatus() {
 }
 
 // ============================================================================
-// 🔧 SYSTEM MONITORING & MAINTENANCE
+// SYSTEM MONITORING & MAINTENANCE
 // ============================================================================
 
 /**
- * @brief 🔧 Monitors GPIO0 button for factory reset activation
+ * @brief Monitors GPIO0 button for factory reset activation
  * 
  * Continuously monitors GPIO0 pin for factory reset trigger with debouncing
  * and configurable hold time. Provides secure system restoration capability
@@ -2271,12 +2271,12 @@ void WiFiManager::checkConnectionSuccessDisplay() {
             switchToNormalMode();
         }
         
-        LOG_INFO(TAG, "✅ Switched to normal mode display");
+        LOG_INFO(TAG, "Switched to normal mode display");
     }
 }
 
 /**
- * @brief 🔍 Returns current connection success display state
+ * @brief Returns current connection success display state
  * 
  * Provides read-only access to the connection success display flag,
  * indicating whether the system is currently showing a WiFi connection
@@ -2357,10 +2357,10 @@ void WiFiManager::setupOTARoutes() {
             
             if (Update.hasError()) {
                 String errorMsg = "OTA Update failed with error: " + String(Update.getError());
-                LOG_ERRORF(TAG, "❌ %s", errorMsg.c_str());
+                LOG_ERRORF(TAG, "%s", errorMsg.c_str());
                 request->send(500, "text/plain", errorMsg);
             } else {
-                LOG_INFO(TAG, "✅ OTA update successful - restarting device");
+                LOG_INFO(TAG, "OTA update successful - restarting device");
                 request->send(200, "text/plain", "OTA Update successful! Device restarting...");
                 
                 // Schedule restart after sending response
@@ -2379,14 +2379,14 @@ void WiFiManager::setupOTARoutes() {
                 
                 // Validate file extension
                 if (!filename.endsWith(".bin")) {
-                    LOG_ERROR(TAG, "❌ Invalid file type - only .bin files allowed");
+                    LOG_ERROR(TAG, "Invalid file type - only .bin files allowed");
                     request->send(400, "text/plain", "Error: Only .bin firmware files are allowed");
                     return;
                 }
                 
                 // Basic size validation (ESP32 firmware typically 1-4MB)
                 if (totalSize < 100000 || totalSize > 4194304) {
-                    LOG_ERRORF(TAG, "❌ Invalid firmware size: %d bytes", totalSize);
+                    LOG_ERRORF(TAG, "Invalid firmware size: %d bytes", totalSize);
                     request->send(400, "text/plain", "Error: Invalid firmware size for ESP32");
                     return;
                 }
@@ -2410,7 +2410,7 @@ void WiFiManager::setupOTARoutes() {
                     #endif
                     
                     String errorMsg = "Error: Firmware '" + filename + "' is not compatible with " + expectedPlatform + " " + expectedDisplay;
-                    LOG_ERRORF(TAG, "❌ %s", errorMsg.c_str());
+                    LOG_ERRORF(TAG, "%s", errorMsg.c_str());
                     request->send(400, "text/plain", errorMsg);
                     return;
                 }
@@ -2418,17 +2418,17 @@ void WiFiManager::setupOTARoutes() {
                 // Start the update process
                 if (!Update.begin(totalSize)) {
                     String errorMsg = "OTA begin failed - error: " + String(Update.getError());
-                    LOG_ERRORF(TAG, "❌ %s", errorMsg.c_str());
+                    LOG_ERRORF(TAG, "%s", errorMsg.c_str());
                     request->send(500, "text/plain", errorMsg);
                     return;
                 }
                 
-                LOG_INFO(TAG, "✅ OTA update started successfully");
+                LOG_INFO(TAG, "OTA update started successfully");
             }
             
             // Write chunk data
             if (Update.write(data, len) != len) {
-                LOG_ERRORF(TAG, "❌ OTA write failed at chunk %d", index);
+                LOG_ERRORF(TAG, "OTA write failed at chunk %d", index);
                 request->send(500, "text/plain", "OTA write failed");
                 return;
             }
@@ -2439,10 +2439,10 @@ void WiFiManager::setupOTARoutes() {
                 
                 if (!Update.end(true)) {
                     String errorMsg = "OTA end failed - error: " + String(Update.getError());
-                    LOG_ERRORF(TAG, "❌ %s", errorMsg.c_str());
+                    LOG_ERRORF(TAG, "%s", errorMsg.c_str());
                     request->send(500, "text/plain", errorMsg);
                 } else {
-                    LOG_INFO(TAG, "✅ OTA update finalized successfully");
+                    LOG_INFO(TAG, "OTA update finalized successfully");
                     // Success response will be sent in the main handler above
                 }
             }
@@ -2504,11 +2504,11 @@ void WiFiManager::setupOTARoutes() {
         }
     });
     
-    LOG_INFO(TAG, "✅ OTA routes configured successfully");
+    LOG_INFO(TAG, "OTA routes configured successfully");
 }
 
 /**
- * @brief 🔒 Validates firmware filename for platform and display compatibility
+ * @brief Validates firmware filename for platform and display compatibility
  * 
  * Performs security validation to ensure uploaded firmware matches current
  * hardware platform and display configuration. Prevents installation of
@@ -2555,7 +2555,7 @@ bool WiFiManager::validateFirmwareFilename(const String& filename) {
     } else if (platform.chipModel == PlatformDetector::CHIP_ESP32_S3) {
         expectedPlatform = "esp32s3";
     } else {
-        LOG_WARN(TAG, "⚠️ Unknown platform for firmware validation");
+        LOG_WARN(TAG, "Unknown platform for firmware validation");
         return false;
     }
     
@@ -2573,10 +2573,10 @@ bool WiFiManager::validateFirmwareFilename(const String& filename) {
     String expectedLatest = expectedPlatform + "_" + expectedDisplay + "_latest.bin";
     String genericFirmware = "firmware.bin";
     
-    LOG_INFOF(TAG, "🔍 Validating firmware file: %s", filename.c_str());
-    LOG_INFOF(TAG, "📱 Current platform: %s", expectedPlatform.c_str());
-    LOG_INFOF(TAG, "🖥️ Current display: %s", expectedDisplay.c_str());
-    LOG_INFOF(TAG, "✅ Expected patterns: %s, %s, %s, %s", 
+    LOG_INFOF(TAG, "Validating firmware file: %s", filename.c_str());
+    LOG_INFOF(TAG, "Current platform: %s", expectedPlatform.c_str());
+    LOG_INFOF(TAG, "Current display: %s", expectedDisplay.c_str());
+    LOG_INFOF(TAG, "Expected patterns: %s, %s, %s, %s", 
              expectedDebug.c_str(), expectedProduction.c_str(), 
              expectedLatest.c_str(), genericFirmware.c_str());
     
@@ -2585,18 +2585,18 @@ bool WiFiManager::validateFirmwareFilename(const String& filename) {
         filename.equals(expectedProduction) || 
         filename.equals(expectedLatest) ||
         filename.equals(genericFirmware)) {
-        LOG_INFO(TAG, "✅ Firmware filename validation passed");
+        LOG_INFO(TAG, "Firmware filename validation passed");
         return true;
     }
     
-    LOG_WARN(TAG, "❌ Firmware filename validation failed!");
-    LOG_WARNF(TAG, "❌ File '%s' is not compatible with %s %s", 
+    LOG_WARN(TAG, "Firmware filename validation failed!");
+    LOG_WARNF(TAG, "File '%s' is not compatible with %s %s", 
              filename.c_str(), expectedPlatform.c_str(), expectedDisplay.c_str());
     return false;
 }
 
 /**
- * @brief 🔍 Validates firmware binary content for ESP32 compatibility
+ * @brief Validates firmware binary content for ESP32 compatibility
  * 
  * Performs binary-level validation of firmware data to ensure compatibility
  * with ESP32 architecture and prevent installation of corrupted or invalid
@@ -2641,12 +2641,12 @@ bool WiFiManager::validateFirmwareFilename(const String& filename) {
 bool WiFiManager::validateFirmwareBinary(uint8_t* data, size_t length) {
     // Basic ESP32 firmware validation
     if (length < 100000) {
-        LOG_WARN(TAG, "⚠️ Firmware file too small");
+        LOG_WARN(TAG, "Firmware file too small");
         return false;
     }
     
     if (length > 4194304) { // 4MB max
-        LOG_WARN(TAG, "⚠️ Firmware file too large");
+        LOG_WARN(TAG, "Firmware file too large");
         return false;
     }
     
@@ -2654,12 +2654,12 @@ bool WiFiManager::validateFirmwareBinary(uint8_t* data, size_t length) {
     if (length >= 4) {
         // ESP32 firmware typically starts with 0xE9 (ESP32 magic number)
         if (data[0] == 0xE9) {
-            LOG_INFO(TAG, "✅ ESP32 firmware signature detected");
+            LOG_INFO(TAG, "ESP32 firmware signature detected");
             return true;
         }
     }
     
-    LOG_WARN(TAG, "⚠️ Firmware signature not recognized");
+    LOG_WARN(TAG, "Firmware signature not recognized");
     return true; // Allow anyway, but warn
 }
 

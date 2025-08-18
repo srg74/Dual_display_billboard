@@ -67,7 +67,7 @@ bool TimeManager::begin() {
     LOG_INFO(TAG, "🕐 Initializing Time Manager...");
     
     if (timeInitialized) {
-        LOG_INFO(TAG, "✅ Time Manager already initialized");
+        LOG_INFO(TAG, "Time Manager already initialized");
         return true;
     }
     
@@ -100,11 +100,11 @@ bool TimeManager::begin() {
     
     if (waitForTimeSync()) {
         timeInitialized = true;
-        LOG_INFO(TAG, "✅ Time Manager initialized successfully");
+        LOG_INFO(TAG, "Time Manager initialized successfully");
         LOG_INFOF(TAG, "📅 Current time: %s", getCurrentTime().c_str());
         return true;
     } else {
-        LOG_ERROR(TAG, "❌ Time synchronization failed");
+        LOG_ERROR(TAG, "Time synchronization failed");
         return false;
     }
 }
@@ -143,7 +143,7 @@ void TimeManager::configureNTP() {
     setenv("TZ", currentTimezone.c_str(), 1);
     tzset();
     
-    LOG_INFOF(TAG, "✅ NTP configured with timezone: %s", currentTimezone.c_str());
+    LOG_INFOF(TAG, "NTP configured with timezone: %s", currentTimezone.c_str());
 }
 
 /**
@@ -168,9 +168,9 @@ bool TimeManager::waitForTimeSync(int maxRetries) {
     }
     
     if (currentTime > 100000) {
-        LOG_INFOF(TAG, "✅ Time synchronized successfully! Current epoch: %ld", currentTime);
+        LOG_INFOF(TAG, "Time synchronized successfully! Current epoch: %ld", currentTime);
     } else {
-        LOG_ERRORF(TAG, "❌ Time sync failed after %d attempts (current time: %ld)", retries, currentTime);
+        LOG_ERRORF(TAG, "Time sync failed after %d attempts (current time: %ld)", retries, currentTime);
     }
     
     return currentTime > 100000;
@@ -267,9 +267,9 @@ void TimeManager::setTimezone(const String& timezone) {
     
     // Persist timezone setting to LittleFS
     if (saveTimezone(timezone)) {
-        LOG_INFOF(TAG, "💾 Timezone saved to LittleFS: %s", timezone.c_str());
+        LOG_INFOF(TAG, "Timezone saved to LittleFS: %s", timezone.c_str());
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save timezone to LittleFS");
+        LOG_WARN(TAG, "Failed to save timezone to LittleFS");
     }
     
     // Apply timezone immediately if time system is initialized
@@ -322,9 +322,9 @@ void TimeManager::setClockLabel(const String& label) {
     
     // Save to LittleFS
     if (saveClockLabel(label)) {
-        LOG_INFOF(TAG, "💾 Clock label saved to LittleFS: %s", label.c_str());
+        LOG_INFOF(TAG, "Clock label saved to LittleFS: %s", label.c_str());
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save clock label to LittleFS");
+        LOG_WARN(TAG, "Failed to save clock label to LittleFS");
     }
     
     LOG_INFOF(TAG, "🏷️ Clock label set to: %s", label.c_str());
@@ -371,10 +371,10 @@ void TimeManager::forceResync() {
     configureNTP();
     
     if (waitForTimeSync(5)) {
-        LOG_INFO(TAG, "✅ Time resync successful");
+        LOG_INFO(TAG, "Time resync successful");
         LOG_INFOF(TAG, "📅 Updated time: %s", getCurrentTime().c_str());
     } else {
-        LOG_WARN(TAG, "⚠️ Time resync failed");
+        LOG_WARN(TAG, "Time resync failed");
     }
 }
 
@@ -400,9 +400,9 @@ void TimeManager::setNTPServer(const String& server1, const String& server2, con
     
     // Save to LittleFS
     if (saveNTPServer(server1)) {
-        LOG_INFOF(TAG, "💾 NTP server saved to LittleFS: %s", server1.c_str());
+        LOG_INFOF(TAG, "NTP server saved to LittleFS: %s", server1.c_str());
     } else {
-        LOG_WARN(TAG, "⚠️ Failed to save NTP server to LittleFS");
+        LOG_WARN(TAG, "Failed to save NTP server to LittleFS");
     }
     
     // Reconfigure NTP with new servers
@@ -410,9 +410,9 @@ void TimeManager::setNTPServer(const String& server1, const String& server2, con
         sntp_stop();
         configureNTP();
         if (waitForTimeSync(5)) {
-            LOG_INFO(TAG, "✅ NTP server updated successfully");
+            LOG_INFO(TAG, "NTP server updated successfully");
         } else {
-            LOG_WARN(TAG, "⚠️ Failed to sync with new NTP server");
+            LOG_WARN(TAG, "Failed to sync with new NTP server");
         }
     }
 }
@@ -441,7 +441,7 @@ void TimeManager::resetToDefaultNTP() {
         sntp_stop();
         configureNTP();
         if (waitForTimeSync(5)) {
-            LOG_INFO(TAG, "✅ Default NTP servers restored");
+            LOG_INFO(TAG, "Default NTP servers restored");
         }
     }
 }
@@ -454,7 +454,7 @@ void TimeManager::resetToDefaultNTP() {
 bool TimeManager::saveTimezone(const String& timezone) {
     File file = LittleFS.open(TIMEZONE_FILE, "w");
     if (!file) {
-        LOG_ERROR(TAG, "❌ Failed to open timezone file for writing");
+        LOG_ERROR(TAG, "Failed to open timezone file for writing");
         return false;
     }
     
@@ -474,7 +474,7 @@ String TimeManager::loadTimezone() {
     
     File file = LittleFS.open(TIMEZONE_FILE, "r");
     if (!file) {
-        LOG_ERROR(TAG, "❌ Failed to open timezone file for reading");
+        LOG_ERROR(TAG, "Failed to open timezone file for reading");
         return "";
     }
     
@@ -492,7 +492,7 @@ String TimeManager::loadTimezone() {
 bool TimeManager::saveClockLabel(const String& label) {
     File file = LittleFS.open(CLOCK_LABEL_FILE, "w");
     if (!file) {
-        LOG_ERROR(TAG, "❌ Failed to open clock label file for writing");
+        LOG_ERROR(TAG, "Failed to open clock label file for writing");
         return false;
     }
     
@@ -512,7 +512,7 @@ String TimeManager::loadClockLabel() {
     
     File file = LittleFS.open(CLOCK_LABEL_FILE, "r");
     if (!file) {
-        LOG_ERROR(TAG, "❌ Failed to open clock label file for reading");
+        LOG_ERROR(TAG, "Failed to open clock label file for reading");
         return "";
     }
     
@@ -530,7 +530,7 @@ String TimeManager::loadClockLabel() {
 bool TimeManager::saveNTPServer(const String& server) {
     File file = LittleFS.open(NTP_SERVER_FILE, "w");
     if (!file) {
-        LOG_ERROR(TAG, "❌ Failed to open NTP server file for writing");
+        LOG_ERROR(TAG, "Failed to open NTP server file for writing");
         return false;
     }
     
@@ -555,7 +555,7 @@ String TimeManager::loadNTPServer() {
     
     File file = LittleFS.open(NTP_SERVER_FILE, "r");
     if (!file) {
-        LOG_ERROR(TAG, "❌ Failed to open NTP server file for reading");
+        LOG_ERROR(TAG, "Failed to open NTP server file for reading");
         return "";
     }
     
