@@ -108,7 +108,7 @@ ESP32-S3 GPIO 8   →  Display 2 BLK pin
 - **CS** → GPIO 10 (Display 1) or GPIO 39 (Display 2) for ESP32-S3
 - **BLK/LED** → GPIO 7 (Display 1) or GPIO 8 (Display 2) for ESP32-S3
 
-### Connection Example for ESP32-S3:
+### Connection Example for ESP32-S3
 
 ```text
 Display 1:

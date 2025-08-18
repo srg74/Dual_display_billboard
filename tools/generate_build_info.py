@@ -48,6 +48,27 @@ class BuildInfoGenerator:
             return "0.9"  # Set to current version, can be made dynamic later
         except:
             return "0.9"  # Fallback version
+            
+    def _get_production_build_number(self):
+        """Extract manual production build number from platformio.ini"""
+        try:
+            project_dir = self.env.get("PROJECT_DIR", os.getcwd())
+            config_path = os.path.join(project_dir, 'platformio.ini')
+            
+            with open(config_path, 'r') as f:
+                content = f.read()
+                
+            # Look for production_build = xxxxxxx in [common] section
+            import re
+            match = re.search(r'production_build\s*=\s*(\d+)', content)
+            if match:
+                return match.group(1)
+        except Exception as e:
+            print(f"⚠️  Could not read production_build from platformio.ini: {e}")
+        
+        # Fallback to date-based number
+        now = datetime.now()
+        return now.strftime("%y%m%d") + "0"
     
     def _load_build_info(self):
         """Load existing build information from JSON file"""
@@ -69,44 +90,55 @@ class BuildInfoGenerator:
     
     def _generate_build_number(self):
         """
-        Generate build number in YYMMDDx format
-        x = daily build counter (0-9, resets daily)
+        For production builds: Use manual production_build number from platformio.ini
+        For debug builds: Generate date-based number (but debug builds shouldn't call this script)
         """
-        now = datetime.now()
-        date_part = now.strftime("%y%m%d")  # YYMMDD
+        # Get environment name to determine if this is production
+        env_name = self.env.get("PIOENV", "unknown")
         
-        # Load existing build info
-        build_info = self._load_build_info()
-        
-        # Check if it's a new day or first build
-        last_date = build_info.get("last_date", "")
-        daily_counter = build_info.get("daily_counter", 0)
-        
-        if last_date != date_part:
-            # New day - reset counter
-            daily_counter = 0
+        if "production" in env_name.lower():
+            # Production build: Use manual number from platformio.ini
+            build_number = self._get_production_build_number()
+            print(f"📦 Using manual production build number: {build_number}")
+            return build_number, 0  # No daily counter for manual builds
         else:
-            # Same day - increment counter
-            daily_counter += 1
+            # Debug build: Use original automatic logic (but this shouldn't happen)
+            print(f"⚠️  Warning: Debug build calling generate_build_info.py - this should not happen")
+            now = datetime.now()
+            date_part = now.strftime("%y%m%d")  # YYMMDD
             
-        # Ensure counter stays within 0-9
-        if daily_counter > 9:
-            daily_counter = 9
-            print(f"⚠️  Warning: Daily build limit reached (9), keeping counter at 9")
-        
-        # Generate build number
-        build_number = f"{date_part}{daily_counter}"
-        
-        # Update and save build info
-        build_info.update({
-            "last_date": date_part,
-            "daily_counter": daily_counter,
-            "last_build": build_number,
-            "build_timestamp": now.isoformat()
-        })
-        self._save_build_info(build_info)
-        
-        return build_number, daily_counter
+            # Load existing build info
+            build_info = self._load_build_info()
+            
+            # Check if it's a new day or first build
+            last_date = build_info.get("last_date", "")
+            daily_counter = build_info.get("daily_counter", 0)
+            
+            if last_date != date_part:
+                # New day - reset counter
+                daily_counter = 0
+            else:
+                # Same day - increment counter
+                daily_counter += 1
+                
+            # Ensure counter stays within 0-9
+            if daily_counter > 9:
+                daily_counter = 9
+                print(f"⚠️  Warning: Daily build limit reached (9), keeping counter at 9")
+            
+            # Generate build number
+            build_number = f"{date_part}{daily_counter}"
+            
+            # Update and save build info
+            build_info.update({
+                "last_date": date_part,
+                "daily_counter": daily_counter,
+                "last_build": build_number,
+                "build_timestamp": now.isoformat()
+            })
+            self._save_build_info(build_info)
+            
+            return build_number, daily_counter
     
     def generate(self):
         """Generate comprehensive build information"""

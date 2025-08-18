@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-Post-build script to rename firmware binaries with descriptive names
-Creates firmware files with format: platform_display_buildtype.bin
-Examples: esp32_ST7735_debug.bin, esp32s3_ST7735_production.bin
+Post-build script to rename and archive PRODUCTION firmware binaries only
+Creates firmware files with format: platform_display_production.bin
+Examples: esp32_ST7735_production.bin, esp32s3_ST7735_production.bin
+
+Debug builds are not archived - they remain in .pio/build/ for temporary use
+Production builds are copied to firmware/ folder for distribution and OTA updates
 """
 
 try:
@@ -14,15 +17,21 @@ import os
 import shutil
 
 def rename_firmware(source, target, env):
-    """Rename firmware binary to descriptive name"""
+    """Rename firmware binary to descriptive name - PRODUCTION BUILDS ONLY"""
     
     # Get environment name to determine platform and build type
     env_name = env["PIOENV"]
     
+    # Only process production builds
+    if "production" not in env_name:
+        print(f"📝 Debug build detected ({env_name}) - skipping firmware archival")
+        print(f"💡 Only production builds are copied to firmware/ folder")
+        return
+    
     # Parse environment name to extract info
     platform = "unknown"
     display = "unknown" 
-    build_type = "unknown"
+    build_type = "production"  # We know it's production at this point
     
     if "esp32dev" in env_name:
         platform = "esp32"
@@ -33,11 +42,6 @@ def rename_firmware(source, target, env):
         display = "ST7735"
     elif "st7789" in env_name:
         display = "ST7789"
-    
-    if "debug" in env_name:
-        build_type = "debug"
-    elif "production" in env_name:
-        build_type = "production"
     
     # Create descriptive filename (no date stamp in filename)
     firmware_name = f"{platform}_{display}_{build_type}.bin"
@@ -58,23 +62,6 @@ def rename_firmware(source, target, env):
         
         print(f"✅ Firmware copied to: firmware/{firmware_name}")
         print(f"📁 Ready for OTA upload: {firmware_name}")
-        
-        # Also create a latest symlink for convenience
-        latest_name = f"{platform}_{display}_latest.bin"
-        latest_path = os.path.join(firmware_dir, latest_name)
-        
-        # Remove existing symlink if it exists
-        if os.path.exists(latest_path):
-            os.remove(latest_path)
-        
-        # Create new symlink (or copy on Windows)
-        try:
-            os.symlink(firmware_name, latest_path)
-        except OSError:
-            # Fallback to copy on Windows
-            shutil.copy2(dest_path, latest_path)
-        
-        print(f"🔗 Latest version: firmware/{latest_name}")
         
     except Exception as e:
         print(f"❌ Error copying firmware: {e}")
