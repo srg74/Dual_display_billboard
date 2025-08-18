@@ -70,7 +70,7 @@ ESP32-S3 GPIO 14 (DC)    →  Display 1 DC   →  Display 2 DC
 ### Individual Display Connections
 
 ```text
-🎯 These pins are unique for each display:
+These pins are unique for each display:
 
 Step 4: Display 1 Only
 ESP32-S3 GPIO 10  →  Display 1 CS  pin
