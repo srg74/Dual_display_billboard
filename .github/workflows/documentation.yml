@@ -25,6 +25,9 @@ jobs:
     - name: Generate documentation
       run: |
         doxygen Doxyfile
+        # Fix XHTML content-type to HTML to prevent browser rendering issues
+        find docs/generated/html -name "*.html" -exec sed -i 's/content="text\/xhtml/content="text\/html/g' {} \;
+        find docs/generated/html -name "*.html" -exec sed -i 's/<!DOCTYPE html PUBLIC.*>/<!DOCTYPE html>/g' {} \;
         
     - name: Create redirect page
       run: |
