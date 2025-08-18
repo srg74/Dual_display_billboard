@@ -99,12 +99,42 @@ def process_html_file(path):
         content = content.strip()
         return string_to_c_array(content, name=Path(path).name, compress=True)  # Ultra files get compression
     
-    # Minify inline JS
+    # Security-enhanced JavaScript minification for inline scripts
+    # This implementation addresses "Bad HTML filtering regexp" security concerns by:
+    # 1. Using more restrictive regex patterns with proper boundaries
+    # 2. Validating script content to prevent nested/malformed tags
+    # 3. Adding exception handling for minification failures
+    # 4. Using case-insensitive matching for better HTML compliance
+    
+    # Minify inline JS with secure pattern matching
+    # Use more restrictive regex that validates script tag structure
+    def minify_script_content(match):
+        opening_tag = match.group(1)
+        script_content = match.group(2)
+        closing_tag = match.group(3)
+        
+        # Validate that this is a legitimate script tag (not nested or malformed)
+        if '<script' in script_content or '</script>' in script_content:
+            # Skip minification if nested script tags detected (potential security issue)
+            return match.group(0)
+        
+        # Only minify if content looks like legitimate JavaScript
+        if script_content.strip():
+            try:
+                minified_js = jsmin(script_content)
+                return f"{opening_tag}{minified_js}{closing_tag}"
+            except Exception:
+                # If minification fails, return original content
+                return match.group(0)
+        
+        return match.group(0)
+    
+    # More secure regex pattern with proper boundaries and validation
     content = re.sub(
-        r'(<script[^>]*>)(.*?)(</script>)',
-        lambda m: f"{m.group(1)}{jsmin(m.group(2))}{m.group(3)}",
+        r'(<script(?:\s+[^>]*)?>)(.*?)(<\/script>)',
+        minify_script_content,
         content,
-        flags=re.DOTALL
+        flags=re.DOTALL | re.IGNORECASE
     )
     # Minify HTML
     minified_html = htmlmin.minify(content, remove_comments=True, reduce_empty_attributes=True)
