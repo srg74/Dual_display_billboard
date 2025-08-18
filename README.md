@@ -41,9 +41,11 @@ Dual display billboard system designed for scale modelers, featuring WiFi connec
 - Memory management and error handling
 - Modular component design
 
-## Documentation (In progress)
+## Documentation
 
 This project features comprehensive documentation generated from Doxygen-style annotations:
+
+- [API Documentation](https://srg74.github.io/Dual_display_billboard/api-docs/)
 
 ### **Code Documentation**
 
