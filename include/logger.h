@@ -1,49 +1,262 @@
+/**
+ * @file logger.h
+ * @brief Hierarchical logging system with build-time optimization for ESP32 dual display billboard
+ * 
+ * Provides comprehensive logging infrastructure with five priority levels and build-time
+ * filtering for optimal performance. Designed for embedded systems requiring both
+ * development debugging capabilities and production performance optimization.
+ * 
+ * Key Features:
+ * - Five-level priority hierarchy (ERROR → WARN → INFO → DEBUG → VERBOSE)
+ * - Build-time level filtering via preprocessor flags for zero runtime overhead
+ * - Printf-style formatted logging with variable arguments support
+ * - Convenience wrapper functions for simplified usage
+ * - System diagnostic functions for hardware and network status
+ * - Professional text-only output formatting without visual clutter
+ * - Singleton pattern with lazy initialization for resource efficiency
+ * 
+ * Build-Time Optimization:
+ * - LOGGER_LEVEL_ERROR: Critical errors only
+ * - LOGGER_LEVEL_WARN: Warnings and above
+ * - LOGGER_LEVEL_INFO: General information and above (production default)
+ * - LOGGER_LEVEL_DEBUG: Development debugging and above
+ * - LOGGER_LEVEL_VERBOSE: Maximum detail for intensive debugging
+ * 
+ * Usage Examples:
+ * ```cpp
+ * Logger::info("STARTUP", "System initialized successfully");
+ * Logger::errorf("WIFI", "Connection failed: %s", error_message);
+ * Logger::printSystemInfo(); // Hardware diagnostics
+ * ```
+ * 
+ * @author ESP32 Billboard Project
+ * @date 2025
+ * @version 0.9
+ * @since v0.9
+ */
+
 #pragma once
 #include <Arduino.h>
+#include <LittleFS.h>
 
 // Use build flags directly - don't redefine them
 // The build flags from platformio.ini will be used automatically
 
-// Logger class
+/**
+ * @brief Hierarchical logging system with build-time optimization
+ * 
+ * Singleton logger class providing comprehensive logging infrastructure for
+ * embedded ESP32 systems. Features five priority levels with build-time
+ * filtering to eliminate runtime overhead in production environments.
+ * 
+ * The logger automatically initializes on first use and provides both
+ * simple string logging and printf-style formatted output. All logging
+ * calls are subject to compile-time filtering based on build flags,
+ * ensuring zero performance impact for disabled log levels.
+ * 
+ * Thread Safety: Not required for single-threaded ESP32 Arduino environment
+ * Memory Usage: Minimal static allocation with 512-byte formatting buffers
+ * Performance: Zero overhead for disabled levels via preprocessor elimination
+ */
 class Logger {
 private:
-    static bool initialized;
+    static bool initialized;       ///< Lazy initialization state tracking
+    static bool fileLogging;       ///< File logging enabled state
+    static String currentLogFile;  ///< Current log file path
+    
+    /**
+     * @brief Ensures logger is initialized before use
+     * 
+     * Lazy initialization function called automatically by all public
+     * logging methods. Initializes Serial communication and system
+     * state on first invocation only.
+     * 
+     * @note Thread-safe not required in single-threaded Arduino environment
+     * @note Called automatically - no need for manual invocation
+     * @see init() for explicit initialization with custom baud rate
+     */
     static void ensureInitialized();
     
+    /**
+     * @brief Writes message to log file if file logging is enabled
+     * @param message Formatted log message to write to file
+     */
+    static void writeToFile(const String& message);
+    
 public:
+    /**
+     * @brief Logging priority levels in ascending order of verbosity
+     * 
+     * Five-level hierarchy designed for embedded systems with clear
+     * separation between production-suitable levels (ERROR/WARN/INFO)
+     * and development levels (DEBUG/VERBOSE).
+     */
     enum Level {
-        ERROR = 1,
-        WARN = 2,
-        INFO = 3,
-        DEBUG = 4,
-        VERBOSE = 5
+        ERROR = 1,    ///< Critical errors requiring immediate attention
+        WARN = 2,     ///< Non-critical issues and recoverable errors
+        INFO = 3,     ///< General operational information (production default)
+        DEBUG = 4,    ///< Development debugging and detailed state information
+        VERBOSE = 5   ///< Maximum detail for intensive debugging scenarios
     };
     
+    /**
+     * @brief Explicit logger initialization with custom baud rate
+     * @param baudRate Serial communication speed (default: 115200)
+     * @see ensureInitialized() for automatic initialization
+     */
     static void init(unsigned long baudRate = 115200);
+    
+    /**
+     * @brief Sets runtime log level threshold
+     * @param level Minimum level for log output
+     * @note Build-time filtering takes precedence over runtime level
+     */
     static void setLevel(Level level);
+    
+    /**
+     * @brief Gets current runtime log level threshold
+     * @return Current minimum log level
+     */
     static Level getLevel();
     
+    // File logging control
+    
+    /**
+     * @brief Enables file logging to specified file path
+     * @param filePath Path to log file (will be created if doesn't exist)
+     * @return true if file logging was successfully enabled
+     */
+    static bool enableFileLogging(const String& filePath = "/logs/system.log");
+    
+    /**
+     * @brief Disables file logging
+     */
+    static void disableFileLogging();
+    
+    /**
+     * @brief Checks if file logging is currently enabled
+     * @return true if file logging is active
+     */
+    static bool isFileLoggingEnabled();
+    
     // Core logging functions
+    
+    /**
+     * @brief Core logging function with explicit level specification
+     * @param level Log level for this message
+     * @param tag Component identifier for message categorization
+     * @param message Log message content
+     * @note Subject to both build-time and runtime level filtering
+     */
     static void log(Level level, const String& tag, const String& message);
+    
+    /**
+     * @brief Printf-style formatted logging with explicit level
+     * @param level Log level for this message
+     * @param tag Component identifier for message categorization  
+     * @param format Printf-style format string
+     * @param ... Variable arguments for format specifiers
+     * @note Uses 512-byte internal buffer for message formatting
+     */
     static void logf(Level level, const String& tag, const char* format, ...);
     
     // Convenience functions
+    
+    /**
+     * @brief Log error-level message (highest priority)
+     * @param tag Component identifier
+     * @param message Error message content
+     */
     static void error(const String& tag, const String& message);
+    
+    /**
+     * @brief Log warning-level message  
+     * @param tag Component identifier
+     * @param message Warning message content
+     */
     static void warn(const String& tag, const String& message);
+    
+    /**
+     * @brief Log informational message (production default)
+     * @param tag Component identifier
+     * @param message Information content
+     */
     static void info(const String& tag, const String& message);
+    
+    /**
+     * @brief Log debug-level message (development use)
+     * @param tag Component identifier
+     * @param message Debug information
+     */
     static void debug(const String& tag, const String& message);
+    
+    /**
+     * @brief Log verbose-level message (maximum detail)
+     * @param tag Component identifier
+     * @param message Verbose debugging content
+     */
     static void verbose(const String& tag, const String& message);
     
     // Printf-style functions
+    
+    /**
+     * @brief Printf-style error logging
+     * @param tag Component identifier
+     * @param format Printf format string
+     * @param ... Variable arguments
+     */
     static void errorf(const String& tag, const char* format, ...);
+    
+    /**
+     * @brief Printf-style warning logging
+     * @param tag Component identifier
+     * @param format Printf format string
+     * @param ... Variable arguments
+     */
     static void warnf(const String& tag, const char* format, ...);
+    
+    /**
+     * @brief Printf-style informational logging
+     * @param tag Component identifier
+     * @param format Printf format string
+     * @param ... Variable arguments
+     */
     static void infof(const String& tag, const char* format, ...);
+    
+    /**
+     * @brief Printf-style debug logging
+     * @param tag Component identifier
+     * @param format Printf format string
+     * @param ... Variable arguments
+     */
     static void debugf(const String& tag, const char* format, ...);
+    
+    /**
+     * @brief Printf-style verbose logging
+     * @param tag Component identifier  
+     * @param format Printf format string
+     * @param ... Variable arguments
+     */
     static void verbosef(const String& tag, const char* format, ...);
     
     // System info logging
+    
+    /**
+     * @brief Output comprehensive ESP32 system information
+     * @note Displays chip model, CPU freq, memory, SDK version
+     */
     static void printSystemInfo();
+    
+    /**
+     * @brief Output detailed WiFi connection status
+     * @note Shows AP/STA modes, connection status, signal strength
+     */
     static void printWiFiStatus();
+    
+    /**
+     * @brief Output memory usage analysis including PSRAM
+     * @note Requires DEBUG level logging for visibility
+     */
     static void printMemoryInfo();
 };
 

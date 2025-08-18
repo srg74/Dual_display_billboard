@@ -1,13 +1,25 @@
 /**
  * @file platform_detector.cpp
- * @brief Multiplatform detection and PSRAM capability testing
+ * @brief Multiplatform detection and PSRAM capability testing implementation
  * 
- * Demonstrates ESP32 vs ESP32-S3 detection and PSRAM availability
- * across different hardware variants.
+ * Provides comprehensive hardware platform detection across the ESP32 family
+ * with specialized PSRAM capability testing and board variant identification.
+ * Essential for multiplatform compatibility and optimal hardware utilization.
+ * 
+ * Supports automatic detection of:
+ * - ESP32 Classic (original) variants
+ * - ESP32-S2 single-core variants  
+ * - ESP32-S3 dual-core with PSRAM variants (N8R2, N16R8)
+ * - ESP32-C3 RISC-V variants
+ * - Custom and unknown hardware configurations
+ * 
+ * PSRAM detection includes both compile-time configuration validation
+ * and runtime hardware presence verification with functional testing.
  * 
  * @author ESP32 Billboard Project
  * @date 2025
- * @version 1.0.0
+ * @version 0.9
+ * @since v0.9
  */
 
 #include "platform_detector.h"
@@ -17,6 +29,42 @@
 
 const char* PlatformDetector::TAG = "PLATFORM";
 
+/**
+ * @brief Performs comprehensive ESP32 family platform detection and analysis
+ * 
+ * Core detection function that identifies hardware platform characteristics
+ * including chip model, CPU configuration, memory specifications, and PSRAM
+ * availability. Provides complete hardware profile for optimal system configuration.
+ * 
+ * Detection Process:
+ * 1. ESP chip information retrieval via esp_chip_info()
+ * 2. Chip model classification (ESP32/S2/S3/C3)
+ * 3. CPU core count and frequency detection
+ * 4. Flash memory size determination
+ * 5. PSRAM configuration and presence validation
+ * 6. Board variant identification based on memory configuration
+ * 7. Heap memory statistics collection
+ * 
+ * Board Variant Detection:
+ * - ESP32 Classic: DevKit (No PSRAM)
+ * - ESP32-S3 N8: Standard without PSRAM
+ * - ESP32-S3 N8R2: 2MB PSRAM variant
+ * - ESP32-S3 N16R8: 8MB PSRAM variant
+ * - Custom configurations: Size-based classification
+ * 
+ * @return PlatformInfo Complete hardware profile structure
+ * 
+ * @note Uses compile-time BOARD_HAS_PSRAM flag for PSRAM configuration detection
+ * @note Distinguishes between PSRAM compilation support and actual hardware presence
+ * @note Board variant identification assists with optimal memory allocation strategies
+ * @note CPU frequency and core count enable platform-specific performance tuning
+ * 
+ * @see printPlatformInfo() for formatted output of detection results
+ * @see testPSRAMAllocation() for functional PSRAM validation
+ * @see getPlatformSummary() for concise platform description
+ * 
+ * @since v0.9
+ */
 PlatformDetector::PlatformInfo PlatformDetector::detectPlatform() {
     PlatformInfo info = {};
     
@@ -103,6 +151,43 @@ PlatformDetector::PlatformInfo PlatformDetector::detectPlatform() {
     return info;
 }
 
+/**
+ * @brief Outputs comprehensive platform detection results via logging system
+ * 
+ * Formatted display function that presents complete hardware platform analysis
+ * through the centralized logging infrastructure. Provides structured output
+ * ideal for system diagnostics, development debugging, and user support.
+ * 
+ * Output Information Categories:
+ * - Chip identification (model, cores, frequency)
+ * - Board variant classification and memory configuration
+ * - Flash memory capacity and heap statistics
+ * - PSRAM configuration status and functional verification
+ * - Platform compatibility assessment and optimization recommendations
+ * 
+ * PSRAM Status Reporting:
+ * - CONFIGURED BUT NOT DETECTED: Hardware mismatch indication
+ * - DETECTED AND FUNCTIONAL: Optimal configuration confirmation
+ * - NOT CONFIGURED: ESP32 Classic mode identification
+ * 
+ * Compatibility Assessment:
+ * - OPTIMAL: Hardware matches chip expectations (S3 with PSRAM, ESP32 without)
+ * - SUBOPTIMAL: Configuration mismatch requiring attention
+ * 
+ * @param info Platform information structure from detectPlatform()
+ * 
+ * @note Requires INFO level logging for standard output visibility
+ * @note Uses WARNING level for hardware mismatch conditions
+ * @note All output tagged with "PLATFORM" for easy log filtering
+ * @note Memory sizes displayed in user-friendly MB/KB units
+ * @note Compatibility status guides optimal system configuration
+ * 
+ * @see detectPlatform() for platform information collection
+ * @see Logger::infof() for formatted logging output mechanism
+ * @see Logger::warnf() for hardware mismatch warnings
+ * 
+ * @since v0.9
+ */
 void PlatformDetector::printPlatformInfo(const PlatformInfo& info) {
     LOG_INFOF(TAG, "=== MULTIPLATFORM DETECTION RESULTS ===");
     LOG_INFOF(TAG, "Chip: %s (%d cores @ %d MHz)", info.chipName, info.cpuCores, info.cpuFreqMHz);
@@ -130,6 +215,44 @@ void PlatformDetector::printPlatformInfo(const PlatformInfo& info) {
     LOG_INFOF(TAG, "=====================================");
 }
 
+/**
+ * @brief Performs comprehensive PSRAM functionality testing and validation
+ * 
+ * Advanced testing function that validates PSRAM hardware functionality through
+ * systematic allocation tests across multiple memory sizes. Essential for
+ * confirming PSRAM reliability before production deployment and memory-intensive operations.
+ * 
+ * Test Methodology:
+ * 1. PSRAM presence verification via psramFound()
+ * 2. Progressive allocation testing (1KB → 256KB)
+ * 3. Memory write pattern validation (0xAA test pattern)
+ * 4. Boundary condition verification (first/last byte integrity)
+ * 5. Proper memory deallocation and cleanup
+ * 6. Success rate calculation and reporting
+ * 
+ * Test Allocation Sizes:
+ * - 1KB: Small allocation baseline
+ * - 4KB: Page-size allocation testing
+ * - 16KB: Medium buffer validation
+ * - 64KB: Large buffer capability
+ * - 256KB: Maximum typical allocation test
+ * 
+ * @return true if all PSRAM tests pass or not applicable for platform
+ * @return false if PSRAM configured but tests fail
+ * 
+ * @note Only executes when BOARD_HAS_PSRAM compile flag is enabled
+ * @note Uses heap_caps_malloc() with MALLOC_CAP_SPIRAM for PSRAM-specific allocation
+ * @note Test pattern 0xAA provides reliable write/read verification
+ * @note Boundary testing ensures full allocation integrity
+ * @note All test results logged with detailed size and status information
+ * @note Non-PSRAM platforms return true (not considered an error condition)
+ * 
+ * @see detectPlatform() for PSRAM configuration detection
+ * @see printPlatformInfo() for PSRAM status reporting
+ * @see heap_caps_malloc() for PSRAM-specific memory allocation
+ * 
+ * @since v0.9
+ */
 bool PlatformDetector::testPSRAMAllocation() {
     #ifdef BOARD_HAS_PSRAM
     if (!psramFound()) {
@@ -173,6 +296,39 @@ bool PlatformDetector::testPSRAMAllocation() {
     #endif
 }
 
+/**
+ * @brief Generates concise platform summary string for web interfaces and displays
+ * 
+ * Utility function that creates compact, user-friendly platform identification
+ * suitable for web interfaces, status displays, and API responses. Provides
+ * essential hardware information in minimal space while maintaining clarity.
+ * 
+ * Summary Format Examples:
+ * - "Platform: ESP32 DevKit (No PSRAM) | No PSRAM"
+ * - "Platform: ESP32-S3 N8R2 (2MB PSRAM) | PSRAM: 2MB"
+ * - "Platform: ESP32-S3 N16R8 (8MB PSRAM) | PSRAM: 8MB"
+ * - "Platform: ESP32-C3 Unknown | No PSRAM"
+ * 
+ * Information Components:
+ * - Chip name identification (ESP32, ESP32-S3, etc.)
+ * - Board variant classification (N8, N8R2, N16R8, DevKit)
+ * - PSRAM status and capacity (if present)
+ * - Compact formatting suitable for constrained display space
+ * 
+ * @return String Formatted platform summary for display purposes
+ * 
+ * @note Uses detectPlatform() internally for current hardware analysis
+ * @note PSRAM capacity displayed in MB units for readability
+ * @note String format optimized for web UI status displays
+ * @note Consistent formatting across all supported platforms
+ * @note Suitable for JSON API responses and embedded displays
+ * 
+ * @see detectPlatform() for comprehensive platform information
+ * @see printPlatformInfo() for detailed diagnostic output
+ * @see PlatformInfo for complete hardware specification structure
+ * 
+ * @since v0.9
+ */
 String PlatformDetector::getPlatformSummary() {
     PlatformInfo info = detectPlatform();
     

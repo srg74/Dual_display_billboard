@@ -251,6 +251,20 @@ public:
     static String getDisplayName(DisplayType display = DISPLAY_UNKNOWN);
 
     /**
+     * @brief Get severity level name for JSON output
+     * @param severity Validation severity level
+     * @return String representation of severity
+     */
+    static String getSeverityName(ValidationSeverity severity);
+
+    /**
+     * @brief Get emoji icon for severity level
+     * @param severity Validation severity level
+     * @return Emoji icon representing severity
+     */
+    static String getSeverityIcon(ValidationSeverity severity);
+
+    /**
      * @brief Force re-validation of the entire system
      * @param autoFix Enable automatic fixing
      * @return New validation report

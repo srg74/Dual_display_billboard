@@ -1,5 +1,41 @@
-#include "slideshow_manager.h"
+/**
+ * @file slideshow_manager.cpp
+ * @brief 🎯 Advanced slideshow management system with clock integration and DCC control
+ * 
+ * This module provides comprehensive slideshow functionality for dual display billboards,
+ * featuring intelligent image sequencing, clock integration, DCC command response,
+ * and dynamic image management with real-time enable/disable capabilities.
+ * 
+ * Key Features:
+ * - Configurable image timing and transition control
+ * - Seamless clock integration between image sequences
+ * - Dynamic image list management with enable/disable states
+ * - DCC command integration for remote gallery/clock switching
+ * - Persistent image state storage and recovery
+ * - Smart retry logic for "no images" scenarios
+ * 
+ * @author ESP32 Dual Display Billboard System
+ * @date 2025
+ * @version 0.9
+ */
 
+#include "slideshow_manager.h"
+#include "display_timing_config.h"
+
+// ============================================================================
+// CONSTRUCTOR AND INITIALIZATION
+// ============================================================================
+
+/**
+/**
+ * @brief 🏗️ Constructor initializes slideshow manager with required component dependencies
+ * @param im Pointer to ImageManager for image handling operations
+ * @param sm Pointer to SettingsManager for configuration access
+ * @param cm Pointer to DisplayClockManager for clock display integration
+ * 
+ * Initializes the slideshow manager with all required component dependencies
+ * and sets default state values for slideshow operation.
+ */
 SlideshowManager::SlideshowManager(ImageManager* im, SettingsManager* sm, DisplayClockManager* cm) 
     : imageManager(im), settingsManager(sm), clockManager(cm) {
     slideshowActive = false;
@@ -9,10 +45,23 @@ SlideshowManager::SlideshowManager(ImageManager* im, SettingsManager* sm, Displa
     showingClock = false;
 }
 
+/**
+ * @brief 🔚 Destructor performs cleanup operations
+ * 
+ * Currently no dynamic resources require cleanup, but provides
+ * framework for future resource management if needed.
+ */
 SlideshowManager::~SlideshowManager() {
     // Nothing to clean up
 }
 
+/**
+ * @brief 🚀 Initialize slideshow manager and load persistent image states
+ * @return true if initialization successful, false if required components unavailable
+ * 
+ * Performs initial setup including validation of required component dependencies
+ * and loading of persistent image enable/disable states from storage.
+ */
 bool SlideshowManager::begin() {
     if (!imageManager || !settingsManager) {
         LOG_ERROR("SLIDESHOW", "ImageManager or SettingsManager not available");
@@ -26,6 +75,17 @@ bool SlideshowManager::begin() {
     return true;
 }
 
+// ============================================================================
+// SLIDESHOW CONTROL AND MANAGEMENT
+// ============================================================================
+
+/**
+ * @brief ▶️ Start slideshow with automatic image loading and validation
+ * 
+ * Initiates slideshow operation by loading enabled images and starting
+ * the display sequence. Handles "no images" scenario gracefully with
+ * appropriate messaging and timing controls.
+ */
 void SlideshowManager::startSlideshow() {
     loadEnabledImages();
     
@@ -45,11 +105,24 @@ void SlideshowManager::startSlideshow() {
     showNextImage();
 }
 
+/**
+ * @brief ⏹️ Stop slideshow and reset state variables
+ * 
+ * Halts slideshow operation and resets internal state variables
+ * to prepare for future slideshow sessions.
+ */
 void SlideshowManager::stopSlideshow() {
     slideshowActive = false;
     currentImageIndex = 0;
 }
 
+/**
+ * @brief 🔄 Update slideshow timing and handle image/clock transitions
+ * 
+ * Core slideshow update loop that handles timing-based image transitions,
+ * clock integration based on user settings, and maintains proper sequence
+ * flow between images and clock displays.
+ */
 void SlideshowManager::updateSlideshow() {
     if (!slideshowActive || enabledImages.empty() || !settingsManager) {
         return;
@@ -81,6 +154,13 @@ void SlideshowManager::updateSlideshow() {
     }
 }
 
+/**
+ * @brief 🔄 Restart active slideshow with fresh image loading
+ * 
+ * Performs complete slideshow restart including stopping current operation
+ * and reinitializing with fresh image list. Only operates when slideshow
+ * is currently active to prevent unwanted state changes.
+ */
 void SlideshowManager::restartSlideshow() {
     Serial.println("=== Restarting Slideshow ===");
     if (slideshowActive) {
@@ -88,6 +168,14 @@ void SlideshowManager::restartSlideshow() {
         startSlideshow();
     }
 }
+
+/**
+ * @brief 🔄 Refresh image list with dynamic slideshow state management
+ * 
+ * Reloads the image list and intelligently manages slideshow state based
+ * on image availability. Handles transitions between active/inactive states
+ * and adjusts current index when image list changes.
+ */
 
 void SlideshowManager::refreshImageList() {
     Serial.println("=== Refreshing Image List ===");
@@ -126,12 +214,32 @@ void SlideshowManager::refreshImageList() {
     }
 }
 
+// ============================================================================
+// STATE QUERIES AND STATUS METHODS
+// ============================================================================
+
+/**
+ * @brief 📋 Get name of currently displayed image
+ * @return Current image filename if slideshow active, empty string otherwise
+ * 
+ * Returns the filename of the currently displayed image when slideshow
+ * is active and valid. Provides safe access with bounds checking.
+ */
 String SlideshowManager::getCurrentImageName() const {
     if (slideshowActive && currentImageIndex < enabledImages.size()) {
         return enabledImages[currentImageIndex];
     }
     return "";
 }
+
+/**
+ * @brief ⏰ Check if slideshow should retry after "no images" state
+ * @return true if enough time has passed since last retry attempt
+ * 
+ * Implements intelligent retry logic to prevent rapid slideshow restart
+ * attempts when no images are available. Uses configurable timing intervals
+ * to balance responsiveness with system stability.
+ */
 
 bool SlideshowManager::shouldRetrySlideshow() const {
     // If slideshow is active, no need to retry
@@ -147,18 +255,30 @@ bool SlideshowManager::shouldRetrySlideshow() const {
     // Check if enough time has passed since last "no images" check
     // Use the same interval as image display (default 30 seconds, configurable to 10)
     unsigned long currentTime = millis();
-    uint32_t checkInterval = 10000; // 10 seconds as requested
+    uint32_t checkInterval = SLIDESHOW_DEFAULT_INTERVAL_MS; // 10 seconds as requested
     if (settingsManager) {
         checkInterval = settingsManager->getImageInterval() * 1000; // Convert to ms
         // Minimum 10 seconds to avoid rapid loops
-        if (checkInterval < 10000) {
-            checkInterval = 10000;
+        if (checkInterval < SLIDESHOW_DEFAULT_INTERVAL_MS) {
+            checkInterval = SLIDESHOW_DEFAULT_INTERVAL_MS;
         }
     }
     
     return (currentTime - lastNoImagesCheck >= checkInterval);
 }
 
+// ============================================================================
+// INTERNAL HELPER METHODS
+// ============================================================================
+
+/**
+/**
+ * @brief 🖼️ Display next image in sequence on available displays
+ * 
+ * Handles the actual image display operation using ImageManager to show
+ * the current image on both displays. Includes validation and error handling
+ * for missing images or manager components.
+ */
 void SlideshowManager::showNextImage() {
     if (enabledImages.empty() || !imageManager) {
         return;
@@ -170,6 +290,13 @@ void SlideshowManager::showNextImage() {
     bool result = imageManager->displayImageOnBoth(currentImage);
 }
 
+/**
+ * @brief 📂 Load list of enabled images from filesystem and user preferences
+ * 
+ * Scans the images directory and builds a list of enabled images based on
+ * user preferences and file availability. Filters for supported image formats
+ * and respects enable/disable state settings.
+ */
 void SlideshowManager::loadEnabledImages() {
     enabledImages.clear();
     
@@ -198,6 +325,15 @@ void SlideshowManager::loadEnabledImages() {
     Serial.printf("Total enabled images: %d\n", enabledImages.size());
 }
 
+/**
+ * @brief ✅ Check if specific image is enabled for slideshow display
+ * @param filename Image filename to check enable status
+ * @return true if image is enabled, false if disabled, defaults to true if not found
+ * 
+ * Queries the image enabled states map to determine if a specific image
+ * should be included in slideshow rotation. Uses default enabled state
+ * for images without explicit settings.
+ */
 bool SlideshowManager::isImageEnabled(const String& filename) {
     // Check if we have a stored state for this image
     auto it = imageEnabledStates.find(filename);
@@ -208,6 +344,20 @@ bool SlideshowManager::isImageEnabled(const String& filename) {
     // Default to enabled if no state is stored
     return true;
 }
+
+// ============================================================================
+// CONFIGURATION AND STATE MANAGEMENT
+// ============================================================================
+
+/**
+ * @brief 🔧 Update enable/disable state for specific image in slideshow
+ * @param filename Image filename to update state for
+ * @param enabled New enabled state (true=enabled, false=disabled)
+ * 
+ * Updates the enabled state for a specific image and persists the change
+ * to storage. Automatically refreshes the slideshow to apply changes
+ * immediately if the slideshow is currently active.
+ */
 
 void SlideshowManager::updateImageEnabledState(const String& filename, bool enabled) {
     Serial.printf("=== UPDATING IMAGE STATE ===\n");
@@ -240,8 +390,25 @@ void SlideshowManager::updateImageEnabledState(const String& filename, bool enab
     refreshImageList();
 }
 
+/**
+ * @brief 💾 Load image enable/disable states from persistent storage
+ * 
+ * Reads image enabled states from JSON file stored in LittleFS filesystem.
+ * Handles missing file gracefully by defaulting all images to enabled state.
+ * Performs simple JSON parsing to restore user preferences for image visibility.
+ */
+
 void SlideshowManager::loadImageStatesFromStorage() {
     Serial.println("Loading image enabled states from storage...");
+    
+    // Create default file if it doesn't exist to prevent VFS errors
+    if (!LittleFS.exists("/slideshow_states.json")) {
+        File file = LittleFS.open("/slideshow_states.json", "w");
+        if (file) {
+            file.print("{}");  // Empty JSON object
+            file.close();
+        }
+    }
     
     File file = LittleFS.open("/slideshow_states.json", "r");
     if (!file) {
@@ -283,6 +450,15 @@ void SlideshowManager::loadImageStatesFromStorage() {
     Serial.printf("Loaded %d image states from storage\n", imageEnabledStates.size());
 }
 
+/**
+ * @brief 📋 Get comprehensive map of all image enabled states for web interface
+ * @return Map of image filenames to their enabled states (true/false)
+ * 
+ * Returns complete map of image enabled states, including both stored preferences
+ * and default enabled states for newly discovered images. Essential for web
+ * interface to display current image enable/disable status to users.
+ */
+
 std::map<String, bool> SlideshowManager::getImageEnabledStates() const {
     Serial.println("=== GET IMAGE ENABLED STATES ===");
     std::map<String, bool> result = imageEnabledStates;
@@ -321,6 +497,14 @@ std::map<String, bool> SlideshowManager::getImageEnabledStates() const {
     return result;
 }
 
+/**
+ * @brief 📷 Display "No Images Available" message on both displays
+ * 
+ * Shows user-friendly message when no enabled images are available for slideshow.
+ * Utilizes ImageManager's display functionality to render text message on both
+ * screens, providing clear feedback about slideshow state.
+ */
+
 void SlideshowManager::showNoImagesMessage() {
     if (!imageManager) {
         return;
@@ -334,6 +518,14 @@ void SlideshowManager::showNoImagesMessage() {
     
     Serial.println("'No Images' message displayed");
 }
+
+/**
+ * @brief 🕐 Display clock on both screens with user-configured face style
+ * 
+ * Renders clock display using DisplayClockManager with user's preferred clock
+ * face style from settings. Integrates with slideshow sequence to provide
+ * time display between image rotations when clock feature is enabled.
+ */
 
 void SlideshowManager::showClock() {
     if (!clockManager) {

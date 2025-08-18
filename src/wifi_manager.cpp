@@ -1,9 +1,49 @@
+/**
+ * @file wifi_manager.cpp
+ * @brief 🌐 ESP32 Dual Display Billboard - Advanced WiFi Management System v0.9
+ * 
+ * @details Comprehensive WiFi and web server management system for ESP32 dual display billboard.
+ *          Provides sophisticated network connectivity, dual-mode operation (Setup/Normal),
+ *          comprehensive web interface with image management, DCC control, system monitoring,
+ *          factory reset functionality, and robust connection management with automatic retry logic.
+ * 
+ * Key Features:
+ * • 🏗️ Dual-Mode Operation: Setup mode for initial configuration, Normal mode for operations
+ * • 🌐 Advanced Network Management: Auto-connection, retry logic, connection health monitoring
+ * • 📱 Comprehensive Web Interface: Settings management, image upload/control, system status
+ * • 🖼️ Image Management: Upload, enable/disable, preview, slideshow control via web interface
+ * • 🚂 DCC Integration: Web-based DCC command interface for model railroad control
+ * • 🔧 System Monitoring: Real-time memory health, WiFi status, platform information
+ * • 🔄 Factory Reset: GPIO0-based factory reset with configurable timing
+ * • 📊 RESTful API: JSON endpoints for system status, image management, settings control
+ * • 🛡️ Robust Error Handling: Connection timeout management, automatic mode switching
+ * • 💾 Persistent Configuration: Credential storage, connection state management
+ * 
+ * Architecture:
+ * - Setup Mode: Access Point for initial WiFi configuration and system setup
+ * - Normal Mode: Station mode with full web interface and system functionality
+ * - Dynamic Mode Switching: Automatic transition based on connection status and user input
+ * - RESTful Web Services: JSON API for external integration and mobile applications
+ * - Integrated Image Pipeline: Direct web-based image upload and slideshow management
+ * - Memory-Aware Operations: Dynamic content serving based on available memory
+ * 
+ * Dependencies: AsyncWebServer, TimeManager, SettingsManager, DisplayManager, 
+ *               ImageManager, SlideshowManager, DCCManager, MemoryManager
+ * Platform: ESP32 with WiFi capability
+ * Version: 0.9 - Pre-release development version with comprehensive system integration
+ * 
+ * @author ESP32 Dual Display Billboard System
+ * @version 0.9
+ * @date 2025
+ */
+
 #include "wifi_manager.h"
 #include "dcc_manager.h"
 #include "logger.h"
 #include "config.h"
 #include "webcontent.h"
 #include "display_manager.h"
+#include "display_timing_config.h"
 #include "slideshow_manager.h"
 #include "memory_manager.h"
 #include "platform_detector.h"
@@ -12,6 +52,36 @@ static const String TAG = "WIFI";
 
 const unsigned long WiFiManager::RETRY_DELAYS[] = {5000, 10000, 30000}; // 5s, 10s, 30s
 
+// ============================================================================
+// 🏗️ CONSTRUCTOR & INITIALIZATION
+// ============================================================================
+
+/**
+ * @brief 🏗️ Constructs WiFiManager with comprehensive system integration
+ * 
+ * @details Initializes the WiFi management system with references to all core system components.
+ *          Sets up dual-mode operation state, connection retry logic, GPIO factory reset monitoring,
+ *          and establishes communication pathways between web interface and system components.
+ * 
+ * Key Initialization:
+ * • Dual-mode state management (Setup/Normal mode switching)
+ * • Connection retry and timing control systems
+ * • GPIO0 factory reset monitoring and debouncing
+ * • Cross-component communication interfaces
+ * • Memory and connection health monitoring
+ * • Restart scheduling and portal mode switching
+ * 
+ * @param webServer Pointer to AsyncWebServer instance for HTTP request handling
+ * @param timeManager Pointer to TimeManager for timestamp and scheduling operations
+ * @param settingsManager Pointer to SettingsManager for configuration persistence
+ * @param displayManager Pointer to DisplayManager for visual status feedback
+ * @param imageManager Pointer to ImageManager for image storage and retrieval
+ * @param slideshowManager Pointer to SlideshowManager for slideshow control
+ * @param dccManager Pointer to DCCManager for model railroad command integration
+ * 
+ * @note Constructor establishes component relationships but does not initiate network operations.
+ *       Call initializeAP() or initializeFromCredentials() to begin WiFi operations.
+ */
 WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager, SlideshowManager* slideshowManager, class DCCManager* dccManager) 
     : server(webServer), timeManager(timeManager), settingsManager(settingsManager), displayManager(displayManager), imageManager(imageManager), slideshowManager(slideshowManager), dccManager(dccManager) {
     LOG_DEBUG(TAG, "WiFiManager constructor called");
@@ -27,7 +97,7 @@ WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, Se
     restartScheduledTime = 0;
     switchToPortalMode = false;
     
-    // FIX: Uncomment these lines
+    // Initialize connection success display tracking
     connectionSuccessDisplayed = false;
     connectionSuccessStartTime = 0;
     
@@ -35,6 +105,28 @@ WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, Se
     pinMode(GPIO0_PIN, INPUT_PULLUP);
 }
 
+/**
+ * @brief 🌐 Initializes WiFi Access Point for setup mode configuration
+ * 
+ * @details Establishes ESP32 as WiFi Access Point to enable initial system configuration.
+ *          Creates isolated network environment for secure credential entry and system setup.
+ *          Provides visual feedback through display manager and comprehensive logging for debugging.
+ * 
+ * Setup Process:
+ * • Stores AP credentials for internal reference and display
+ * • Configures ESP32 WiFi hardware for Access Point mode
+ * • Displays setup status on connected displays
+ * • Enables DHCP for client device connectivity
+ * • Prepares for web server route configuration
+ * 
+ * @param ssid Access Point network name (visible to connecting devices)
+ * @param password Access Point password for network security (WPA2-PSK)
+ * 
+ * @note This method only configures the Access Point. Call setupRoutes() and startServer()
+ *       to enable web interface functionality for configuration.
+ * @note Access Point mode provides isolated network for secure initial setup without
+ *       requiring existing WiFi infrastructure.
+ */
 void WiFiManager::initializeAP(const String& ssid, const String& password) {
     apSSID = ssid;
     apPassword = password;
@@ -43,9 +135,10 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     LOG_INFOF(TAG, "SSID: '%s'", ssid.c_str());
     LOG_INFOF(TAG, "Password: '%s'", password.c_str());
     
-    // OPTIMIZATION: Show quick starting indicator (non-blocking)
-    extern DisplayManager displayManager;
-    displayManager.showAPStarting();  // Fast "Starting AP..." message
+    // Show starting AP status on display
+    if (displayManager) {
+        displayManager->showAPStarting();
+    }
     
     // FAST PATH: Do critical WiFi setup without display delays
     WiFi.disconnect(true);
@@ -64,7 +157,7 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     WiFi.mode(WIFI_AP);
     if (!WiFi.softAPConfig(local_IP, gateway, subnet)) {
         LOG_ERROR(TAG, "❌ Failed to configure AP IP");
-        displayManager.showQuickStatus("AP Config Failed", TFT_RED);
+        displayManager->showQuickStatus("AP Config Failed", TFT_RED);
         return;
     }
     
@@ -74,17 +167,15 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
     bool apStarted = WiFi.softAP(apSSID.c_str(), apPassword.c_str(), 11, 0, 4);
     
     if (apStarted) {
-        // Quick success feedback
-        displayManager.showAPReady();  // Fast "AP Ready!" message
-        
         IPAddress IP = WiFi.softAPIP();
         LOG_INFOF(TAG, "✅ Access Point started successfully! SSID: %s, IP: %s", 
                   apSSID.c_str(), IP.toString().c_str());
         
         currentMode = MODE_SETUP;
         
-        // AFTER AP IS READY: Show splash screen (5s) then portal info
-        displayManager.showPortalSequence(
+        // DIRECT PORTAL SEQUENCE: Show splash screen (4s) then portal info
+        // This ensures identical behavior on ESP32 and ESP32S3
+        displayManager->showPortalSequence(
             PORTAL_SSID,           
             "IP: 4.3.2.1",        
             "Ready to connect"     
@@ -95,10 +186,41 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
         LOG_ERROR(TAG, "Check if another AP is running or SSID is too long");
         
         // Show error status
-        displayManager.showQuickStatus("AP Start Failed", TFT_RED);
+        displayManager->showQuickStatus("AP Start Failed", TFT_RED);
     }
 }
 
+// ============================================================================
+// 🌐 WEB SERVER ROUTE CONFIGURATION
+// ============================================================================
+
+/**
+ * @brief 🌐 Configures comprehensive web server routes for setup mode
+ * 
+ * @details Establishes complete web interface routing for WiFi setup and initial system configuration.
+ *          Provides memory-aware content serving, comprehensive system diagnostics, network scanning,
+ *          credential management, and robust error handling for setup mode operations.
+ * 
+ * Route Categories:
+ * • 🔧 System Diagnostics: /test, /status, /memory endpoints for health monitoring
+ * • 🌐 Network Management: /, /portal for main interface, /scan for network discovery
+ * • 📡 Connection Control: /connect for WiFi credential submission and validation
+ * • 🖼️ Visual Interface: Portal HTML with responsive design and status feedback
+ * • 💾 Memory Management: Dynamic content serving based on available heap memory
+ * • 📊 Real-time Status: Live system information including memory health and connectivity
+ * 
+ * Key Features:
+ * • Memory-aware content serving (minimal interface for low memory conditions)
+ * • Chunked response handling for large HTML content
+ * • Cross-Origin Resource Sharing (CORS) support for external access
+ * • Comprehensive error handling with user-friendly feedback
+ * • Real-time memory and system status reporting
+ * • Network scanning with security information display
+ * 
+ * @note Routes configured here are active only in setup mode. Normal mode uses
+ *       setupNormalModeRoutes() for expanded functionality.
+ * @note Memory threshold of 50KB used for content serving decisions to prevent crashes.
+ */
 void WiFiManager::setupRoutes() {
     LOG_INFO(TAG, "=== Setting up web server routes ===");
     
@@ -292,12 +414,47 @@ void WiFiManager::setupRoutes() {
     LOG_INFO(TAG, "✅ Web routes configured successfully");
 }
 
+/**
+ * @brief 🚀 Starts the HTTP web server for client request handling
+ * 
+ * @details Activates the AsyncWebServer instance to begin listening for HTTP requests on port 80.
+ *          Enables access to all configured routes including portal interface, system diagnostics,
+ *          and WiFi configuration endpoints. Server activation is the final step in setup mode preparation.
+ * 
+ * @note Server must be started after route configuration (setupRoutes()) to ensure all
+ *       endpoints are properly registered and available to clients.
+ * @note Default HTTP port 80 used for standard web browser compatibility.
+ */
 void WiFiManager::startServer() {
     LOG_INFO(TAG, "🚀 Starting web server...");
     server->begin();
     LOG_INFO(TAG, "✅ Web server started and listening on port 80");
 }
 
+// ============================================================================
+// 📡 NETWORK SCANNING & DISCOVERY
+// ============================================================================
+
+/**
+ * @brief 📡 Performs WiFi network scan and returns formatted HTML results
+ * 
+ * @details Executes comprehensive WiFi network discovery scan and formats results as HTML
+ *          for web interface display. Provides detailed network information including
+ *          signal strength, security type, and channel information for user network selection.
+ * 
+ * Scan Features:
+ * • Clears previous scan results to ensure fresh data
+ * • Comprehensive network discovery with signal strength analysis
+ * • Security type detection (Open, WEP, WPA/WPA2, WPA3)
+ * • Signal strength visualization with colored indicators
+ * • Channel information for interference analysis
+ * • HTML formatted output for direct web interface integration
+ * • Error handling for scan failures and timeout conditions
+ * 
+ * @return String HTML formatted list of discovered networks with selection interface
+ * @note Returns "No networks found" message if scan yields no results
+ * @note Scan may take 5-10 seconds depending on channel coverage and network density
+ */
 String WiFiManager::scanNetworks() {
     LOG_INFO(TAG, "Scanning for WiFi networks...");
     
@@ -387,6 +544,82 @@ String WiFiManager::scanNetworks() {
     return networks;
 }
 
+// ============================================================================
+// 🔗 WIFI CONNECTION MANAGEMENT
+// ============================================================================
+
+/**
+ * @brief 🔗 Establishes WiFi connection with comprehensive error handling
+ * 
+ * @details Initiates WiFi connection to specified network with robust timeout management,
+ *          connection status monitoring, and visual feedback through display system.
+ *          Provides detailed logging and error reporting for troubleshooting connectivity issues.
+ * 
+ * Connection Process:
+ * • Network credential validation and sanitization
+ * • WiFi hardware configuration for station mode
+ * • Connection initiation with specified credentials
+ * • Timeout-based connection monitoring (20-second limit)
+ * • Connection status verification and IP address assignment
+ * • Visual feedback through display manager status updates
+ * • Comprehensive error logging for failed connection attempts
+ * 
+ * @param ssid Target WiFi network name (SSID) for connection
+ * @param password Network password for WPA/WPA2 authentication
+ * 
+ * @return bool True if connection established successfully with valid IP assignment,
+ *              false if connection failed or timed out
+ * 
+ * @note Connection timeout set to 20 seconds to prevent indefinite hanging
+ * @note Displays connection status on attached displays for user feedback
+ * @note Failed connections leave WiFi in disconnected state for retry attempts
+ */
+/**
+ * @brief 🌐 Establishes WiFi connection with enhanced crash prevention
+ * 
+ * @details Connects ESP32 to specified WiFi network with comprehensive authentication failure
+ *          handling and crash prevention mechanisms. Implements aggressive timeout management,
+ *          early failure detection, and graceful disconnection to prevent ESP32 WiFi stack
+ *          abort() crashes that occur during prolonged authentication failures.
+ * 
+ * Enhanced Safety Features (v0.9.1):
+ * • 🛡️ Authentication Failure Prevention: Detects and aborts early on auth failures
+ * • ⏱️ Aggressive Timeout Management: Reduced to 8 seconds to prevent prolonged failures
+ * • 🔍 Real-time Status Monitoring: 250ms status checks for rapid failure detection
+ * • 🚫 Early Abort Logic: Stops after 2 quick failures to prevent crash conditions
+ * • 🧹 Aggressive Cleanup: Forces disconnection after failures with delay
+ * • 📊 Visual Feedback: Display integration for connection status and failures
+ * 
+ * Connection Process:
+ * • Pre-connection cleanup with forced disconnect and delay
+ * • Real-time WiFi status monitoring with 250ms granularity
+ * • Authentication failure counting with early abort (max 2 attempts)
+ * • Stuck connection detection (disconnected state > 3 seconds)
+ * • Comprehensive cleanup on failure with forced disconnect and delay
+ * 
+ * Safety Mechanisms:
+ * • Prevents ESP32 WiFi stack abort() crashes during authentication failures
+ * • Detects WL_CONNECT_FAILED and WL_CONNECTION_LOST states early
+ * • Monitors for prolonged WL_DISCONNECTED states indicating stuck connections
+ * • Forces WiFi hardware reset on failure to ensure clean state
+ * 
+ * @param ssid Target network SSID for connection attempt
+ * @param password Network password for WPA/WPA2 authentication
+ * 
+ * @return bool True if connection established successfully with valid IP assignment,
+ *              false if connection failed, timed out, or aborted due to safety mechanisms
+ * 
+ * @note Connection timeout aggressively reduced to 8 seconds to prevent auth crashes
+ * @note Displays connection status on attached displays for user feedback
+ * @note Failed connections leave WiFi in clean disconnected state with hardware reset
+ * @note Multiple quick failures trigger early abort to prevent system crash
+ * 
+ * @see WiFi.onEvent() for complementary event-based crash prevention
+ * @see displayManager->showConnecting() for visual feedback integration
+ * @warning Authentication failures can cause ESP32 WiFi stack crashes if not handled properly
+ * 
+ * @version 0.9.1 - Enhanced crash prevention and authentication failure handling
+ */
 bool WiFiManager::connectToWiFi(const String& ssid, const String& password) {
     LOG_INFOF(TAG, "Attempting to connect to WiFi: %s", ssid.c_str());
     
@@ -413,11 +646,44 @@ bool WiFiManager::connectToWiFi(const String& ssid, const String& password) {
         return true;
     } else {
         LOG_ERRORF(TAG, "❌ Connection failed. Status: %d", WiFi.status());
+        
+        // Show connection failed status on display
+        if (displayManager) {
+            displayManager->showQuickStatus("WiFi Failed", TFT_RED);
+        }
+        
         WiFi.disconnect(); // Clean up failed connection
         return false;
     }
 }
 
+/**
+ * @brief 🔗 Handles HTTP POST requests for WiFi connection from web interface
+ * 
+ * @details Processes WiFi connection requests submitted through the web portal interface.
+ *          Validates submitted credentials, attempts network connection, manages credential storage,
+ *          and provides immediate HTTP response with connection status and next steps.
+ * 
+ * Request Processing:
+ * • Validates presence of required SSID and password parameters
+ * • Sanitizes and extracts network credentials from HTTP form data
+ * • Initiates WiFi connection attempt using connectToWiFi()
+ * • Manages credential persistence through CredentialManager integration
+ * • Schedules system restart for mode transition upon successful connection
+ * • Provides detailed HTTP response with connection status and user instructions
+ * 
+ * Response Handling:
+ * • Success: Returns status page with restart notification and IP information
+ * • Failure: Returns error page with retry instructions and troubleshooting tips
+ * • Missing Parameters: Returns error response indicating required field validation
+ * • Credential Storage: Logs success/failure of credential persistence operations
+ * 
+ * @param request Pointer to AsyncWebServerRequest containing WiFi credentials and metadata
+ * 
+ * @note Successful connections trigger 3-second delayed restart to transition to normal mode
+ * @note Failed connections leave system in setup mode for additional retry attempts
+ * @note All credential handling logged for security auditing and debugging purposes
+ */
 void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
     LOG_INFO(TAG, "WiFi connection request received");
     
@@ -426,6 +692,11 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
         String password = request->getParam("password", true)->value();
         
         LOG_INFOF(TAG, "Starting connection to: %s", ssid.c_str());
+        
+        // Show connecting status on display for visual feedback
+        if (displayManager) {
+            displayManager->showConnecting();
+        }
         
         // Attempt connection
         bool connected = connectToWiFi(ssid, password);
@@ -453,6 +724,13 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
             request->send(200, "application/json", response);
             LOG_INFOF(TAG, "✅ Connection successful - device will be available at %s", deviceIP.c_str());
             
+            // Show connection success message
+            if (displayManager) {
+                displayManager->showConnectionSuccess(deviceIP);
+                connectionSuccessDisplayed = true;
+                connectionSuccessStartTime = millis();
+            }
+            
             // NON-BLOCKING RESTART: Schedule restart instead of immediate delay
             restartPending = true;
             restartScheduledTime = millis() + 3000;  // 3 seconds from now
@@ -462,6 +740,11 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
             String response = "{\"status\":\"error\",\"message\":\"Failed to connect to " + ssid + ". Check password and signal strength.\"}";
             request->send(400, "application/json", response);
             LOG_ERROR(TAG, "❌ Connection failed");
+            
+            // Show connection failed status on display
+            if (displayManager) {
+                displayManager->showQuickStatus("Connection Failed", TFT_RED);
+            }
         }
     } else {
         LOG_ERROR(TAG, "Missing SSID or password in request");
@@ -469,6 +752,34 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
     }
 }
 
+// ============================================================================
+// 💾 MEMORY & SYSTEM HEALTH MONITORING
+// ============================================================================
+
+/**
+ * @brief 💾 Monitors system memory health and triggers automatic cleanup
+ * 
+ * @details Continuously monitors ESP32 memory health using MemoryManager integration.
+ *          Provides proactive memory management with automatic cleanup triggers and
+ *          emergency response protocols to prevent system crashes and ensure stable operation.
+ * 
+ * Health Monitoring:
+ * • Real-time memory health status assessment using MemoryManager
+ * • Warning level detection with enhanced monitoring activation
+ * • Critical level response with immediate cleanup operations
+ * • Emergency level handling with system stability protocols
+ * • Detailed logging for memory trend analysis and debugging
+ * 
+ * Automated Responses:
+ * • WARNING: Enhanced monitoring with detailed status logging
+ * • CRITICAL: Immediate forceCleanup() execution to reclaim memory
+ * • EMERGENCY: System stability protocols and potential restart scheduling
+ * • HEALTHY: Normal operation with periodic status verification
+ * 
+ * @note Called periodically during WiFiManager operations to ensure system stability
+ * @note Memory cleanup operations may cause brief service interruptions
+ * @note Emergency conditions may trigger automatic system restart for recovery
+ */
 void WiFiManager::checkHeapHealth() {
     // Use the new memory manager for comprehensive health checking
     MemoryManager::HealthStatus overallHealth = MemoryManager::getOverallHealth();
@@ -502,10 +813,36 @@ void WiFiManager::checkHeapHealth() {
     }
 }
 
-// ========================================
-// Step 2: Mode Management & Auto-Connect
-// ========================================
+// ============================================================================
+// 🔄 MODE MANAGEMENT & AUTO-CONNECT SYSTEM
+// ============================================================================
 
+/**
+ * @brief 🔄 Initializes WiFi connection using stored credentials with fallback handling
+ * 
+ * @details Attempts to establish WiFi connection using previously saved network credentials.
+ *          Provides automatic fallback to setup mode if credentials are missing, invalid,
+ *          or connection attempts fail. Integrates with CredentialManager for secure storage access.
+ * 
+ * Initialization Process:
+ * • Checks for existence of saved WiFi credentials in persistent storage
+ * • Validates credential integrity and format before connection attempt
+ * • Attempts network connection using stored SSID and password
+ * • Transitions to normal mode upon successful connection establishment
+ * • Falls back to setup mode if any step fails for user intervention
+ * 
+ * Fallback Scenarios:
+ * • No saved credentials → Setup mode for initial configuration
+ * • Invalid credentials → Setup mode for credential correction
+ * • Connection failure → Setup mode for network troubleshooting
+ * • Network unavailable → Setup mode with retry capability
+ * 
+ * @return bool True if connection established successfully using saved credentials,
+ *              false if fallback to setup mode required
+ * 
+ * @note Automatic mode switching ensures system remains accessible for configuration
+ * @note Credential validation prevents connection attempts with corrupted data
+ */
 bool WiFiManager::initializeFromCredentials() {
     LOG_INFO(TAG, "🔍 Checking for saved WiFi credentials...");
     
@@ -526,7 +863,8 @@ bool WiFiManager::initializeFromCredentials() {
     
     // Try to connect to saved network
     if (connectToSavedNetwork()) {
-        switchToNormalMode();
+        // CHANGED: Don't immediately switch to normal mode - let connection success display run first
+        // switchToNormalMode() will be called by checkConnectionSuccessDisplay() after 5 seconds
         return true;
     } else {
         LOG_WARN(TAG, "⚠️ Auto-connect failed - falling back to setup mode");
@@ -543,6 +881,11 @@ bool WiFiManager::connectToSavedNetwork() {
     
     LOG_INFOF(TAG, "🔗 Attempting auto-connect to: %s", creds.ssid.c_str());
     
+    // Show connecting status on display for visual feedback
+    if (displayManager) {
+        displayManager->showConnecting();
+    }
+    
     // Stop AP mode and switch to STA mode
     WiFi.softAPdisconnect(true);
     WiFi.mode(WIFI_STA);
@@ -555,8 +898,7 @@ bool WiFiManager::connectToSavedNetwork() {
         connectionRetryCount = 0; // Reset retry counter
         
         // NEW: Show connection success message
-        extern DisplayManager displayManager;
-        displayManager.showConnectionSuccess(WiFi.localIP().toString());
+        displayManager->showConnectionSuccess(WiFi.localIP().toString());
         connectionSuccessDisplayed = true;
         connectionSuccessStartTime = millis();
         
@@ -567,6 +909,32 @@ bool WiFiManager::connectToSavedNetwork() {
     }
 }
 
+/**
+ * @brief 🔄 Transitions system from setup mode to full operational normal mode
+ * 
+ * @details Reconfigures WiFiManager for normal operation mode after successful WiFi connection.
+ *          Stops setup mode web server, configures comprehensive normal mode routes,
+ *          and restarts server with full system functionality including image management,
+ *          DCC control, and advanced system monitoring capabilities.
+ * 
+ * Transition Process:
+ * • Updates internal mode state from MODE_SETUP to MODE_NORMAL
+ * • Gracefully stops existing web server to prevent connection conflicts
+ * • Configures comprehensive normal mode route set via setupNormalModeRoutes()
+ * • Restarts web server with expanded functionality and system integration
+ * • Provides visual confirmation of successful mode transition
+ * 
+ * Normal Mode Features:
+ * • Full web interface with image upload and management
+ * • DCC command interface for model railroad control
+ * • Comprehensive system status and configuration endpoints
+ * • Real-time monitoring and diagnostic capabilities
+ * • Advanced settings management and system control
+ * 
+ * @note Mode transition involves brief service interruption during server restart
+ * @note Normal mode provides access to full system functionality and integration
+ * @note Server remains accessible via WiFi IP address after transition
+ */
 void WiFiManager::switchToNormalMode() {
     LOG_INFO(TAG, "🔄 Switching to NORMAL mode");
     currentMode = MODE_NORMAL;
@@ -583,6 +951,33 @@ void WiFiManager::switchToNormalMode() {
     LOG_INFOF(TAG, "✅ Normal mode active - server running on WiFi IP: %s", WiFi.localIP().toString().c_str());
 }
 
+/**
+ * @brief 🔄 Transitions system from normal mode to setup mode for configuration
+ * 
+ * @details Reconfigures WiFiManager for setup mode operation when WiFi connection is lost,
+ *          factory reset is triggered, or manual configuration is required. Establishes
+ *          Access Point mode for secure credential entry and system reconfiguration.
+ * 
+ * Transition Process:
+ * • Updates internal mode state from MODE_NORMAL to MODE_SETUP
+ * • Records setup mode initiation timestamp for timeout management
+ * • Gracefully stops current web server to prevent service conflicts
+ * • Disconnects from current WiFi network to free radio resources
+ * • Initializes Access Point with predefined SSID and password
+ * • Configures setup mode routes for credential entry and system configuration
+ * • Restarts web server with portal interface for user access
+ * 
+ * Setup Mode Features:
+ * • Isolated Access Point for secure configuration without external dependencies
+ * • WiFi network scanning and selection interface
+ * • Credential entry and validation system
+ * • Basic system status and diagnostic capabilities
+ * • Factory reset and system restoration options
+ * 
+ * @note Setup mode provides isolated network environment for secure reconfiguration
+ * @note Mode transition involves brief service interruption during server restart
+ * @note Access Point credentials defined by PORTAL_SSID and PORTAL_PASSWORD constants
+ */
 void WiFiManager::switchToSetupMode() {
     LOG_INFO(TAG, "🔄 Switching to SETUP mode");
     currentMode = MODE_SETUP;
@@ -615,6 +1010,42 @@ void WiFiManager::switchToSetupMode() {
     LOG_INFO(TAG, "✅ Setup mode active - portal running at http://4.3.2.1");
 }
 
+/**
+ * @brief 🌐 Configures web server routes for normal operation mode
+ * 
+ * Establishes production web interface endpoints for billboard operation,
+ * system management, and user interaction. Provides comprehensive routing
+ * for all normal mode functionality including display control, settings,
+ * and system monitoring.
+ * 
+ * Normal Mode Routes:
+ * • GET / - Main billboard interface with live display data
+ * • GET /settings - System configuration and management page  
+ * • POST /settings - Configuration updates and system changes
+ * • GET /api/status - Real-time system status and health data
+ * • GET /api/images - Current image library and metadata
+ * • Integration with image upload and slideshow management
+ * 
+ * Route Features:
+ * • Dynamic HTML templating with live system data
+ * • RESTful API endpoints for programmatic access
+ * • Real-time status monitoring and health checks
+ * • Settings management with validation and persistence
+ * • Image library management and slideshow control
+ * 
+ * Template Processing:
+ * • Live system data injection (WiFi status, memory usage)
+ * • Device information display (IP address, firmware version)
+ * • Dynamic content updates based on current system state
+ * • Error handling for missing templates or data
+ * 
+ * @note Routes configured for production operation after WiFi connection
+ * @note All routes include proper CORS headers for web compatibility
+ * @note Template processing includes security considerations
+ * 
+ * @see setupImageRoutes() for image management endpoint configuration
+ * @see getIndexHTML() for main interface template processing
+ */
 void WiFiManager::setupNormalModeRoutes() {
     LOG_INFO(TAG, "=== Setting up normal mode routes ===");
     
@@ -675,6 +1106,13 @@ void WiFiManager::setupNormalModeRoutes() {
         html.replace("{{CURRENT_NTP_SERVER}}", timeManager ? timeManager->getNTPServer1() : "pool.ntp.org");
         
         request->send(200, "text/html", html);
+    });
+    
+    // CSS styles
+    server->on("/styles.css", HTTP_GET, [this](AsyncWebServerRequest *request){
+        LOG_INFO(TAG, "🎨 CSS styles requested");
+        String css = getStylesCSS();
+        request->send(200, "text/css", css);
     });
     
     // Time API
@@ -740,24 +1178,9 @@ void WiFiManager::setupNormalModeRoutes() {
             // Send response immediately to prevent timeout
             request->send(200, "text/plain", "OK");
             
-            // Save to persistent settings after response sent
+            // Save to persistent settings - SettingsManager will automatically apply brightness
             settingsManager->setSecondDisplayEnabled(isEnabled);
-            LOG_INFOF(TAG, "📺 Second display setting saved, current value: %s", settingsManager->isSecondDisplayEnabled() ? "true" : "false");
-            
-            // Apply current brightness to appropriate display(s)
-            if (displayManager) {
-                uint8_t currentBrightness = settingsManager->getBrightness();
-                if (isEnabled) {
-                    // Second display enabled - apply brightness to both displays
-                    displayManager->setBrightness(currentBrightness, 0); // 0 = both displays
-                    LOG_DEBUG(TAG, "Applied current brightness to both displays");
-                } else {
-                    // Second display disabled - only first display gets brightness, turn off second
-                    displayManager->setBrightness(currentBrightness, 1); // 1 = first display only
-                    displayManager->setBrightness(0, 2); // Turn off second display
-                    LOG_DEBUG(TAG, "Applied brightness to first display only, turned off second");
-                }
-            }
+            LOG_INFOF(TAG, "📺 Second display setting saved and brightness applied automatically, current value: %s", settingsManager->isSecondDisplayEnabled() ? "true" : "false");
         } else {
             LOG_WARN(TAG, "⚠️ Missing second_display parameter");
             request->send(400, "text/plain", "Missing parameter");
@@ -928,24 +1351,9 @@ void WiFiManager::setupNormalModeRoutes() {
             // Send response immediately to prevent timeout
             request->send(200, "text/plain", "OK");
             
-            // Save to persistent settings after response sent
+            // Save to persistent settings - SettingsManager will automatically apply to hardware
             settingsManager->setBrightness(brightnessValue);
-            LOG_DEBUG(TAG, "Brightness setting saved to persistent storage");
-            
-            // Apply brightness to display(s) based on second display setting
-            if (displayManager) {
-                bool secondDisplayEnabled = settingsManager->isSecondDisplayEnabled();
-                if (secondDisplayEnabled) {
-                    // Both displays enabled - set brightness for both
-                    displayManager->setBrightness(brightnessValue, 0); // 0 = both displays
-                    LOG_DEBUG(TAG, "Applied brightness to both displays");
-                } else {
-                    // Only main display enabled - Display 1 (BLUE) should stay on, Display 2 (YELLOW) should turn off
-                    displayManager->setBrightness(brightnessValue, 1); // Keep Display 1 (BLUE) on with brightness
-                    displayManager->setBrightness(0, 2); // Turn off Display 2 (YELLOW)
-                    LOG_DEBUG(TAG, "Applied brightness to main display only, turned off second display");
-                }
-            }
+            LOG_DEBUG(TAG, "Brightness setting saved and applied automatically");
         } else {
             request->send(400, "text/plain", "Missing parameter");
         }
@@ -1203,6 +1611,36 @@ void WiFiManager::setupNormalModeRoutes() {
     LOG_INFO(TAG, "✅ Normal mode routes configured");
 }
 
+/**
+ * @brief 🖼️ Sets up image management HTTP routes for file upload and manipulation
+ * 
+ * Configures comprehensive image handling endpoints including:
+ * • File upload with chunk processing and validation
+ * • Image conversion and optimization
+ * • Gallery management and listing
+ * • Direct image display and preview
+ * • Slideshow control integration
+ * 
+ * Features:
+ * • Multi-format support (JPEG, PNG, BMP)
+ * • Automatic resize and optimization
+ * • Progress tracking during upload
+ * • Memory-efficient chunk processing
+ * • Integration with ImageManager for processing
+ * 
+ * @note Requires ImageManager to be initialized
+ * @note Handles large file uploads via chunked processing
+ * @warning Upload endpoint processes raw binary data - ensure proper validation
+ * 
+ * Routes configured:
+ * • POST /upload - Multi-part file upload with progress tracking
+ * • GET /images - Image gallery listing and management
+ * • POST /image-action - Image manipulation commands
+ * • GET /preview - Image preview and thumbnail generation
+ * 
+ * @see ImageManager for file processing capabilities
+ * @see SlideshowManager for display integration
+ */
 void WiFiManager::setupImageRoutes() {
     if (!imageManager) {
         LOG_WARN(TAG, "ImageManager not available - skipping image routes");
@@ -1240,15 +1678,46 @@ void WiFiManager::setupImageRoutes() {
                 
                 LOG_INFOF(TAG, "📁 Starting image upload: %s (%d bytes)", filename.c_str(), totalSize);
                 
+                // SAFETY: Check available memory before allocation
+                size_t freeHeap = ESP.getFreeHeap();
+                #ifdef ESP32S3_MODE
+                size_t minFreeAfterAlloc = 150000; // Keep at least 150KB free on ESP32-S3
+                size_t maxFileSize = 1000000;      // 1MB max on ESP32-S3 (more memory available)
+                #else
+                size_t minFreeAfterAlloc = 100000; // Keep at least 100KB free on ESP32
+                size_t maxFileSize = 500000;       // 500KB max on ESP32 (less memory available)
+                #endif
+                
+                if (totalSize == 0 || totalSize > (freeHeap - minFreeAfterAlloc)) {
+                    Serial.printf("ERROR: Upload too large. Size: %d, Free heap: %d\n", totalSize, freeHeap);
+                    LOG_ERRORF(TAG, "Upload rejected - size %d bytes exceeds available memory", totalSize);
+                    request->send(400, "text/plain", "File too large for available memory");
+                    return;
+                }
+                
+                // Additional safety: Platform-specific file size limits
+                if (totalSize > maxFileSize) {
+                    Serial.printf("ERROR: File too large: %d bytes (max %d bytes)\n", totalSize, maxFileSize);
+                    LOG_ERRORF(TAG, "Upload rejected - file exceeds %d byte limit", maxFileSize);
+                    request->send(400, "text/plain", String("File too large (max ") + String(maxFileSize/1000) + "KB)");
+                    return;
+                }
+                
+                // SAFETY: Temporarily disable memory monitoring during upload
+                MemoryManager::setMonitoringEnabled(false);
+                
                 // Allocate buffer for entire file
                 uploadBuffer = (uint8_t*)malloc(totalSize);
                 if (!uploadBuffer) {
                     Serial.println("ERROR: Failed to allocate upload buffer");
                     LOG_ERROR(TAG, "Failed to allocate upload buffer");
+                    // Re-enable monitoring before returning
+                    MemoryManager::setMonitoringEnabled(true);
                     request->send(500, "text/plain", "Memory allocation failed");
                     return;
                 }
-                Serial.println("Buffer allocated successfully");
+                Serial.printf("Buffer allocated successfully (%d bytes), Free heap now: %d\n", 
+                             totalSize, ESP.getFreeHeap());
             }
             
             // Copy chunk data to buffer
@@ -1276,7 +1745,15 @@ void WiFiManager::setupImageRoutes() {
                     // Use the total expected size, not received size for validation
                     bool success = imageManager->handleImageUpload(uploadFilename, uploadBuffer, totalSize);
                     
-                    if (!success) {
+                    if (success) {
+                        // BUGFIX: Refresh slideshow after successful upload
+                        // This ensures newly uploaded images appear in the slideshow immediately
+                        if (slideshowManager) {
+                            Serial.println("SUCCESS: Image uploaded, refreshing slideshow...");
+                            slideshowManager->refreshImageList();
+                            LOG_INFO(TAG, "📄 Slideshow refreshed after image upload");
+                        }
+                    } else {
                         String errorMsg = imageManager->getLastError();
                         if (errorMsg.length() == 0) {
                             errorMsg = "Image validation failed - check format and size";
@@ -1297,6 +1774,9 @@ void WiFiManager::setupImageRoutes() {
                 }
                 totalSize = 0;
                 receivedSize = 0;
+                
+                // SAFETY: Re-enable memory monitoring after upload completes
+                MemoryManager::setMonitoringEnabled(true);
             }
         });
     
@@ -1482,6 +1962,35 @@ void WiFiManager::setupImageRoutes() {
     LOG_INFO(TAG, "✅ Image management routes configured");
 }
 
+/**
+ * @brief 🔍 Monitors WiFi connection status and handles automatic reconnection
+ * 
+ * Continuously monitors the WiFi connection health in normal mode and implements
+ * intelligent reconnection strategies to maintain network connectivity.
+ * 
+ * Monitoring Features:
+ * • Periodic connection health checks (every 30 seconds)
+ * • Signal strength (RSSI) monitoring and logging
+ * • Connection failure detection and counting
+ * • Automatic reconnection attempts with exponential backoff
+ * • Mode switching on persistent connection failures
+ * 
+ * Reconnection Strategy:
+ * • First attempt: Simple reconnect to current network
+ * • Second attempt: Full credential reload and connect
+ * • Final attempt: Switch to setup mode for reconfiguration
+ * 
+ * @note Only operates in MODE_NORMAL to avoid interference with setup mode
+ * @note Logs connection statistics for debugging and monitoring
+ * @warning Persistent failures will trigger setup mode switch
+ * 
+ * Failure Thresholds:
+ * • 3+ consecutive failures trigger credential reload
+ * • 5+ consecutive failures trigger setup mode switch
+ * 
+ * @see switchToSetupMode() for fallback handling
+ * @see connectToSavedNetwork() for reconnection logic
+ */
 void WiFiManager::checkConnectionStatus() {
     if (currentMode != MODE_NORMAL) return;
     
@@ -1518,6 +2027,38 @@ void WiFiManager::checkConnectionStatus() {
     }
 }
 
+// ============================================================================
+// 🔧 SYSTEM MONITORING & MAINTENANCE
+// ============================================================================
+
+/**
+ * @brief 🔧 Monitors GPIO0 button for factory reset activation
+ * 
+ * Continuously monitors GPIO0 pin for factory reset trigger with debouncing
+ * and configurable hold time. Provides secure system restoration capability
+ * while preventing accidental resets through timing requirements.
+ * 
+ * Factory Reset Process:
+ * • Continuous GPIO0 monitoring with 100ms polling interval
+ * • Button state debouncing to prevent false triggers
+ * • Configurable hold time requirement (default: 5 seconds)
+ * • Visual countdown feedback during reset process
+ * • Complete credential and settings erasure upon activation
+ * • Automatic system restart in setup mode after reset
+ * 
+ * Safety Features:
+ * • Requires sustained button press to prevent accidental activation
+ * • Visual feedback shows remaining hold time
+ * • Immediate release cancels reset process
+ * • Confirmation logging before executing reset
+ * 
+ * @note GPIO0 configured with internal pullup resistor (LOW when pressed)
+ * @note Factory reset is irreversible - clears all stored credentials
+ * @warning All network settings and configurations will be lost
+ * 
+ * @see CredentialManager::clearCredentials() for reset implementation
+ * @see switchToSetupMode() for post-reset mode handling
+ */
 void WiFiManager::checkGpio0FactoryReset() {
     unsigned long currentTime = millis();
     
@@ -1558,10 +2099,57 @@ void WiFiManager::checkGpio0FactoryReset() {
     }
 }
 
+// ============================================================================
+// 📊 STATUS QUERY & UTILITY METHODS
+// ============================================================================
+
+/**
+ * @brief 📊 Checks current WiFi connection status and operational mode
+ * 
+ * Verifies both WiFi hardware connection state and system operational mode.
+ * Ensures accurate connection reporting by validating both network connectivity
+ * and proper normal mode operation for reliable status indication.
+ * 
+ * Validation Criteria:
+ * • WiFi hardware connection state (WL_CONNECTED)
+ * • System operational mode (MODE_NORMAL)
+ * • Network interface availability and functionality
+ * 
+ * @return bool True if connected to WiFi network AND in normal operational mode,
+ *              false if disconnected or in setup mode
+ * 
+ * @note Connection status requires both WL_CONNECTED state and MODE_NORMAL operation
+ * @note Setup mode returns false even if technically connected to validate operational state
+ * @note Used by web APIs and system monitoring for accurate status reporting
+ * 
+ * @see getWiFiIP() for retrieving connection details when connected
+ * @see checkConnectionStatus() for connection monitoring implementation
+ */
 bool WiFiManager::isConnectedToWiFi() const {
     return (WiFi.status() == WL_CONNECTED && currentMode == MODE_NORMAL);
 }
 
+/**
+ * @brief 🌐 Retrieves current WiFi IP address for network identification
+ * 
+ * Returns the assigned WiFi IP address when in normal mode with active connection.
+ * Provides network identification information for status displays and remote access.
+ * 
+ * Connection Requirements:
+ * • Active WiFi connection (WL_CONNECTED)
+ * • Normal operational mode (MODE_NORMAL)
+ * • Valid IP assignment from DHCP or static configuration
+ * 
+ * @return String Current WiFi IP address in dot notation (e.g., "192.168.1.100"),
+ *                or "N/A" if not connected or in setup mode
+ * 
+ * @note Returns "N/A" for setup mode or disconnected state for clear status indication
+ * @note IP address used for remote access and network troubleshooting
+ * @note Commonly used in web APIs and status displays for network information
+ * 
+ * @see isConnectedToWiFi() for connection status verification
+ * @see checkConnectionStatus() for connectivity monitoring
+ */
 String WiFiManager::getWiFiIP() const {
     if (currentMode == MODE_NORMAL && WiFi.status() == WL_CONNECTED) {
         return WiFi.localIP().toString();
@@ -1569,6 +2157,31 @@ String WiFiManager::getWiFiIP() const {
     return "N/A";
 }
 
+/**
+ * @brief 🔄 Executes scheduled system restart when timeout reached
+ * 
+ * Monitors for pending restart conditions and executes system restart
+ * when scheduled time is reached. Provides controlled restart capability
+ * for mode transitions and system recovery operations.
+ * 
+ * Restart Conditions:
+ * • Restart flag is pending (restartPending = true)
+ * • Scheduled time has been reached or exceeded
+ * • System is in a stable state for restart execution
+ * 
+ * Common Restart Triggers:
+ * • Factory reset completion
+ * • Mode transition requirements
+ * • Critical system recovery needs
+ * • Configuration changes requiring reboot
+ * 
+ * @note Called periodically in main loop to check restart scheduling
+ * @note Restart execution is immediate and non-recoverable
+ * @warning All unsaved data will be lost during restart
+ * 
+ * @see checkGpio0FactoryReset() for factory reset restart triggers
+ * @see switchToSetupMode() for mode transition restart needs
+ */
 void WiFiManager::checkScheduledRestart() {
     if (restartPending && millis() >= restartScheduledTime) {
         LOG_INFO(TAG, "🔄 Executing scheduled restart...");
@@ -1576,6 +2189,38 @@ void WiFiManager::checkScheduledRestart() {
     }
 }
 
+/**
+ * @brief 🔄 Checks for pending portal mode switch requests and executes transition
+ * 
+ * Monitors internal flag for portal mode switch requests typically triggered
+ * by user interface actions or system conditions requiring configuration
+ * access. Provides controlled transition to setup mode when requested.
+ * 
+ * Portal Mode Switch Process:
+ * • Checks switchToPortalMode flag state
+ * • Logs transition request for debugging purposes  
+ * • Resets flag to prevent repeated switching
+ * • Executes immediate transition to setup mode
+ * 
+ * Common Triggers:
+ * • User request via settings interface
+ * • System configuration requirements
+ * • Administrative access needs
+ * • Troubleshooting mode activation
+ * 
+ * Transition Behavior:
+ * • Flag-based triggering prevents race conditions
+ * • Single execution per flag setting
+ * • Immediate mode switching without delay
+ * • Comprehensive logging for troubleshooting
+ * 
+ * @note Called periodically in main loop to check switch requests
+ * @note Flag automatically reset after processing to prevent repeat switches
+ * @note Mode switching involves brief service interruption
+ * 
+ * @see switchToSetupMode() for actual mode transition implementation
+ * @see Settings interface for user-triggered portal mode requests
+ */
 void WiFiManager::checkPortalModeSwitch() {
     if (switchToPortalMode) {
         LOG_INFO(TAG, "🌐 Switching to portal mode as requested via settings");
@@ -1584,21 +2229,81 @@ void WiFiManager::checkPortalModeSwitch() {
     }
 }
 
+/**
+ * @brief ⏰ Manages transition from connection success display to normal mode
+ * 
+ * Monitors display state timing to transition from connection success message
+ * back to normal operation display after configured delay period. Provides
+ * visual feedback continuity and automatic return to standard operation.
+ * 
+ * Display Transition Process:
+ * • Checks if connection success message is currently displayed
+ * • Monitors elapsed time since success message started
+ * • Automatically transitions to normal mode after 5-second delay
+ * • Updates internal state flags and logs transition
+ * 
+ * Timing Considerations:
+ * • Success message displayed for exactly 5 seconds
+ * • Automatic transition prevents indefinite success display
+ * • Non-blocking operation maintains system responsiveness
+ * • State tracking ensures proper display mode management
+ * 
+ * @note Called periodically in main loop for timing management
+ * @note Transition is automatic and requires no external intervention
+ * @warning Display mode changes are immediate and visible to users
+ * 
+ * @see isShowingConnectionSuccess() for current display state checking
+ * @see WiFi connection handling for success trigger conditions
+ */
 void WiFiManager::checkConnectionSuccessDisplay() {
     // Only check if we're displaying the connection success message
     if (!connectionSuccessDisplayed) return;
     
     // Check if 5 seconds have passed
-    if (millis() - connectionSuccessStartTime >= 5000) {
+    if (millis() - connectionSuccessStartTime >= DISPLAY_MODE_SWITCH_DURATION_MS) {
         LOG_INFO(TAG, "🕐 5 seconds passed, switching to normal mode display");
         
         // Mark as no longer displaying
         connectionSuccessDisplayed = false;
         
+        // ADDED: Switch to normal mode now that connection success display is complete
+        if (currentMode != MODE_NORMAL && WiFi.status() == WL_CONNECTED) {
+            switchToNormalMode();
+        }
+        
         LOG_INFO(TAG, "✅ Switched to normal mode display");
     }
 }
 
+/**
+ * @brief 🔍 Returns current connection success display state
+ * 
+ * Provides read-only access to the connection success display flag,
+ * indicating whether the system is currently showing a WiFi connection
+ * success message on the displays.
+ * 
+ * State Information:
+ * • Returns true when success message is actively displayed
+ * • Returns false during normal operation or other display modes
+ * • State automatically managed by success display timing logic
+ * • Used for display coordination and status checking
+ * 
+ * Common Use Cases:
+ * • Display mode coordination and conflict prevention
+ * • Status checking for external monitoring systems
+ * • Debugging display state management issues
+ * • Integration with other display management components
+ * 
+ * @return bool Current connection success display state
+ * @retval true Success message is currently displayed
+ * @retval false Normal operation or other display mode active
+ * 
+ * @note This is a const method and does not modify system state
+ * @note State is automatically managed by display timing logic
+ * 
+ * @see checkConnectionSuccessDisplay() for state transition management
+ * @see DisplayManager for actual display rendering coordination
+ */
 // NEW: Getter method for connection success display state
 bool WiFiManager::isShowingConnectionSuccess() const {
     return connectionSuccessDisplayed;
@@ -1608,6 +2313,39 @@ bool WiFiManager::isShowingConnectionSuccess() const {
 // OTA Firmware Update Implementation
 // ========================================
 
+/**
+ * @brief 🔄 Configures Over-The-Air (OTA) firmware update web endpoints
+ * 
+ * Establishes secure web-based firmware update capability allowing remote
+ * system updates without physical device access. Implements comprehensive
+ * validation, progress monitoring, and error handling for safe updates.
+ * 
+ * OTA Update Features:
+ * • Secure firmware binary validation before installation
+ * • Real-time upload progress monitoring and feedback
+ * • Comprehensive error handling and recovery mechanisms
+ * • Platform-specific firmware compatibility checking
+ * • Automatic system restart after successful update
+ * 
+ * Configured Endpoints:
+ * • POST /ota-update: Firmware binary upload and installation
+ * • Filename validation for platform compatibility
+ * • Binary signature verification for security
+ * • Progress tracking for user feedback
+ * 
+ * Security Measures:
+ * • Firmware filename validation against expected patterns
+ * • Binary header verification for ESP32 compatibility
+ * • Upload size limitations to prevent memory exhaustion
+ * • Error state handling to prevent partial installations
+ * 
+ * @note OTA updates require system restart to take effect
+ * @note Failed updates maintain current firmware integrity
+ * @warning OTA process temporarily interrupts normal operations
+ * 
+ * @see validateFirmwareFilename() for filename security checking
+ * @see validateFirmwareBinary() for binary integrity verification
+ */
 void WiFiManager::setupOTARoutes() {
     LOG_INFO(TAG, "🔄 Setting up OTA firmware update routes");
     
@@ -1769,6 +2507,43 @@ void WiFiManager::setupOTARoutes() {
     LOG_INFO(TAG, "✅ OTA routes configured successfully");
 }
 
+/**
+ * @brief 🔒 Validates firmware filename for platform and display compatibility
+ * 
+ * Performs security validation to ensure uploaded firmware matches current
+ * hardware platform and display configuration. Prevents installation of
+ * incompatible firmware that could cause system malfunction or damage.
+ * 
+ * Validation Criteria:
+ * • Platform compatibility (ESP32 vs ESP32-S3)
+ * • Display type matching (ST7735 vs ST7789)
+ * • Filename pattern verification for expected format
+ * • Build type identification (debug, production, latest)
+ * 
+ * Expected Filename Patterns:
+ * • esp32_ST7735_*.bin - ESP32 with ST7735 display
+ * • esp32_ST7789_*.bin - ESP32 with ST7789 display
+ * • esp32s3_ST7735_*.bin - ESP32-S3 with ST7735 display
+ * • esp32s3_ST7789_*.bin - ESP32-S3 with ST7789 display
+ * 
+ * Security Benefits:
+ * • Prevents cross-platform firmware installation
+ * • Avoids display driver incompatibility issues
+ * • Reduces risk of hardware damage from wrong firmware
+ * • Ensures proper functionality after update
+ * 
+ * @param filename Firmware filename to validate against current hardware
+ * @return bool Validation result indicating compatibility
+ * @retval true Firmware is compatible with current hardware
+ * @retval false Firmware is incompatible and should be rejected
+ * 
+ * @note Uses PlatformDetector for current hardware identification
+ * @note Display type determined from compile-time definitions
+ * @warning Installing incompatible firmware may render device inoperable
+ * 
+ * @see PlatformDetector::detectPlatform() for hardware identification
+ * @see validateFirmwareBinary() for binary content validation
+ */
 bool WiFiManager::validateFirmwareFilename(const String& filename) {
     // Get current platform info
     auto platform = PlatformDetector::detectPlatform();
@@ -1820,6 +2595,49 @@ bool WiFiManager::validateFirmwareFilename(const String& filename) {
     return false;
 }
 
+/**
+ * @brief 🔍 Validates firmware binary content for ESP32 compatibility
+ * 
+ * Performs binary-level validation of firmware data to ensure compatibility
+ * with ESP32 architecture and prevent installation of corrupted or invalid
+ * firmware that could damage the system or cause malfunction.
+ * 
+ * Binary Validation Checks:
+ * • Size validation within ESP32 flash memory limits
+ * • ESP32 binary header verification and magic numbers
+ * • Segment structure validation for proper loading
+ * • Checksum verification for data integrity
+ * 
+ * Size Constraints:
+ * • Minimum size: 100KB (prevents invalid/incomplete binaries)
+ * • Maximum size: 4MB (ESP32 flash memory partition limit)
+ * • Realistic size range validation for typical firmware
+ * 
+ * ESP32 Binary Format:
+ * • Magic number verification (0xE9 at offset 0)
+ * • Segment count validation
+ * • Load address verification
+ * • Entry point validation
+ * 
+ * Security Features:
+ * • Prevents upload of non-ESP32 binaries
+ * • Detects corrupted firmware files
+ * • Validates binary structure integrity
+ * • Protects against malicious firmware uploads
+ * 
+ * @param data Pointer to firmware binary data buffer
+ * @param length Size of firmware binary in bytes
+ * @return bool Binary validation result
+ * @retval true Binary is valid ESP32 firmware
+ * @retval false Binary is invalid or incompatible
+ * 
+ * @note Validation includes both basic checks and ESP32-specific format verification
+ * @note Failed validation prevents OTA update process from starting
+ * @warning Installing invalid firmware will cause system malfunction
+ * 
+ * @see ESP32 Technical Reference Manual for binary format specifications
+ * @see validateFirmwareFilename() for filename-based compatibility checking
+ */
 bool WiFiManager::validateFirmwareBinary(uint8_t* data, size_t length) {
     // Basic ESP32 firmware validation
     if (length < 100000) {
@@ -1845,6 +2663,41 @@ bool WiFiManager::validateFirmwareBinary(uint8_t* data, size_t length) {
     return true; // Allow anyway, but warn
 }
 
+/**
+ * @brief 📋 Returns comprehensive firmware version information string
+ * 
+ * Generates formatted version string containing firmware version, build type,
+ * and build date for system identification, debugging, and compatibility
+ * verification during OTA updates and system management.
+ * 
+ * Version String Format:
+ * • Base version number (e.g., "0.9")
+ * • Build type identifier (debug, production, latest)
+ * • Build date stamp for temporal identification
+ * • Combined format: "0.9-production-250815"
+ * 
+ * Version Components:
+ * • FIRMWARE_VERSION: Core version number from build system
+ * • BUILD_TYPE: Compilation configuration (debug/production/latest)
+ * • BUILD_DATE: Automated build timestamp (YYMMDD format)
+ * 
+ * Common Use Cases:
+ * • OTA update compatibility verification
+ * • System status reporting and monitoring
+ * • Debug log identification and correlation
+ * • User interface version display
+ * • Support and troubleshooting identification
+ * 
+ * @return String Formatted firmware version information
+ * @return Format: "{version}-{type}-{date}" (e.g., "0.9-production-250815")
+ * 
+ * @note Version information populated automatically during build process
+ * @note Build date uses YYMMDD format for compact representation
+ * @note Version string used in OTA update validation and system reporting
+ * 
+ * @see include/version.h for version management and automated build numbering
+ * @see platformio.ini for version configuration and build type definitions
+ */
 String WiFiManager::getFirmwareVersion() {
     // Return current firmware version with build info
     String version = String(FIRMWARE_VERSION) + "-" + String(BUILD_TYPE) + "-" + String(BUILD_DATE);

@@ -25,7 +25,7 @@
  * - ST7789 TFT displays (240x240)
  * 
  * @author Dual Display Billboard Project
- * @version 2.0
+ * @version 0.9
  * @date 2025
  */
 
@@ -184,23 +184,24 @@ void loop() {
 
 #else
 // Full Billboard System with WiFi + Display Integration
+#include <LittleFS.h>               // Filesystem for persistent storage
 #include "logger.h"
 #include "display_manager.h"
-#include "wifi_manager.h"           // ADD: WiFi management
-#include "credential_manager.h"     // ADD: Credential storage
-#include "time_manager.h"           // ADD: Time management
-#include "settings_manager.h"       // ADD: Settings management
-#include "image_manager.h"          // ADD: Image management
-#include "slideshow_manager.h"      // ADD: Slideshow management
-#include "display_clock_manager.h"  // ADD: Clock management
-#include "dcc_manager.h"            // ADD: DCC management
-#include "memory_manager.h"         // ADD: Memory monitoring
-#include "platform_detector.h"      // ADD: Multiplatform detection
+#include "wifi_manager.h"           // WiFi management
+#include "credential_manager.h"     // Credential storage
+#include "time_manager.h"           // Time management
+#include "settings_manager.h"       // Settings management
+#include "image_manager.h"          // Image management
+#include "slideshow_manager.h"      // Slideshow management
+#include "display_clock_manager.h"  // Clock management
+#include "dcc_manager.h"            // DCC management
+#include "memory_manager.h"         // Memory monitoring
+#include "platform_detector.h"      // Multiplatform detection
 #include "config.h"
 
-// Create instances
+// Create system component instances
 DisplayManager displayManager;
-AsyncWebServer server(80);          // ADD: Web server
+AsyncWebServer server(80);          // Web server for portal and API
 
 // Configure TCP settings to reduce timeout errors
 void configureTCPSettings() {
@@ -211,14 +212,15 @@ void configureTCPSettings() {
     yield();
 }
 
-TimeManager timeManager;            // ADD: Time manager
-SettingsManager settingsManager;    // ADD: Settings manager
-ImageManager imageManager(&displayManager);  // ADD: Image manager
-DisplayClockManager clockManager(&displayManager, &timeManager);  // ADD: Clock manager
-SlideshowManager slideshowManager(&imageManager, &settingsManager, &clockManager);  // ADD: Slideshow manager
-DCCManager dccManager(&settingsManager, &slideshowManager);  // ADD: DCC manager
-WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager, &imageManager, &slideshowManager, &dccManager);   // ADD: WiFi manager with all components
-CredentialManager credentialManager; // ADD: Credential manager
+// System component instances with dependency injection
+TimeManager timeManager;
+SettingsManager settingsManager;
+ImageManager imageManager(&displayManager);
+DisplayClockManager clockManager(&displayManager, &timeManager);
+SlideshowManager slideshowManager(&imageManager, &settingsManager, &clockManager);
+DCCManager dccManager(&settingsManager, &slideshowManager);
+WiFiManager wifiManager(&server, &timeManager, &settingsManager, &displayManager, &imageManager, &slideshowManager, &dccManager);
+CredentialManager credentialManager;
 
 // Timing variables using config.h constants
 unsigned long lastHeartbeat = 0;
@@ -229,6 +231,7 @@ bool systemInitialized = false;
 bool wifiInitialized = false;
 bool displayInitialized = false;
 bool timeInitialized = false;
+bool secondDisplaySettingApplied = false;  // Track if second display setting has been applied post-splash
 
 void setup() {
     // Initialize logging first
@@ -236,7 +239,7 @@ void setup() {
     
     startupTime = millis();
     
-    LOG_INFO("MAIN", "DUAL DISPLAY BILLBOARD SYSTEM v2.0");
+    LOG_INFO("MAIN", "DUAL DISPLAY BILLBOARD SYSTEM v0.9");
     LOG_SYSTEM_INFO();
     
     LOG_INFO("MAIN", "System startup initiated");
@@ -294,9 +297,24 @@ void loop() {
         if (!wifiInitialized && displayInitialized) {
             LOG_INFO("MAIN", "Initializing WiFi subsystem...");
             
+            // Initialize LittleFS filesystem with formatting enabled
+            if (!LittleFS.begin(true)) {
+                LOG_ERROR("MAIN", "LittleFS initialization failed");
+            } else {
+                LOG_INFO("MAIN", "LittleFS filesystem initialized");
+            }
+            
             // Initialize credential manager
             if (credentialManager.begin()) {
                 LOG_INFO("MAIN", "Credential manager initialized");
+                
+                // File logging disabled for ESP32 - Serial logging is sufficient
+                // This eliminates LittleFS errors and saves flash memory
+                // if (Logger::enableFileLogging("/logs/system.log")) {
+                //     LOG_INFO("MAIN", "📁 File logging enabled to /logs/system.log");
+                // } else {
+                //     LOG_WARN("MAIN", "⚠️ File logging could not be enabled - continuing with Serial only");
+                // }
             } else {
                 LOG_ERROR("MAIN", "Credential manager failed");
             }
@@ -368,22 +386,20 @@ void loop() {
         
         // Step 4: System ready
         if (displayInitialized && wifiInitialized) {
-            // Enable second display based on saved setting
+#ifndef ESP32S3_MODE
+            // ESP32: Apply second display setting immediately (original working behavior)
             displayManager.enableSecondDisplay(settingsManager.isSecondDisplayEnabled());
+            LOG_INFOF("MAIN", "🎯 ESP32: Applied second display setting immediately: %s", 
+                     settingsManager.isSecondDisplayEnabled() ? "enabled" : "disabled");
+#else
+            // ESP32S3: Second display setting will be applied after splash screen completes
+            // This ensures splash shows on both displays regardless of user settings
+            LOG_INFO("MAIN", "🎯 ESP32S3: Deferring second display setting until after splash completion");
+#endif
             
-            // Set initial brightness based on saved setting
-            uint8_t savedBrightness = settingsManager.getBrightness();
-            bool secondDisplayEnabled = settingsManager.isSecondDisplayEnabled();
-            if (secondDisplayEnabled) {
-                // Both displays enabled
-                displayManager.setBrightness(savedBrightness, 0); // 0 = both displays
-                LOG_INFOF("MAIN", "Initial brightness set to %d for both displays", savedBrightness);
-            } else {
-                // Only first display enabled
-                displayManager.setBrightness(savedBrightness, 1); // 1 = first display only
-                displayManager.setBrightness(0, 2); // Turn off second display backlight
-                LOG_INFOF("MAIN", "Initial brightness set to %d for first display only", savedBrightness);
-            }
+            // Integrate SettingsManager with DisplayManager for immediate brightness application
+            settingsManager.setDisplayManager(&displayManager);
+            LOG_INFO("MAIN", "🔗 SettingsManager-DisplayManager integration enabled for immediate brightness control");
             
             systemInitialized = true;
             lastHeartbeat = currentTime;
@@ -398,6 +414,37 @@ void loop() {
     if (systemInitialized) {
         // Handle splash screen transitions (non-blocking)
         displayManager.updateSplashScreen();
+        
+        // ESP32S3-specific: Apply second display setting after splash completes
+        // This ensures splash shows on both displays regardless of user settings
+#ifdef ESP32S3_MODE
+        if (!secondDisplaySettingApplied && !displayManager.isSplashActive()) {
+            // Splash has completed, now apply the saved second display setting
+            displayManager.enableSecondDisplay(settingsManager.isSecondDisplayEnabled());
+            // Also apply the brightness setting that was deferred during splash
+            if (!settingsManager.isSecondDisplayEnabled()) {
+                displayManager.setBrightness(0, 2);  // Turn off Display 2 brightness
+                LOG_INFO("MAIN", "🎯 ESP32S3: Applied deferred Display 2 brightness setting (turned off)");
+            }
+            secondDisplaySettingApplied = true;
+            LOG_INFOF("MAIN", "🎯 ESP32S3: Applied second display setting after splash completion: %s", 
+                     settingsManager.isSecondDisplayEnabled() ? "enabled" : "disabled");
+        }
+#endif
+        
+        // Initialize time system if not already done and now in normal mode
+        if (!timeInitialized && wifiInitialized && 
+            wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL) {
+            LOG_INFO("MAIN", "Initializing time subsystem...");
+            
+            if (timeManager.begin()) {
+                LOG_INFO("MAIN", "Time manager initialized");
+                timeInitialized = true;
+            } else {
+                LOG_WARN("MAIN", "Time manager initialization failed");
+                timeInitialized = true; // Continue without time sync
+            }
+        }
         
         // WiFi management (non-blocking)
         wifiManager.checkConnectionStatus();

@@ -1,11 +1,13 @@
 # Display Pin Configuration Reference
 
 ## Overview
+
 This document provides the complete pin configuration for connecting ST7735 displays to ESP32 and ESP32-S3 boards in the dual display billboard system.
 
 ## Pin Assignments
 
 ### ESP32-S3 (ESP32S3_MODE)
+
 Used for ESP32-S3-N8R2 modules with your specified pinout
 
 | Function | Pin | GPIO | Description |
@@ -42,7 +44,8 @@ GPIO 8  (BL2)   →    ─            →    BLK
 ## Step-by-Step Wiring Guide - ESP32-S3
 
 ### Power Connections (Do These First!)
-```
+
+```text
 ⚡ CRITICAL: Use 3.3V only - 5V will damage displays!
 
 Step 1: Power Rails
@@ -51,7 +54,8 @@ ESP32-S3 GND   →  Breadboard - rail  →  Both Display GND pins
 ```
 
 ### SPI Bus Connections (Shared Between Displays)
-```
+
+```text
 🔗 These pins connect to BOTH displays:
 
 Step 2: SPI Data & Clock
@@ -64,7 +68,8 @@ ESP32-S3 GPIO 14 (DC)    →  Display 1 DC   →  Display 2 DC
 ```
 
 ### Individual Display Connections
-```
+
+```text
 🎯 These pins are unique for each display:
 
 Step 4: Display 1 Only
@@ -93,6 +98,7 @@ ESP32-S3 GPIO 8   →  Display 2 BLK pin
 ## ST7735 Display Wiring
 
 ### Display Module Pins (typical ST7735 breakout)
+
 - **VCC** → 3.3V (DO NOT use 5V)
 - **GND** → Ground
 - **SCL/SCLK** → SPI Clock pin (GPIO 12 for ESP32-S3, GPIO 18 for ESP32)
@@ -102,8 +108,9 @@ ESP32-S3 GPIO 8   →  Display 2 BLK pin
 - **CS** → GPIO 10 (Display 1) or GPIO 39 (Display 2) for ESP32-S3
 - **BLK/LED** → GPIO 7 (Display 1) or GPIO 8 (Display 2) for ESP32-S3
 
-### Connection Example for ESP32-S3:
-```
+### Connection Example for ESP32-S3
+
+```text
 Display 1:
   VCC  → 3.3V
   GND  → GND
@@ -128,21 +135,25 @@ Display 2:
 ## Notes
 
 ### Power Requirements
+
 - **Voltage**: 3.3V only - DO NOT connect to 5V
 - **Current**: Each display draws ~20-50mA depending on content and backlight
 - **Total system**: ~100-150mA for dual displays
 
 ### SPI Configuration
+
 - **Mode**: SPI Mode 0 (CPOL=0, CPHA=0)
 - **Speed**: 40MHz (optimized for ST7735)
 - **Bit Order**: MSB First
 
 ### Display Specifications
+
 - **Resolution**: 160x80 pixels (ST7735_GREENTAB160x80)
 - **Color**: 16-bit RGB565
 - **Orientation**: Portrait (80x160) or Landscape (160x80)
 
 ### Troubleshooting
+
 1. **No display**: Check power (3.3V), connections, and CS pins
 2. **Garbled display**: Verify SPI pins (MOSI, SCLK, DC)
 3. **Wrong colors**: Check RGB order in configuration
@@ -151,12 +162,14 @@ Display 2:
 ## Hardware Testing Checklist
 
 ### Before Power-On
+
 - [ ] Verify all connections match pin table above
 - [ ] Confirm 3.3V power (NOT 5V)
 - [ ] Check for short circuits
 - [ ] Ensure CS pins are correctly connected (different for each display)
 
 ### After Power-On
+
 - [ ] Check system boots correctly (serial monitor)
 - [ ] Verify display initialization messages in log
 - [ ] Test backlight control (displays should light up)
@@ -164,12 +177,15 @@ Display 2:
 - [ ] Test image upload and display functionality
 
 ### Common Issues
+
 - **ESP32-S3 specific**: Ensure PSRAM is working (check serial log for memory info)
 - **Pin conflicts**: GPIO 39 on ESP32-S3 is input-only on some boards - verify your board supports output on GPIO 39
 - **Power**: Insufficient power can cause boot loops or display corruption
 
 ## Configuration Validation
+
 Current pin configuration is automatically selected based on the build environment:
+
 - **esp32s3-st7735-debug**: Uses ESP32-S3 pinout
 - **esp32dev-st7735-debug**: Uses ESP32 pinout
 

@@ -94,6 +94,7 @@ private:
     static unsigned long lastMonitorTime;
     static unsigned long monitorInterval;
     static bool autoCleanupEnabled;
+    static bool monitoringEnabled;  // NEW: Allow temporary monitoring disable
     static size_t heapSampleCount;
     static size_t heapSampleSum;
 
@@ -171,6 +172,12 @@ public:
      * @param enabled true to enable automatic cleanup, false to disable
      */
     static void setAutoCleanup(bool enabled);
+
+    /**
+     * @brief Enable or disable memory monitoring (for critical operations)
+     * @param enabled true to enable monitoring, false to disable temporarily
+     */
+    static void setMonitoringEnabled(bool enabled);
 
     /**
      * @brief Set memory monitoring interval
