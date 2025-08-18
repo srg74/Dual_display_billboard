@@ -68,6 +68,12 @@ GENERATE_HTML          = YES
 HTML_OUTPUT            = html
 HTML_TIMESTAMP         = YES
 GENERATE_TREEVIEW      = YES
+# Force HTML5 output instead of XHTML
+HTML_DYNAMIC_MENUS     = YES
+HTML_DYNAMIC_SECTIONS  = YES
+# Disable XHTML-specific features
+DISABLE_INDEX          = NO
+ENUM_VALUES_PER_LINE   = 4
 SEARCHENGINE           = YES
 
 #---------------------------------------------------------------------------
