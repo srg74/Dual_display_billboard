@@ -3,8 +3,8 @@
 #---------------------------------------------------------------------------
 # Project related configuration options
 #---------------------------------------------------------------------------
-PROJECT_NAME           = "ESP32 Dual Display Billboard"
-PROJECT_NUMBER         = "v1.2"
+PROJECT_NAME           = "Dual Display Billboard"
+PROJECT_NUMBER         = "v0.9"
 PROJECT_BRIEF          = "ESP32-based dual display billboard system"
 OUTPUT_DIRECTORY       = docs/generated
 OUTPUT_LANGUAGE        = English
