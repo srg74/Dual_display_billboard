@@ -1,0 +1,37 @@
+<map id="include/display_manager.h" name="include/display_manager.h">
+<area shape="rect" id="Node000001" title="Hardware abst // Hardware pin definitions &#45; platform specific #if defined(ESP32S3_MODE) ESP32&#45;S3 pino..." alt="" coords="845,5,1041,31"/>
+<area shape="rect" id="Node000002" href="$display__clock__manager_8h.html" title="Professional clock display system with multiple face styles for dual display billboard." alt="" coords="301,79,462,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="848,35,462,89,462,83,847,30"/>
+<area shape="rect" id="Node000005" href="$main_8cpp.html" title="Dual Display Billboard System &#45; Multi&#45;Mode Application Entry Point." alt="" coords="250,240,355,265"/>
+<area shape="poly" id="edge19_Node000001_Node000005" title=" " alt="" coords="831,21,621,26,497,34,372,47,253,66,148,91,103,107,65,125,35,146,13,168,8,179,13,190,28,202,51,213,113,229,185,240,250,246,249,251,184,245,112,234,49,218,25,207,8,194,3,179,8,165,31,142,63,121,101,102,146,86,252,60,371,42,497,29,620,21,831,16"/>
+<area shape="rect" id="Node000007" href="$wifi__manager_8cpp.html" title="🌐 ESP32 Dual Display Billboard &#45; Advanced WiFi Management System v0.9" alt="" coords="819,240,978,265"/>
+<area shape="poly" id="edge21_Node000001_Node000007" title=" " alt="" coords="963,40,983,71,1001,110,1010,152,1007,173,1000,193,987,210,971,224,936,242,934,237,968,219,983,206,995,191,1002,172,1004,152,996,112,978,74,958,43"/>
+<area shape="rect" id="Node000009" href="$image__manager_8h.html" title="Manages JPEG image storage, validation, and display for dual TFT displays." alt="" coords="605,86,795,111"/>
+<area shape="poly" id="edge9_Node000001_Node000009" title=" " alt="" coords="895,37,736,89,734,83,893,32"/>
+<area shape="rect" id="Node000010" href="$wifi__manager_8h.html" title="Advanced WiFi management system with dual&#45;mode operation for ESP32 dual display billboard." alt="" coords="813,167,985,192"/>
+<area shape="poly" id="edge16_Node000001_Node000010" title=" " alt="" coords="938,44,904,167,899,166,933,43"/>
+<area shape="rect" id="Node000012" href="$config__validator_8cpp.html" title="Comprehensive multiplatform configuration validation system implementation." alt="" coords="1042,86,1217,111"/>
+<area shape="poly" id="edge17_Node000001_Node000012" title=" " alt="" coords="983,33,1103,84,1101,88,981,38"/>
+<area shape="rect" id="Node000013" href="$display__manager_8cpp.html" title=" " alt="" coords="1241,86,1423,111"/>
+<area shape="poly" id="edge18_Node000001_Node000013" title=" " alt="" coords="1013,31,1276,83,1275,89,1012,36"/>
+<area shape="rect" id="Node000014" href="$settings__manager_8cpp.html" title="Implementation of comprehensive configuration persistence system with hardware integration." alt="" coords="1447,86,1635,111"/>
+<area shape="poly" id="edge20_Node000001_Node000014" title=" " alt="" coords="1055,28,1234,49,1436,76,1481,83,1480,89,1435,81,1233,54,1054,34"/>
+<area shape="rect" id="Node000003" href="$slideshow__manager_8h.html" title="Advanced image slideshow system with clock integration for dual display billboard." alt="" coords="373,167,587,192"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="417,125,467,164,463,168,414,129"/>
+<area shape="poly" id="edge8_Node000002_Node000005" title=" " alt="" coords="348,130,331,148,318,168,307,206,305,240,300,240,302,205,313,166,327,144,344,126"/>
+<area shape="rect" id="Node000008" href="$display__clock__manager_8cpp.html" title="Advanced clock display system with multiple face styles and dual display support." alt="" coords="23,167,247,192"/>
+<area shape="poly" id="edge7_Node000002_Node000008" title=" " alt="" coords="310,125,171,169,170,164,308,120"/>
+<area shape="rect" id="Node000004" href="$dcc__manager_8cpp.html" title="Digital Command Control (DCC) interface implementation for model railway integration." alt="" coords="605,240,763,265"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="526,194,652,237,650,242,525,199"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="440,200,333,242,331,237,438,195"/>
+<area shape="rect" id="Node000006" href="$slideshow__manager_8cpp.html" title="🎯 Advanced slideshow management system with clock integration and DCC control" alt="" coords="379,240,581,265"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="483,206,483,240,477,240,477,206"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="561,192,832,237,831,243,560,197"/>
+<area shape="poly" id="edge10_Node000009_Node000003" title=" " alt="" coords="656,118,513,169,511,164,654,113"/>
+<area shape="poly" id="edge15_Node000009_Node000005" title=" " alt="" coords="591,115,458,137,401,152,361,169,343,185,328,205,309,241,305,239,324,202,339,181,358,164,399,147,457,132,591,110"/>
+<area shape="poly" id="edge11_Node000009_Node000010" title=" " alt="" coords="743,114,871,164,869,169,741,119"/>
+<area shape="rect" id="Node000011" href="$image__manager_8cpp.html" title="Implementation of comprehensive image management system." alt="" coords="611,167,789,192"/>
+<area shape="poly" id="edge14_Node000009_Node000011" title=" " alt="" coords="703,125,703,166,697,166,697,125"/>
+<area shape="poly" id="edge12_Node000010_Node000005" title=" " alt="" coords="799,195,581,217,367,243,356,244,355,239,366,237,580,211,799,189"/>
+<area shape="poly" id="edge13_Node000010_Node000007" title=" " alt="" coords="901,206,901,240,896,240,896,206"/>
+</map>

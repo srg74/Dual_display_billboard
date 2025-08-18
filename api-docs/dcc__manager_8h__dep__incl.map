@@ -1,0 +1,9 @@
+<map id="include/dcc_manager.h" name="include/dcc_manager.h">
+<area shape="rect" id="Node000001" title="Digital Command Control (DCC) interface for model railway integration." alt="" coords="155,5,326,31"/>
+<area shape="rect" id="Node000002" href="$dcc__manager_8cpp.html" title="Digital Command Control (DCC) interface implementation for model railway integration." alt="" coords="5,79,164,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="204,39,111,81,109,76,202,34"/>
+<area shape="rect" id="Node000003" href="$main_8cpp.html" title="Dual Display Billboard System &#45; Multi&#45;Mode Application Entry Point." alt="" coords="188,79,293,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="243,44,243,79,238,79,238,44"/>
+<area shape="rect" id="Node000004" href="$wifi__manager_8cpp.html" title="🌐 ESP32 Dual Display Billboard &#45; Advanced WiFi Management System v0.9" alt="" coords="317,79,476,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="279,34,372,76,370,81,277,39"/>
+</map>

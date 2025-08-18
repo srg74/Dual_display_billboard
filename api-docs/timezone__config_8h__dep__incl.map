@@ -1,0 +1,29 @@
+<map id="include/timezone_config.h" name="include/timezone_config.h">
+<area shape="rect" id="Node000001" title="User&#45;configurable timezone definitions for the dual display billboard system." alt="" coords="671,5,863,31"/>
+<area shape="rect" id="Node000002" href="$time__manager_8h.html" title="Professional time management system for ESP32 dual display billboard." alt="" coords="615,79,793,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="749,43,716,80,712,77,745,39"/>
+<area shape="rect" id="Node000011" href="$time__manager_8cpp.html" title="Professional time management implementation for ESP32 dual display billboard." alt="" coords="793,159,959,185"/>
+<area shape="poly" id="edge16_Node000001_Node000011" title=" " alt="" coords="785,40,870,158,866,161,781,43"/>
+<area shape="rect" id="Node000003" href="$display__clock__manager_8h.html" title="Professional clock display system with multiple face styles for dual display billboard." alt="" coords="358,152,519,192"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="653,110,503,154,502,149,651,105"/>
+<area shape="rect" id="Node000006" href="$main_8cpp.html" title="Dual Display Billboard System &#45; Multi&#45;Mode Application Entry Point." alt="" coords="623,313,729,339"/>
+<area shape="poly" id="edge14_Node000002_Node000006" title=" " alt="" coords="717,116,728,147,736,185,738,226,730,266,713,294,693,315,689,311,709,291,726,264,733,226,731,186,722,148,712,118"/>
+<area shape="rect" id="Node000009" href="$display__clock__manager_8cpp.html" title="Advanced clock display system with multiple face styles and dual display support." alt="" coords="5,240,229,265"/>
+<area shape="poly" id="edge13_Node000002_Node000009" title=" " alt="" coords="601,106,478,124,346,155,286,175,228,199,140,242,138,237,226,195,284,170,345,149,477,119,600,100"/>
+<area shape="rect" id="Node000010" href="$wifi__manager_8h.html" title="Advanced WiFi management system with dual&#45;mode operation for ESP32 dual display billboard." alt="" coords="545,240,717,265"/>
+<area shape="poly" id="edge10_Node000002_Node000010" title=" " alt="" coords="695,118,639,241,634,238,691,115"/>
+<area shape="poly" id="edge15_Node000002_Node000011" title=" " alt="" coords="742,107,852,157,850,162,740,112"/>
+<area shape="rect" id="Node000004" href="$slideshow__manager_8h.html" title="Advanced image slideshow system with clock integration for dual display billboard." alt="" coords="254,240,469,265"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="412,204,375,242,371,238,409,200"/>
+<area shape="poly" id="edge9_Node000003_Node000006" title=" " alt="" coords="465,201,496,233,533,263,587,291,638,311,636,316,585,296,531,268,492,237,461,204"/>
+<area shape="poly" id="edge8_Node000003_Node000009" title=" " alt="" coords="349,198,165,243,164,237,348,193"/>
+<area shape="rect" id="Node000005" href="$dcc__manager_8cpp.html" title="Digital Command Control (DCC) interface implementation for model railway integration." alt="" coords="33,313,191,339"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="309,272,153,316,152,311,307,267"/>
+<area shape="poly" id="edge5_Node000004_Node000006" title=" " alt="" coords="426,266,626,311,624,316,425,271"/>
+<area shape="rect" id="Node000007" href="$slideshow__manager_8cpp.html" title="🎯 Advanced slideshow management system with clock integration and DCC control" alt="" coords="215,313,417,339"/>
+<area shape="poly" id="edge6_Node000004_Node000007" title=" " alt="" coords="349,279,326,315,321,312,344,276"/>
+<area shape="rect" id="Node000008" href="$wifi__manager_8cpp.html" title="🌐 ESP32 Dual Display Billboard &#45; Advanced WiFi Management System v0.9" alt="" coords="441,313,599,339"/>
+<area shape="poly" id="edge7_Node000004_Node000008" title=" " alt="" coords="400,268,495,311,493,316,398,273"/>
+<area shape="poly" id="edge11_Node000010_Node000006" title=" " alt="" coords="648,276,671,312,666,315,643,279"/>
+<area shape="poly" id="edge12_Node000010_Node000008" title=" " alt="" coords="603,275,540,315,537,311,600,271"/>
+</map>

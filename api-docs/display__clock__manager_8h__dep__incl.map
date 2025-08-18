@@ -1,0 +1,16 @@
+<map id="include/display_clock_manager.h" name="include/display_clock_manager.h">
+<area shape="rect" id="Node000001" title="Professional clock display system with multiple face styles for dual display billboard." alt="" coords="133,5,295,45"/>
+<area shape="rect" id="Node000002" href="$slideshow__manager_8h.html" title="Advanced image slideshow system with clock integration for dual display billboard." alt="" coords="107,93,321,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="217,59,217,93,211,93,211,59"/>
+<area shape="rect" id="Node000004" href="$main_8cpp.html" title="Dual Display Billboard System &#45; Multi&#45;Mode Application Entry Point." alt="" coords="5,167,111,192"/>
+<area shape="poly" id="edge7_Node000001_Node000004" title=" " alt="" coords="153,54,123,72,96,95,83,113,74,132,63,167,58,165,69,130,79,110,92,92,119,68,150,49"/>
+<area shape="rect" id="Node000007" href="$display__clock__manager_8cpp.html" title="Advanced clock display system with multiple face styles and dual display support." alt="" coords="346,93,570,119"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="286,47,423,91,422,96,285,52"/>
+<area shape="rect" id="Node000003" href="$dcc__manager_8cpp.html" title="Digital Command Control (DCC) interface implementation for model railway integration." alt="" coords="135,167,293,192"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="217,132,217,167,211,167,211,132"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="178,127,85,169,82,164,175,122"/>
+<area shape="rect" id="Node000005" href="$slideshow__manager_8cpp.html" title="🎯 Advanced slideshow management system with clock integration and DCC control" alt="" coords="317,167,519,192"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="260,121,386,164,384,169,259,126"/>
+<area shape="rect" id="Node000006" href="$wifi__manager_8cpp.html" title="🌐 ESP32 Dual Display Billboard &#45; Advanced WiFi Management System v0.9" alt="" coords="543,167,701,192"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="293,118,557,164,556,169,292,124"/>
+</map>

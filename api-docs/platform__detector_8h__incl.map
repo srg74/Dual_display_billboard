@@ -1,0 +1,7 @@
+<map id="include/platform_detector.h" name="include/platform_detector.h">
+<area shape="rect" id="Node000001" title="Multiplatform detection and PSRAM capability testing." alt="" coords="11,5,212,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,79,89,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="103,33,69,70,65,67,99,29"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="114,79,237,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="124,29,158,67,154,70,120,33"/>
+</map>

@@ -1,0 +1,25 @@
+<map id="src/time_manager.cpp" name="src/time_manager.cpp">
+<area shape="rect" id="Node000001" title="Professional time management implementation for ESP32 dual display billboard." alt="" coords="261,5,427,31"/>
+<area shape="rect" id="Node000002" href="$time__manager_8h.html" title="Professional time management system for ESP32 dual display billboard." alt="" coords="104,79,232,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="317,33,211,76,209,71,315,28"/>
+<area shape="rect" id="Node000005" href="$timezone__config_8h.html" title="User&#45;configurable timezone definitions for the dual display billboard system." alt="" coords="203,152,344,177"/>
+<area shape="poly" id="edge6_Node000001_Node000005" title=" " alt="" coords="334,33,316,54,298,80,287,110,280,139,275,138,282,108,294,77,311,51,330,29"/>
+<area shape="rect" id="Node000006" href="$logger_8h.html" title="Hierarchical logging system with build&#45;time optimization for ESP32 dual display billboard." alt="" coords="5,79,80,104"/>
+<area shape="poly" id="edge7_Node000001_Node000006" title=" " alt="" coords="296,33,94,81,93,76,295,28"/>
+<area shape="rect" id="Node000007" href="$config_8h.html" title=" " alt="" coords="307,79,381,104"/>
+<area shape="poly" id="edge10_Node000001_Node000007" title=" " alt="" coords="347,31,347,65,341,65,341,31"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="405,79,469,104"/>
+<area shape="poly" id="edge11_Node000001_Node000008" title=" " alt="" coords="361,29,413,68,410,72,357,33"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="493,79,584,104"/>
+<area shape="poly" id="edge12_Node000001_Node000009" title=" " alt="" coords="376,28,495,71,493,76,374,33"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="609,79,701,104"/>
+<area shape="poly" id="edge13_Node000001_Node000010" title=" " alt="" coords="395,28,596,74,595,79,393,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="123,225,207,251"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="170,105,168,212,163,212,165,104"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="45,152,128,177"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="157,106,112,145,108,141,153,102"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="186,102,246,142,244,147,183,106"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="257,180,196,220,193,215,255,175"/>
+<area shape="poly" id="edge8_Node000006_Node000003" title=" " alt="" coords="40,105,30,139,29,158,36,176,50,193,69,206,111,224,109,229,66,211,47,197,31,179,24,159,24,138,35,103"/>
+<area shape="poly" id="edge9_Node000006_Node000004" title=" " alt="" coords="52,103,75,139,70,142,48,106"/>
+</map>
