@@ -26,6 +26,26 @@ jobs:
       run: |
         doxygen Doxyfile
         
+    - name: Create redirect page
+      run: |
+        mkdir -p gh-pages-deploy
+        # Copy documentation to api-docs subdirectory
+        cp -r docs/generated/html gh-pages-deploy/api-docs
+        # Create root index.html that redirects to api-docs
+        cat > gh-pages-deploy/index.html << 'EOF'
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta http-equiv="refresh" content="0; url=api-docs/">
+          <title>ESP32 Dual Display Billboard - Documentation</title>
+        </head>
+        <body>
+          <h1>ESP32 Dual Display Billboard Documentation</h1>
+          <p>Redirecting to <a href="api-docs/">API Documentation</a>...</p>
+        </body>
+        </html>
+        EOF
+        
     - name: Upload documentation artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -38,5 +58,4 @@ jobs:
       uses: peaceiris/actions-gh-pages@v4
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./docs/generated/html
-        destination_dir: api-docs
+        publish_dir: ./gh-pages-deploy
