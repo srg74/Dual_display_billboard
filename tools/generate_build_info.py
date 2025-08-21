@@ -44,10 +44,21 @@ class BuildInfoGenerator:
     def _get_base_version(self):
         """Extract base version from platformio.ini"""
         try:
-            # Get the base version from the common section in platformio.ini
-            return "0.9"  # Set to current version, can be made dynamic later
-        except:
-            return "0.9"  # Fallback version
+            project_dir = self.env.get("PROJECT_DIR", os.getcwd())
+            config_path = os.path.join(project_dir, 'platformio.ini')
+            
+            with open(config_path, 'r') as f:
+                content = f.read()
+                
+            # Look for current_version = x.xx in [common] section
+            import re
+            match = re.search(r'current_version\s*=\s*([0-9.]+)', content)
+            if match:
+                return match.group(1)
+        except Exception as e:
+            print(f"⚠️  Could not read current_version from platformio.ini: {e}")
+            
+        return "0.9"  # Fallback version
             
     def _get_production_build_number(self):
         """Extract manual production build number from platformio.ini"""

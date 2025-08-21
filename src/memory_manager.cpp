@@ -757,11 +757,8 @@ size_t MemoryManager::forceCleanup() {
     
     LOG_INFOF(TAG, "Starting memory cleanup (initial free: %d bytes)", initialFree);
     
-    // 1. Force garbage collection by yielding
-    for (int i = 0; i < 10; i++) {
-        yield();
-        delay(1);
-    }
+    // 1. Force garbage collection by yielding (non-blocking)
+    yield(); // Single yield instead of loop with delays
     
     // 2. Clear any cached data (placeholder for future implementation)
     // This is where we would clear image caches, temporary buffers, etc.
@@ -771,11 +768,8 @@ size_t MemoryManager::forceCleanup() {
     heap_caps_check_integrity_all(true);
     #endif
     
-    // 4. Another round of yielding
-    for (int i = 0; i < 5; i++) {
-        yield();
-        delay(1);
-    }
+    // 4. Final yield (non-blocking)
+    yield(); // Single yield instead of loop with delays
     
     size_t finalFree = ESP.getFreeHeap();
     if (finalFree > initialFree) {

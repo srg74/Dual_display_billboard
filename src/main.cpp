@@ -9,8 +9,19 @@
  * - SAFE_MODE_ONLY: Minimal functionality for troubleshooting
  * - Production Mode: Full billboard system with WiFi, image management, and clock display
  * 
- * FEATURES:
- * - Dual 160x80 ST7735 TFT displays with independent control
+         // Initialize time system once WiFi is connected and in normal mode
+        if (!timeInitialized && wifiInitialized && 
+            wifiManager.getCurrentMode() == WiFiManager::MODE_NORMAL) {
+            LOG_INFO("MAIN", "Initializing time subsystem...");
+            
+            if (timeManager.begin()) {
+                LOG_INFO("MAIN", "Time manager initialized");
+                timeInitialized = true;
+            } else {
+                LOG_WARN("MAIN", "Time manager initialization failed - will retry later");
+                // Don't set timeInitialized = true so it will retry later
+            }
+        }* - Dual 160x80 ST7735 TFT displays with independent control
  * - WiFi management with captive portal setup
  * - JPEG image upload and slideshow functionality
  * - Multiple clock face styles with time synchronization
@@ -441,8 +452,8 @@ void loop() {
                 LOG_INFO("MAIN", "Time manager initialized");
                 timeInitialized = true;
             } else {
-                LOG_WARN("MAIN", "Time manager initialization failed");
-                timeInitialized = true; // Continue without time sync
+                LOG_WARN("MAIN", "Time manager initialization failed - will retry later");
+                // Don't set timeInitialized = true so it will retry later
             }
         }
         
@@ -486,13 +497,17 @@ void loop() {
         // Essential yield for ESP32 responsiveness
         yield();
         
-        // Memory monitoring and health checks
-        MEMORY_UPDATE();
-        
-        // Check for critical memory conditions
-        if (MEMORY_IS_CRITICAL()) {
-            LOG_WARNF("MAIN", "Critical memory condition detected, running cleanup");
-            MEMORY_CLEANUP();
+        // Memory monitoring and health checks (reduced frequency for performance)
+        static unsigned long lastMemoryCheck = 0;
+        if (millis() - lastMemoryCheck >= 10000) { // Check memory only every 10 seconds
+            lastMemoryCheck = millis();
+            MEMORY_UPDATE();
+            
+            // Check for critical memory conditions
+            if (MEMORY_IS_CRITICAL()) {
+                LOG_WARNF("MAIN", "Critical memory condition detected, running cleanup");
+                MEMORY_CLEANUP();
+            }
         }
         
         // Cooperative multitasking - yield more frequently for web server

@@ -309,6 +309,9 @@ void SlideshowManager::loadEnabledImages() {
     
     File file = dir.openNextFile();
     while (file) {
+        // Yield to prevent blocking web server
+        yield();
+        
         if (!file.isDirectory()) {
             String filename = file.name();
             if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {
@@ -470,6 +473,9 @@ std::map<String, bool> SlideshowManager::getImageEnabledStates() const {
         File file = dir.openNextFile();
         int newDefaults = 0;
         while (file) {
+            // Yield to prevent blocking web server
+            yield();
+            
             if (!file.isDirectory()) {
                 String filename = file.name();
                 if (filename.endsWith(".jpg") || filename.endsWith(".jpeg")) {

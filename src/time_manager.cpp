@@ -158,22 +158,29 @@ void TimeManager::configureNTP() {
 bool TimeManager::waitForTimeSync(int maxRetries) {
     LOG_INFO(TAG, "⏳ Waiting for time synchronization...");
     
-    int retries = 0;
-    time_t currentTime;
-    while ((currentTime = time(nullptr)) < 100000 && retries < maxRetries) {
-        yield(); // Non-blocking yield instead of delay
-        delayMicroseconds(1000000); // 1000ms (1 second) for better sync chances
-        retries++;
-        LOG_INFOF(TAG, "⏳ Time sync attempt %d/%d (current time: %ld)", retries, maxRetries, currentTime);
+    unsigned long startTime = micros();
+    const unsigned long attemptInterval = 2000000UL; // 2 seconds in microseconds
+    
+    for (int retries = 0; retries < maxRetries; retries++) {
+        time_t currentTime = time(nullptr);
+        
+        LOG_INFOF(TAG, "⏳ Time sync attempt %d/%d (current time: %ld)", retries + 1, maxRetries, currentTime);
+        
+        if (currentTime > 100000) {
+            LOG_INFOF(TAG, "✅ Time synchronized successfully! Current epoch: %ld", currentTime);
+            return true;
+        }
+        
+        // Non-blocking wait using micros() - wait 2 seconds between attempts
+        unsigned long attemptStart = micros();
+        while ((micros() - attemptStart) < attemptInterval) {
+            yield(); // Allow other tasks to run
+        }
     }
     
-    if (currentTime > 100000) {
-        LOG_INFOF(TAG, "Time synchronized successfully! Current epoch: %ld", currentTime);
-    } else {
-        LOG_ERRORF(TAG, "Time sync failed after %d attempts (current time: %ld)", retries, currentTime);
-    }
-    
-    return currentTime > 100000;
+    time_t finalTime = time(nullptr);
+    LOG_ERRORF(TAG, "❌ Time sync failed after %d attempts (final time: %ld)", maxRetries, finalTime);
+    return false;
 }
 
 /**
