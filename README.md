@@ -45,6 +45,8 @@ Dual display billboard system designed for scale modelers, featuring WiFi connec
 
 This project features comprehensive documentation generated from Doxygen-style annotations:
 
+[API Documentation](https://srg74.github.io/Dual_display_billboard/api-docs/)
+
 ### **User Guides**
 
 - **[Unicode Character Support Guide](docs/unicode_character_guide.md)** - How to add support for new international characters
