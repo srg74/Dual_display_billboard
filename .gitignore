@@ -18,6 +18,7 @@ ethernet_monitor.py
 # Project specific folders
 logs/
 firmware/
+todo/
 
 # Documentation generation output (ignore generated files)
 docs/generated/
