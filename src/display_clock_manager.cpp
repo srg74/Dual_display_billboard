@@ -22,6 +22,7 @@
 
 #include "display_clock_manager.h"
 #include "time_manager.h"
+#include "text_utils.h"
 #include <math.h>
 
 /**
@@ -89,19 +90,20 @@ void DisplayClockManager::displayClockOnDisplay(TFT_eSPI& tft, int csPin) {
     tft.setRotation(0);           // Portrait orientation for optimal clock display
     tft.fillScreen(TFT_BLACK);    // Clear previous content
     
-    // Render clock label with adaptive positioning for display size compatibility
+    // Render clock label with Unicode support and proper centering
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.setTextFont(2);  // Clean sans-serif font (16px height)
-    String currentLabel = timeManager ? timeManager->getClockLabel() : "Clock";
+    String rawLabel = timeManager ? timeManager->getClockLabel() : "Clock";
+    String currentLabel = TextUtils::toDisplayText(rawLabel);  // Process international characters
     
     // Calculate adaptive center position based on display width
-    int textWidth = tft.textWidth(currentLabel.c_str());
+    int textWidth = TextUtils::getUnicodeTextWidth(tft, currentLabel);
     bool isSmallDisplay = (tft.width() <= 80);
     int centerX = isSmallDisplay ? 40 : 120;  // 80px displays: center=40, 240px displays: center=120
-    int labelX = centerX - textWidth / 2;
     int labelY = 20;  // Fixed Y position for consistent appearance
-    tft.setCursor(labelX, labelY);
-    tft.print(currentLabel);
+    
+    // Draw Unicode text with proper character rendering
+    int labelX = centerX - textWidth / 2;
+    TextUtils::drawUnicodeText(tft, currentLabel, labelX, labelY, TFT_WHITE);
 
     // Display the selected clock face type
     switch (currentClockFace) {
