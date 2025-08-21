@@ -469,7 +469,12 @@ String WiFiManager::scanNetworks() {
         LOG_DEBUG(TAG, "Switching to AP+STA mode for scanning");
         WiFi.mode(WIFI_AP_STA);
         modeChanged = true;
-        delay(100); // Small delay for mode change
+        
+        // Non-blocking delay for mode change
+        unsigned long modeChangeStart = millis();
+        while (millis() - modeChangeStart < 100) {
+            yield();
+        }
     }
     
     // PERFORMANCE FIX: Use synchronous scan for better ESP32-S3 compatibility
@@ -489,7 +494,12 @@ String WiFiManager::scanNetworks() {
     if (modeChanged) {
         LOG_DEBUG(TAG, "Restoring AP mode after scan");
         WiFi.mode(currentMode);
-        delay(50); // Small delay for mode change
+        
+        // Non-blocking delay for mode change
+        unsigned long modeRestoreStart = millis();
+        while (millis() - modeRestoreStart < 50) {
+            yield();
+        }
     }
     
     String networks = "[";
@@ -629,14 +639,19 @@ bool WiFiManager::connectToWiFi(const String& ssid, const String& password) {
     // Wait for connection with timeout (non-blocking in chunks)
     unsigned long startTime = millis();
     const unsigned long timeout = 15000; // 15 seconds timeout
+    unsigned long lastYield = 0;
     
     while (WiFi.status() != WL_CONNECTED && millis() - startTime < timeout) {
         yield(); // Allow other tasks
-        delayMicroseconds(500000); // 500ms delay in microseconds (non-blocking)
         
-        // Log progress every 2 seconds
-        if ((millis() - startTime) % 2000 < 500) {
-            LOG_DEBUGF(TAG, "Connection attempt... Status: %d", WiFi.status());
+        // Non-blocking delay using millis() - check every 50ms but only log every 2 seconds
+        if (millis() - lastYield >= 50) {
+            lastYield = millis();
+            
+            // Log progress every 2 seconds
+            if ((millis() - startTime) % 2000 < 50) {
+                LOG_DEBUGF(TAG, "Connection attempt... Status: %d", WiFi.status());
+            }
         }
     }
     
@@ -1117,9 +1132,19 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // Time API
     server->on("/time", HTTP_GET, [this](AsyncWebServerRequest *request){
-        if (timeManager && timeManager->isTimeValid()) {
-            request->send(200, "text/plain", timeManager->getCurrentTime());
+        if (timeManager) {
+            bool timeValid = timeManager->isTimeValid();
+            String currentTime = timeManager->getCurrentTime();
+            LOG_INFOF(TAG, "🕐 Time API request - Valid: %s, Time: %s", 
+                timeValid ? "true" : "false", currentTime.c_str());
+            
+            if (timeValid) {
+                request->send(200, "text/plain", currentTime);
+            } else {
+                request->send(200, "text/plain", "--:--");
+            }
         } else {
+            LOG_WARN(TAG, "🕐 Time API request - TimeManager is null");
             request->send(200, "text/plain", "--:--");
         }
     });
