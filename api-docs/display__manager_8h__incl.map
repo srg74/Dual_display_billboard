@@ -1,9 +1,0 @@
-<map id="include/display_manager.h" name="include/display_manager.h">
-<area shape="rect" id="Node000001" title="Hardware abst // Hardware pin definitions &#45; platform specific #if defined(ESP32S3_MODE) ESP32&#45;S3 pino..." alt="" coords="61,5,257,31"/>
-<area shape="rect" id="Node000002" title=" " alt="" coords="5,79,89,104"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="143,33,79,73,76,69,140,28"/>
-<area shape="rect" id="Node000003" title=" " alt="" coords="113,79,205,104"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="162,31,162,65,157,65,157,31"/>
-<area shape="rect" id="Node000004" href="$display__hardware__config_8h.html" title="Centralized hardware pin configuration for dual TFT displays." alt="" coords="230,79,425,104"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="187,28,288,71,286,76,185,33"/>
-</map>

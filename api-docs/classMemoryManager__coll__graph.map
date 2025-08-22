@@ -1,5 +1,0 @@
-<map id="MemoryManager" name="MemoryManager">
-<area shape="rect" id="Node000001" title="Comprehensive memory monitoring and management system." alt="" coords="53,93,186,119"/>
-<area shape="rect" id="Node000002" href="$structMemoryManager_1_1MemoryStats.html" title="Memory statistics structure." alt="" coords="5,5,233,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="122,45,122,93,117,93,117,45"/>
-</map>

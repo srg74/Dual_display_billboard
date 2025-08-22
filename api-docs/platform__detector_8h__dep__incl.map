@@ -1,9 +1,0 @@
-<map id="include/platform_detector.h" name="include/platform_detector.h">
-<area shape="rect" id="Node000001" title="Multiplatform detection and PSRAM capability testing." alt="" coords="128,5,329,31"/>
-<area shape="rect" id="Node000002" href="$main_8cpp.html" title="Dual Display Billboard System &#45; Multi&#45;Mode Application Entry Point." alt="" coords="5,79,111,104"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="190,38,87,81,85,76,187,33"/>
-<area shape="rect" id="Node000003" href="$platform__detector_8cpp.html" title="Multiplatform detection and PSRAM capability testing implementation." alt="" coords="135,79,323,104"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="231,44,231,79,226,79,226,44"/>
-<area shape="rect" id="Node000004" href="$wifi__manager_8cpp.html" title="🌐 ESP32 Dual Display Billboard &#45; Advanced WiFi Management System v0.9" alt="" coords="347,79,505,104"/>
-<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="274,33,395,76,393,81,272,38"/>
-</map>
