@@ -130,7 +130,7 @@ ESP32 GPIO 4   →  DCC signal input
 ### Power Connections - ESP32-S3 (Do These First!)
 
 ```text
-⚡ CRITICAL: Use 3.3V only - 5V will damage displays!
+ CRITICAL: Use 3.3V only - 5V will damage displays!
 
 Step 1: Power Rails
 ESP32-S3 3.3V  →  Breadboard + rail  →  Both Display VCC pins
@@ -140,7 +140,7 @@ ESP32-S3 GND   →  Breadboard - rail  →  Both Display GND pins
 ### SPI Bus Connections - ESP32-S3 (Shared Between Displays)
 
 ```text
-🔗 These pins connect to BOTH displays:
+ These pins connect to BOTH displays:
 
 Step 2: SPI Data & Clock
 ESP32-S3 GPIO 11 (MOSI)  →  Display 1 SDA  →  Display 2 SDA

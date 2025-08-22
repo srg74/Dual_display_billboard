@@ -410,7 +410,7 @@ void loop() {
             
             // Integrate SettingsManager with DisplayManager for immediate brightness application
             settingsManager.setDisplayManager(&displayManager);
-            LOG_INFO("MAIN", "🔗 SettingsManager-DisplayManager integration enabled for immediate brightness control");
+            LOG_INFO("MAIN", " SettingsManager-DisplayManager integration enabled for immediate brightness control");
             
             systemInitialized = true;
             lastHeartbeat = currentTime;

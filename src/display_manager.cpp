@@ -21,17 +21,17 @@ DisplayManager::DisplayManager() : initialized(false), brightness1(255), brightn
 }
 
 /**
- * @brief 🚀 Initializes complete dual display hardware system
+ * @brief Initializes complete dual display hardware system
  * 
  * Performs comprehensive hardware initialization sequence for dual ST7735/ST7789 displays.
  * Configures PWM backlight control, chip select pins, TFT interface, and immediately
  * clears both displays to prevent visual artifacts during startup.
  * 
  * Initialization Sequence:
- * 1. 💡 Backlight PWM configuration (5kHz, 8-bit resolution)
+ * 1. Backlight PWM configuration (5kHz, 8-bit resolution)
  * 2. Chip select pin setup with safe deselect state
  * 3. TFT library initialization with dual CS method
- * 4. ⚫ Immediate display clearing to prevent startup flash
+ * 4. Immediate display clearing to prevent startup flash
  * 
  * Hardware Requirements:
  * • ESP32/ESP32-S3 with sufficient GPIO pins
@@ -50,7 +50,7 @@ DisplayManager::DisplayManager() : initialized(false), brightness1(255), brightn
  * @see initializeTFT() for TFT library setup process
  */
 bool DisplayManager::begin() {
-    LOG_INFO("DISPLAY", "🎨 Initializing Display Manager with working config");
+    LOG_INFO("DISPLAY", "Initializing Display Manager with working config");
     
     initializeBacklight();
     initializeCS();
@@ -216,7 +216,7 @@ void DisplayManager::initializeTFT() {
  * @param displayNum The display number to select (1 or 2)
  * 
  * @warning Deselects all displays first, then selects the target display
- * @note 📝 Uses text rotation (DISPLAY_TEXT_ROTATION) as default
+ * @note Uses text rotation (DISPLAY_TEXT_ROTATION) as default
  * 
  * @see selectDisplayForText() for explicit text rotation
  * @see selectDisplayForImage() for image-specific rotation
@@ -230,7 +230,7 @@ void DisplayManager::selectDisplay(int displayNum) {
 }
 
 /**
- * 📝 Selects display with text-optimized rotation
+ * Selects display with text-optimized rotation
  * 
  * Activates the specified display and configures it for optimal text rendering
  * by setting the text rotation (DISPLAY_TEXT_ROTATION). This method ensures
@@ -242,7 +242,7 @@ void DisplayManager::selectDisplay(int displayNum) {
  * 
  * @warning Always deselects all displays before selecting target
  * @note Text rotation is configured via DISPLAY_TEXT_ROTATION constant
- * @note 🔄 Invalid display numbers are silently ignored
+ * @note Invalid display numbers are silently ignored
  * 
  * @see selectDisplayForImage() for image-specific rotation
  * @see deselectAll() for deactivating all displays
@@ -338,7 +338,7 @@ void DisplayManager::deselectAll() {
  * @since v0.9
  */
 void DisplayManager::clearBothDisplaysToBlack() {
-    LOG_INFO("DISPLAY", "⚫ Clearing both displays to black");
+    LOG_INFO("DISPLAY", "Clearing both displays to black");
     
     // Clear display content to black
     selectDisplay(1);
@@ -396,24 +396,24 @@ void DisplayManager::setBrightness(uint8_t brightness, int displayNum) {
     if (displayNum == 1 || displayNum == 0) {
         brightness1 = brightness;
         ledcWrite(3, brightness); // Apply to backlight 1 (GPIO 7, Channel 3)
-        LOG_INFOF("DISPLAY", "🔆 ESP32S3 Backlight 1: %d/255 (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
+    LOG_INFOF("DISPLAY", "ESP32S3 Backlight 1: %d/255 (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
     }
     if (displayNum == 2 || displayNum == 0) {
         brightness2 = brightness;
         ledcWrite(4, brightness); // Apply to backlight 2 (GPIO 8, Channel 4)
-        LOG_INFOF("DISPLAY", "🔆 ESP32S3 Backlight 2: %d/255 (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
+    LOG_INFOF("DISPLAY", "ESP32S3 Backlight 2: %d/255 (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
     }
 #else
     // ESP32 original setup (working) - uses 8-bit PWM and channels 1,2 (swapped)
     if (displayNum == 1 || displayNum == 0) {
         brightness1 = brightness;
         ledcWrite(2, brightness); // Apply to backlight 1 (GPIO 27, Channel 2) - SWAPPED: Blue display is on Channel 2
-        LOG_INFOF("DISPLAY", "🔆 Brightness set - Display 1: %d", brightness);
+    LOG_INFOF("DISPLAY", "Brightness set - Display 1: %d", brightness);
     }
     if (displayNum == 2 || displayNum == 0) {
         brightness2 = brightness;
         ledcWrite(1, brightness); // Apply to backlight 2 (GPIO 22, Channel 1) - SWAPPED: Yellow display is on Channel 1
-        LOG_INFOF("DISPLAY", "🔆 Brightness set - Display 2: %d", brightness);
+    LOG_INFOF("DISPLAY", "Brightness set - Display 2: %d", brightness);
     }
 #endif
 }
@@ -515,7 +515,7 @@ void DisplayManager::enableSecondDisplay(bool enable) {
         selectDisplay(2);
         tft.fillScreen(TFT_BLACK);
         deselectAll();
-        LOG_INFO("DISPLAY", "⚫ Second display disabled");
+    LOG_INFO("DISPLAY", "Second display disabled");
     }
 }
 
@@ -550,7 +550,7 @@ void DisplayManager::alternateDisplays() {
             selectDisplay(1);
             tft.fillScreen(TFT_BLUE);
             deselectAll();
-            // LOG_INFO("DISPLAY", "🔵 First screen BLUE"); // Commented to reduce log spam
+            // LOG_INFO("DISPLAY", " First screen BLUE"); // Commented to reduce log spam
         } else {
             selectDisplay(2);
             tft.fillScreen(TFT_YELLOW);
@@ -721,7 +721,7 @@ void DisplayManager::showPortalInfo(const String& ssid, const String& ip, const 
         return;
     }
     
-    LOG_INFO("DISPLAY", "📋 Showing portal information on display 1");  // FIXED
+    LOG_INFO("DISPLAY", "Showing portal information on display 1");  // FIXED
     
     // Display 1: Show portal info with GREEN background (FIXED)
     selectDisplay(1);  // FIXED: Changed to 1
@@ -783,7 +783,7 @@ void DisplayManager::showConnectionSuccess(const String& ip) {
         return;
     }
     
-    LOG_INFO("DISPLAY", "📶 Showing WiFi connection success on display 1");
+    LOG_INFO("DISPLAY", " Showing WiFi connection success on display 1");
     
     // Display 1: Show connection success with BLUE background
     selectDisplay(1);
@@ -1022,7 +1022,7 @@ void DisplayManager::showPortalSequence(const String& ssid, const String& ip, co
     // Show splash screen for 4 seconds, then portal info will auto-display
     showSplashScreen(0, DISPLAY_SPLASH_DURATION_MS);  // 4 seconds on both displays
     
-    LOG_INFO("DISPLAY", "🚀 Portal sequence started: 4s splash → portal info");
+    LOG_INFO("DISPLAY", " Portal sequence started: 4s splash → portal info");
 }
 
 /**

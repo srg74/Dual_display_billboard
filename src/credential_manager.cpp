@@ -112,7 +112,7 @@ CredentialManager::WiFiCredentials CredentialManager::loadCredentials() {
     
     // Check if credentials file exists before attempting read
     if (!LittleFS.exists(CREDENTIALS_FILE)) {
-        LOG_INFO(TAG, "📄 No credentials file found - returning invalid credentials");
+        LOG_INFO(TAG, "No credentials file found - returning invalid credentials");
         return creds;
     }
     
@@ -127,7 +127,7 @@ CredentialManager::WiFiCredentials CredentialManager::loadCredentials() {
     String content = file.readString();
     file.close();
     
-    LOG_DEBUGF(TAG, "📄 Credentials file content: %s", content.c_str());
+    LOG_DEBUGF(TAG, "Credentials file content: %s", content.c_str());
     
     // Parse JSON content with improved boundary detection
     int ssidStart = content.indexOf("\"ssid\":\"") + 8;
@@ -183,7 +183,7 @@ bool CredentialManager::clearCredentials() {
  */
 bool CredentialManager::hasCredentials() {
     bool exists = LittleFS.exists(CREDENTIALS_FILE);
-    LOG_DEBUGF(TAG, "📄 Credentials file exists: %s", exists ? "YES" : "NO");
+    LOG_DEBUGF(TAG, "Credentials file exists: %s", exists ? "YES" : "NO");
     return exists;
 }
 
@@ -196,7 +196,7 @@ void CredentialManager::printFileSystemInfo() {
     size_t usedBytes = LittleFS.usedBytes();
     size_t freeBytes = totalBytes - usedBytes;
     
-    LOG_INFOF(TAG, "📊 LittleFS Filesystem Statistics:");
+    LOG_INFOF(TAG, "LittleFS Filesystem Statistics:");
     LOG_INFOF(TAG, "   Total Space: %d bytes (%.2f KB)", totalBytes, totalBytes / 1024.0);
     LOG_INFOF(TAG, "   Used Space:  %d bytes (%.2f KB)", usedBytes, usedBytes / 1024.0);
     LOG_INFOF(TAG, "   Free Space:  %d bytes (%.2f KB)", freeBytes, freeBytes / 1024.0);

@@ -28,7 +28,7 @@
 
 /**
 /**
- * @brief 🏗️ Constructor initializes slideshow manager with required component dependencies
+ * @brief Constructor initializes slideshow manager with required component dependencies
  * @param im Pointer to ImageManager for image handling operations
  * @param sm Pointer to SettingsManager for configuration access
  * @param cm Pointer to DisplayClockManager for clock display integration
@@ -46,7 +46,7 @@ SlideshowManager::SlideshowManager(ImageManager* im, SettingsManager* sm, Displa
 }
 
 /**
- * @brief 🔚 Destructor performs cleanup operations
+ * @brief Destructor performs cleanup operations
  * 
  * Currently no dynamic resources require cleanup, but provides
  * framework for future resource management if needed.
@@ -56,7 +56,7 @@ SlideshowManager::~SlideshowManager() {
 }
 
 /**
- * @brief 🚀 Initialize slideshow manager and load persistent image states
+ * @brief Initialize slideshow manager and load persistent image states
  * @return true if initialization successful, false if required components unavailable
  * 
  * Performs initial setup including validation of required component dependencies
@@ -80,7 +80,7 @@ bool SlideshowManager::begin() {
 // ============================================================================
 
 /**
- * @brief ▶️ Start slideshow with automatic image loading and validation
+ * @brief Start slideshow with automatic image loading and validation
  * 
  * Initiates slideshow operation by loading enabled images and starting
  * the display sequence. Handles "no images" scenario gracefully with
@@ -106,7 +106,7 @@ void SlideshowManager::startSlideshow() {
 }
 
 /**
- * @brief ⏹️ Stop slideshow and reset state variables
+ * @brief Stop slideshow and reset state variables
  * 
  * Halts slideshow operation and resets internal state variables
  * to prepare for future slideshow sessions.
@@ -117,7 +117,7 @@ void SlideshowManager::stopSlideshow() {
 }
 
 /**
- * @brief 🔄 Update slideshow timing and handle image/clock transitions
+ * @brief Update slideshow timing and handle image/clock transitions
  * 
  * Core slideshow update loop that handles timing-based image transitions,
  * clock integration based on user settings, and maintains proper sequence
@@ -155,7 +155,7 @@ void SlideshowManager::updateSlideshow() {
 }
 
 /**
- * @brief 🔄 Restart active slideshow with fresh image loading
+ * @brief  Restart active slideshow with fresh image loading
  * 
  * Performs complete slideshow restart including stopping current operation
  * and reinitializing with fresh image list. Only operates when slideshow
@@ -170,7 +170,7 @@ void SlideshowManager::restartSlideshow() {
 }
 
 /**
- * @brief 🔄 Refresh image list with dynamic slideshow state management
+ * @brief  Refresh image list with dynamic slideshow state management
  * 
  * Reloads the image list and intelligently manages slideshow state based
  * on image availability. Handles transitions between active/inactive states
@@ -219,7 +219,7 @@ void SlideshowManager::refreshImageList() {
 // ============================================================================
 
 /**
- * @brief 📋 Get name of currently displayed image
+ * @brief Get name of currently displayed image
  * @return Current image filename if slideshow active, empty string otherwise
  * 
  * Returns the filename of the currently displayed image when slideshow
@@ -291,7 +291,7 @@ void SlideshowManager::showNextImage() {
 }
 
 /**
- * @brief 📂 Load list of enabled images from filesystem and user preferences
+ * @brief  Load list of enabled images from filesystem and user preferences
  * 
  * Scans the images directory and builds a list of enabled images based on
  * user preferences and file availability. Filters for supported image formats
@@ -454,7 +454,7 @@ void SlideshowManager::loadImageStatesFromStorage() {
 }
 
 /**
- * @brief 📋 Get comprehensive map of all image enabled states for web interface
+ * @brief Get comprehensive map of all image enabled states for web interface
  * @return Map of image filenames to their enabled states (true/false)
  * 
  * Returns complete map of image enabled states, including both stored preferences
@@ -504,7 +504,7 @@ std::map<String, bool> SlideshowManager::getImageEnabledStates() const {
 }
 
 /**
- * @brief 📷 Display "No Images Available" message on both displays
+ * @brief  Display "No Images Available" message on both displays
  * 
  * Shows user-friendly message when no enabled images are available for slideshow.
  * Utilizes ImageManager's display functionality to render text message on both
@@ -526,7 +526,7 @@ void SlideshowManager::showNoImagesMessage() {
 }
 
 /**
- * @brief 🕐 Display clock on both screens with user-configured face style
+ * @brief  Display clock on both screens with user-configured face style
  * 
  * Renders clock display using DisplayClockManager with user's preferred clock
  * face style from settings. Integrates with slideshow sequence to provide

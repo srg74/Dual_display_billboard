@@ -156,7 +156,7 @@ void ConfigValidator::loadPlatformConstraints(PlatformType platform) {
             currentConstraints.hasPSRAM = false;                    // ESP32 classic without PSRAM
             currentConstraints.maxRAM = 320000;                     // 320KB internal RAM
             currentConstraints.platformName = "ESP32-DEV";
-            LOG_INFOF(TAG, "📋 Loaded ESP32-DEV constraints (GPIO 0-39, 320KB RAM)");
+            LOG_INFOF(TAG, "Loaded ESP32-DEV constraints (GPIO 0-39, 320KB RAM)");
             break;
             
         case PLATFORM_ESP32_S3:
@@ -177,7 +177,7 @@ void ConfigValidator::loadPlatformConstraints(PlatformType platform) {
             #endif
             
             currentConstraints.platformName = "ESP32-S3";
-            LOG_INFOF(TAG, "📋 Loaded ESP32-S3 constraints (GPIO 0-48, %s)", 
+            LOG_INFOF(TAG, "Loaded ESP32-S3 constraints (GPIO 0-48, %s)", 
                      currentConstraints.hasPSRAM ? "8MB PSRAM" : "512KB RAM");
             break;
             
@@ -264,8 +264,8 @@ ConfigValidator::ValidationReport ConfigValidator::validateSystem(bool autoFix) 
     lastReport.overallSeverity = calculateOverallSeverity();
     lastReport.systemReady = (lastReport.fatalCount == 0 && lastReport.errorCount == 0);
     
-    // Log final validation status with appropriate emoji indicators
-    String statusIcon = lastReport.systemReady ? "✅" : "❌";
+    // Log final validation status with textual indicators (no emoji)
+    String statusIcon = lastReport.systemReady ? "OK" : "ERROR";
     LOG_INFOF(TAG, "%s Validation complete. System Status: %s", 
               statusIcon.c_str(), lastReport.systemReady ? "READY" : "NOT READY");
     
@@ -337,7 +337,7 @@ void ConfigValidator::printValidationReport(const ValidationReport* report, bool
     LOG_INFOF(TAG, "║   OK:       %-30d ║", rep.okCount);
     LOG_INFOF(TAG, "║    Warnings: %-30d ║", rep.warningCount);
     LOG_INFOF(TAG, "║   Errors:   %-30d ║", rep.errorCount);
-    LOG_INFOF(TAG, "║   💀 Fatal:    %-30d ║", rep.fatalCount);
+    LOG_INFOF(TAG, "║   FATAL:    %-30d ║", rep.fatalCount);
     if (rep.autoFixedCount > 0) {
         LOG_INFOF(TAG, "║   Auto-fixed: %-27d ║", rep.autoFixedCount);
     }
@@ -346,7 +346,7 @@ void ConfigValidator::printValidationReport(const ValidationReport* report, bool
     // Include detailed results if requested
     if (includeDetails && !rep.results.empty()) {
         LOG_INFOF(TAG, "");
-        LOG_INFOF(TAG, "📋 DETAILED VALIDATION RESULTS:");
+        LOG_INFOF(TAG, "DETAILED VALIDATION RESULTS:");
         for (const auto& result : rep.results) {
             String severityIcon = getSeverityIcon(result.severity);
             LOG_INFOF(TAG, "  %s [%s] %s", 
@@ -513,12 +513,13 @@ String ConfigValidator::getSeverityName(ValidationSeverity severity) {
  * @return Emoji icon representing the severity level
  */
 String ConfigValidator::getSeverityIcon(ValidationSeverity severity) {
+    // Return short textual tags instead of emoji to comply with project policy
     switch (severity) {
-        case VALIDATION_OK: return "✅";
-        case VALIDATION_WARNING: return "⚠️";
-        case VALIDATION_ERROR: return "❌";
-        case VALIDATION_FATAL: return "💀";
-        default: return "❓";
+        case VALIDATION_OK: return "[OK]";
+        case VALIDATION_WARNING: return "[WARN]";
+        case VALIDATION_ERROR: return "[ERR]";
+        case VALIDATION_FATAL: return "[FATAL]";
+        default: return "[?]";
     }
 }
 

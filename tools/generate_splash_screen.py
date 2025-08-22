@@ -71,7 +71,7 @@ def main():
     
     # Detect display type
     display_type = detect_build_environment()
-    print(f"🎯 Detected display type: {display_type}")
+    print(f"Detected display type: {display_type}")
     
     # Select appropriate PNG file
     if display_type == 'ST7789':
@@ -84,35 +84,35 @@ def main():
     
     # Check if PNG file exists
     if not os.path.exists(png_file):
-        print(f"❌ Error: PNG file not found: {png_file}")
+        print(f"Error: PNG file not found: {png_file}")
         sys.exit(1)
     
     # Check if the existing splash screen is already correct
     is_current, reason = check_existing_splash_screen(output_file, png_file, display_type)
     
     if is_current:
-        print(f"✅ Splash screen already up to date for {display_type}")
-        print(f"   📁 Using existing: {os.path.basename(output_file)}")
+        print(f"Splash screen already up to date for {display_type}")
+        print(f"   Using existing: {os.path.basename(output_file)}")
         return  # Skip regeneration
     else:
-        print(f"🔄 Regenerating splash screen: {reason}")
+        print(f"Regenerating splash screen: {reason}")
     
     # Run the conversion script
     converter_script = os.path.join(script_dir, 'png_to_splash_header_converter.py')
     
-    print(f"🔄 Converting {os.path.basename(png_file)} → splash_screen.h")
+    print(f"Converting {os.path.basename(png_file)} -> splash_screen.h")
     
     try:
         result = subprocess.run([
             sys.executable, converter_script, png_file, output_file, display_type
         ], capture_output=True, text=True, check=True)
-        
-        print(f"✅ Successfully generated splash_screen.h for {display_type}")
+
+        print(f"Successfully generated splash_screen.h for {display_type}")
         if result.stdout:
             print(result.stdout)
-            
+
     except subprocess.CalledProcessError as e:
-        print(f"❌ Error generating splash screen: {e}")
+        print(f"Error generating splash screen: {e}")
         if e.stdout:
             print(f"STDOUT: {e.stdout}")
         if e.stderr:

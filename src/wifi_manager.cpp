@@ -1,6 +1,6 @@
 /**
  * @file wifi_manager.cpp
- * @brief 🌐 ESP32 Dual Display Billboard - Advanced WiFi Management System v0.9
+ * @brief ESP32 Dual Display Billboard - Advanced WiFi Management System v0.9
  * 
  * @details Comprehensive WiFi and web server management system for ESP32 dual display billboard.
  *          Provides sophisticated network connectivity, dual-mode operation (Setup/Normal),
@@ -8,15 +8,15 @@
  *          factory reset functionality, and robust connection management with automatic retry logic.
  * 
  * Key Features:
- * • 🏗️ Dual-Mode Operation: Setup mode for initial configuration, Normal mode for operations
- * • 🌐 Advanced Network Management: Auto-connection, retry logic, connection health monitoring
+ * • Dual-Mode Operation: Setup mode for initial configuration, Normal mode for operations
+ * • Advanced Network Management: Auto-connection, retry logic, connection health monitoring
  * • Comprehensive Web Interface: Settings management, image upload/control, system status
  * • Image Management: Upload, enable/disable, preview, slideshow control via web interface
- * • 🚂 DCC Integration: Web-based DCC command interface for model railroad control
+ * • DCC Integration: Web-based DCC command interface for model railroad control
  * • System Monitoring: Real-time memory health, WiFi status, platform information
- * • 🔄 Factory Reset: GPIO0-based factory reset with configurable timing
- * • 📊 RESTful API: JSON endpoints for system status, image management, settings control
- * • 🛡️ Robust Error Handling: Connection timeout management, automatic mode switching
+ * • Factory Reset: GPIO0-based factory reset with configurable timing
+ * • RESTful API: JSON endpoints for system status, image management, settings control
+ * • Robust Error Handling: Connection timeout management, automatic mode switching
  * • Persistent Configuration: Credential storage, connection state management
  * 
  * Architecture:
@@ -34,7 +34,8 @@
  * 
  * @author ESP32 Dual Display Billboard System
  * @version 0.9
-*/
+ * @date 2025
+ */
 
 #include "wifi_manager.h"
 #include "dcc_manager.h"
@@ -237,11 +238,11 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
 }
 
 // ============================================================================
-// 🌐 WEB SERVER ROUTE CONFIGURATION
+//  WEB SERVER ROUTE CONFIGURATION
 // ============================================================================
 
 /**
- * @brief 🌐 Configures comprehensive web server routes for setup mode
+ * @brief Configures comprehensive web server routes for setup mode
  * 
  * @details Establishes complete web interface routing for WiFi setup and initial system configuration.
  *          Provides memory-aware content serving, comprehensive system diagnostics, network scanning,
@@ -249,11 +250,11 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
  * 
  * Route Categories:
  * • System Diagnostics: /test, /status, /memory endpoints for health monitoring
- * • 🌐 Network Management: /, /portal for main interface, /scan for network discovery
- * • 📡 Connection Control: /connect for WiFi credential submission and validation
+ * • Network Management: /, /portal for main interface, /scan for network discovery
+ * • Connection Control: /connect for WiFi credential submission and validation
  * • Visual Interface: Portal HTML with responsive design and status feedback
  * • Memory Management: Dynamic content serving based on available heap memory
- * • 📊 Real-time Status: Live system information including memory health and connectivity
+ * • Real-time Status: Live system information including memory health and connectivity
  * 
  * Key Features:
  * • Memory-aware content serving (minimal interface for low memory conditions)
@@ -275,7 +276,7 @@ void WiFiManager::setupRoutes() {
     
     // Test route for connectivity
     server->on("/test", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🌐 Test route accessed!");
+        LOG_INFO(TAG, "Test route accessed!");
         String response = "Billboard server is working!\n";
         response += "Time: " + String(millis()) + "\n";
         response += "Mode: " + String(currentMode == MODE_SETUP ? "Setup" : "Normal") + "\n";
@@ -291,7 +292,7 @@ void WiFiManager::setupRoutes() {
 
     // Main portal route
     server->on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🌐 Portal page requested");
+        LOG_INFO(TAG, "Portal page requested");
         
         // Check available memory before serving large content
         size_t freeHeap = ESP.getFreeHeap();
@@ -325,7 +326,7 @@ void WiFiManager::setupRoutes() {
     
     // WiFi scan route
     server->on("/scan", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🌐 WiFi scan requested");
+        LOG_INFO(TAG, "WiFi scan requested");
         String networks = this->scanNetworks();
         request->send(200, "application/json", networks);
     });
@@ -412,12 +413,12 @@ void WiFiManager::setupRoutes() {
     
     // Simple rotation test route that works directly
     server->on("/debug/rotation-test", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🔄 Simple rotation test requested");
+        LOG_INFO(TAG, " Simple rotation test requested");
         
         if (request->hasParam("rotation")) {
             String rotationStr = request->getParam("rotation")->value();
             int rotation = rotationStr.toInt();
-            LOG_INFOF(TAG, "🔄 Testing rotation %d", rotation);
+            LOG_INFOF(TAG, " Testing rotation %d", rotation);
             
             if (rotation >= 0 && rotation <= 3 && displayManager) {
                 // Simple test: set rotation and clear screen with colored label
@@ -461,7 +462,7 @@ void WiFiManager::setupRoutes() {
 }
 
 /**
- * @brief 🚀 Starts the HTTP web server for client request handling
+ * @brief Starts the HTTP web server for client request handling
  * 
  * @details Activates the AsyncWebServer instance to begin listening for HTTP requests on port 80.
  *          Enables access to all configured routes including portal interface, system diagnostics,
@@ -472,17 +473,17 @@ void WiFiManager::setupRoutes() {
  * @note Default HTTP port 80 used for standard web browser compatibility.
  */
 void WiFiManager::startServer() {
-    LOG_INFO(TAG, "🚀 Starting web server...");
+    LOG_INFO(TAG, "Starting web server...");
     server->begin();
     LOG_INFO(TAG, "Web server started and listening on port 80");
 }
 
 // ============================================================================
-// 📡 NETWORK SCANNING & DISCOVERY
+// NETWORK SCANNING & DISCOVERY
 // ============================================================================
 
 /**
- * @brief 📡 Performs WiFi network scan and returns formatted HTML results
+ * @brief Performs WiFi network scan and returns formatted HTML results
  * 
  * @details Executes comprehensive WiFi network discovery scan and formats results as HTML
  *          for web interface display. Provides detailed network information including
@@ -601,11 +602,11 @@ String WiFiManager::scanNetworks() {
 }
 
 // ============================================================================
-// 🔗 WIFI CONNECTION MANAGEMENT
+//  WIFI CONNECTION MANAGEMENT
 // ============================================================================
 
 /**
- * @brief 🔗 Establishes WiFi connection with comprehensive error handling
+ * @brief Establishes WiFi connection with comprehensive error handling
  * 
  * @details Initiates WiFi connection to specified network with robust timeout management,
  *          connection status monitoring, and visual feedback through display system.
@@ -631,7 +632,7 @@ String WiFiManager::scanNetworks() {
  * @note Failed connections leave WiFi in disconnected state for retry attempts
  */
 /**
- * @brief 🌐 Establishes WiFi connection with enhanced crash prevention
+ * @brief Establishes WiFi connection with enhanced crash prevention
  * 
  * @details Connects ESP32 to specified WiFi network with comprehensive authentication failure
  *          handling and crash prevention mechanisms. Implements aggressive timeout management,
@@ -639,12 +640,12 @@ String WiFiManager::scanNetworks() {
  *          abort() crashes that occur during prolonged authentication failures.
  * 
  * Enhanced Safety Features (v0.9.1):
- * • 🛡️ Authentication Failure Prevention: Detects and aborts early on auth failures
+ * • Authentication Failure Prevention: Detects and aborts early on auth failures
  * • Aggressive Timeout Management: Reduced to 8 seconds to prevent prolonged failures
  * • Real-time Status Monitoring: 250ms status checks for rapid failure detection
- * • 🚫 Early Abort Logic: Stops after 2 quick failures to prevent crash conditions
+ * • Early Abort Logic: Stops after 2 quick failures to prevent crash conditions
  * • Aggressive Cleanup: Forces disconnection after failures with delay
- * • 📊 Visual Feedback: Display integration for connection status and failures
+ * • Visual Feedback: Display integration for connection status and failures
  * 
  * Connection Process:
  * • Pre-connection cleanup with forced disconnect and delay
@@ -719,7 +720,7 @@ bool WiFiManager::connectToWiFi(const String& ssid, const String& password) {
 }
 
 /**
- * @brief 🔗 Handles HTTP POST requests for WiFi connection from web interface
+ * @brief Handles HTTP POST requests for WiFi connection from web interface
  * 
  * @details Processes WiFi connection requests submitted through the web portal interface.
  *          Validates submitted credentials, attempts network connection, manages credential storage,
@@ -795,7 +796,7 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
             // NON-BLOCKING RESTART: Schedule restart instead of immediate delay
             restartPending = true;
             restartScheduledTime = millis() + 3000;  // 3 seconds from now
-            LOG_INFO(TAG, "🔄 Restart scheduled in 3 seconds...");
+            LOG_INFO(TAG, "Restart scheduled in 3 seconds...");
             
         } else {
             String response = "{\"status\":\"error\",\"message\":\"Failed to connect to " + ssid + ". Check password and signal strength.\"}";
@@ -875,11 +876,11 @@ void WiFiManager::checkHeapHealth() {
 }
 
 // ============================================================================
-// 🔄 MODE MANAGEMENT & AUTO-CONNECT SYSTEM
+// MODE MANAGEMENT & AUTO-CONNECT SYSTEM
 // ============================================================================
 
 /**
- * @brief 🔄 Initializes WiFi connection using stored credentials with fallback handling
+ * @brief Initializes WiFi connection using stored credentials with fallback handling
  * 
  * @details Attempts to establish WiFi connection using previously saved network credentials.
  *          Provides automatic fallback to setup mode if credentials are missing, invalid,
@@ -908,7 +909,7 @@ bool WiFiManager::initializeFromCredentials() {
     LOG_INFO(TAG, "Checking for saved WiFi credentials...");
     
     if (!CredentialManager::hasCredentials()) {
-        LOG_INFO(TAG, "📄 No saved credentials found - starting setup mode");
+        LOG_INFO(TAG, " No saved credentials found - starting setup mode");
         switchToSetupMode();
         return false;
     }
@@ -940,7 +941,7 @@ bool WiFiManager::connectToSavedNetwork() {
         return false;
     }
     
-    LOG_INFOF(TAG, "🔗 Attempting auto-connect to: %s", creds.ssid.c_str());
+    LOG_INFOF(TAG, " Attempting auto-connect to: %s", creds.ssid.c_str());
     
     // Show connecting status on display for visual feedback
     if (displayManager) {
@@ -971,7 +972,7 @@ bool WiFiManager::connectToSavedNetwork() {
 }
 
 /**
- * @brief 🔄 Transitions system from setup mode to full operational normal mode
+ * @brief Transitions system from setup mode to full operational normal mode
  * 
  * @details Reconfigures WiFiManager for normal operation mode after successful WiFi connection.
  *          Stops setup mode web server, configures comprehensive normal mode routes,
@@ -997,7 +998,7 @@ bool WiFiManager::connectToSavedNetwork() {
  * @note Server remains accessible via WiFi IP address after transition
  */
 void WiFiManager::switchToNormalMode() {
-    LOG_INFO(TAG, "🔄 Switching to NORMAL mode");
+    LOG_INFO(TAG, "Switching to NORMAL mode");
     currentMode = MODE_NORMAL;
     
     // Stop the current server
@@ -1013,7 +1014,7 @@ void WiFiManager::switchToNormalMode() {
 }
 
 /**
- * @brief 🔄 Transitions system from normal mode to setup mode for configuration
+ * @brief Transitions system from normal mode to setup mode for configuration
  * 
  * @details Reconfigures WiFiManager for setup mode operation when WiFi connection is lost,
  *          factory reset is triggered, or manual configuration is required. Establishes
@@ -1040,29 +1041,29 @@ void WiFiManager::switchToNormalMode() {
  * @note Access Point credentials defined by PORTAL_SSID and PORTAL_PASSWORD constants
  */
 void WiFiManager::switchToSetupMode() {
-    LOG_INFO(TAG, "🔄 Switching to SETUP mode");
+    LOG_INFO(TAG, "Switching to SETUP mode");
     currentMode = MODE_SETUP;
     
     unsigned long startTime = millis();
     LOG_INFOF(TAG, "Setup mode start time: %lu ms", startTime);
     
     // Stop current server
-    LOG_INFO(TAG, "🛑 Stopping current server...");
+    LOG_INFO(TAG, "Stopping current server...");
     server->end();
     
     // Disconnect from WiFi and start AP
-    LOG_INFO(TAG, "📶 Disconnecting from WiFi...");
+    LOG_INFO(TAG, "Disconnecting from WiFi...");
     WiFi.disconnect(true);
     
-    LOG_INFO(TAG, "🏗️ Starting Access Point...");
+    LOG_INFO(TAG, "Starting Access Point...");
     initializeAP(PORTAL_SSID, PORTAL_PASSWORD);
     
     // Setup portal routes
-    LOG_INFO(TAG, "🛣️ Setting up portal routes...");
+    LOG_INFO(TAG, "Setting up portal routes...");
     setupRoutes();
     
     // Start server
-    LOG_INFO(TAG, "🚀 Starting server...");
+    LOG_INFO(TAG, "Starting server...");
     startServer();
     
     unsigned long endTime = millis();
@@ -1072,7 +1073,7 @@ void WiFiManager::switchToSetupMode() {
 }
 
 /**
- * @brief 🌐 Configures web server routes for normal operation mode
+ * @brief Configures web server routes for normal operation mode
  * 
  * Establishes production web interface endpoints for billboard operation,
  * system management, and user interaction. Provides comprehensive routing
@@ -1112,7 +1113,7 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // Main billboard page - FIXED: Use getIndexHTML() instead of hardcoded HTML
     server->on("/", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🌐 Billboard main page requested");
+        LOG_INFO(TAG, "Billboard main page requested");
         
         String html = getIndexHTML();
         
@@ -1171,7 +1172,7 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // CSS styles
     server->on("/styles.css", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🎨 CSS styles requested");
+    LOG_INFO(TAG, "CSS styles requested");
         String css = getStylesCSS();
         request->send(200, "text/css", css);
     });
@@ -1181,7 +1182,7 @@ void WiFiManager::setupNormalModeRoutes() {
         if (timeManager) {
             bool timeValid = timeManager->isTimeValid();
             String currentTime = timeManager->getCurrentTime();
-            LOG_INFOF(TAG, "🕐 Time API request - Valid: %s, Time: %s", 
+            LOG_INFOF(TAG, "Time API request - Valid: %s, Time: %s", 
                 timeValid ? "true" : "false", currentTime.c_str());
             
             if (timeValid) {
@@ -1190,7 +1191,7 @@ void WiFiManager::setupNormalModeRoutes() {
                 request->send(200, "text/plain", "--:--");
             }
         } else {
-            LOG_WARN(TAG, "🕐 Time API request - TimeManager is null");
+            LOG_WARN(TAG, "Time API request - TimeManager is null");
             request->send(200, "text/plain", "--:--");
         }
     });
@@ -1199,7 +1200,7 @@ void WiFiManager::setupNormalModeRoutes() {
     server->on("/timezone", HTTP_POST, [this](AsyncWebServerRequest *request){
         if (request->hasParam("timezone", true)) {
             String timezone = request->getParam("timezone", true)->value();
-            LOG_INFOF(TAG, "📅 Timezone set to: %s", timezone.c_str());
+            LOG_INFOF(TAG, "Timezone set to: %s", timezone.c_str());
             if (timeManager) {
                 timeManager->setTimezone(timezone);
             }
@@ -1211,7 +1212,7 @@ void WiFiManager::setupNormalModeRoutes() {
     server->on("/clock-label", HTTP_POST, [this](AsyncWebServerRequest *request){
         if (request->hasParam("label", true)) {
             String label = request->getParam("label", true)->value();
-            LOG_INFOF(TAG, "🏷️ Clock label set to: %s", label.c_str());
+            LOG_INFOF(TAG, "Clock label set to: %s", label.c_str());
             if (timeManager) {
                 timeManager->setClockLabel(label);
             }
@@ -1239,19 +1240,19 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // Second display toggle
     server->on("/second-display", HTTP_POST, [this](AsyncWebServerRequest *request){
-        LOG_DEBUG(TAG, "📺 Second display endpoint called");
+        LOG_DEBUG(TAG, "Second display endpoint called");
         
         if (request->hasParam("second_display", true)) {
             String enabled = request->getParam("second_display", true)->value();
             bool isEnabled = (enabled == "true");
-            LOG_INFOF(TAG, "📺 Second display request: param='%s', parsed=%s", enabled.c_str(), isEnabled ? "true" : "false");
+            LOG_INFOF(TAG, "Second display request: param='%s', parsed=%s", enabled.c_str(), isEnabled ? "true" : "false");
             
             // Send response immediately to prevent timeout
             request->send(200, "text/plain", "OK");
             
             // Save to persistent settings - SettingsManager will automatically apply brightness
             settingsManager->setSecondDisplayEnabled(isEnabled);
-            LOG_INFOF(TAG, "📺 Second display setting saved and brightness applied automatically, current value: %s", settingsManager->isSecondDisplayEnabled() ? "true" : "false");
+            LOG_INFOF(TAG, "Second display setting saved and brightness applied automatically, current value: %s", settingsManager->isSecondDisplayEnabled() ? "true" : "false");
         } else {
             LOG_WARN(TAG, "Missing second_display parameter");
             request->send(400, "text/plain", "Missing parameter");
@@ -1260,12 +1261,12 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // DCC interface toggle
     server->on("/dcc", HTTP_POST, [this](AsyncWebServerRequest *request){
-        LOG_DEBUG(TAG, "🚂 DCC endpoint called");
+        LOG_DEBUG(TAG, "DCC endpoint called");
         
         if (request->hasParam("dcc", true)) {
             String enabled = request->getParam("dcc", true)->value();
             bool isEnabled = (enabled == "true");
-            LOG_INFOF(TAG, "🚂 DCC interface request: param='%s', parsed=%s", enabled.c_str(), isEnabled ? "true" : "false");
+            LOG_INFOF(TAG, "DCC interface request: param='%s', parsed=%s", enabled.c_str(), isEnabled ? "true" : "false");
             
             // Send response immediately to prevent timeout
             request->send(200, "text/plain", "OK");
@@ -1277,7 +1278,7 @@ void WiFiManager::setupNormalModeRoutes() {
                 // Fallback to settings manager only
                 settingsManager->setDCCEnabled(isEnabled);
             }
-            LOG_INFOF(TAG, "🚂 DCC setting saved, current value: %s", settingsManager->isDCCEnabled() ? "true" : "false");
+            LOG_INFOF(TAG, "DCC setting saved, current value: %s", settingsManager->isDCCEnabled() ? "true" : "false");
         } else {
             LOG_WARN(TAG, "Missing dcc parameter");
             request->send(400, "text/plain", "Missing parameter");
@@ -1286,14 +1287,14 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // DCC address setting
     server->on("/dccaddress", HTTP_POST, [this](AsyncWebServerRequest *request){
-        LOG_DEBUG(TAG, "🚂 DCC address endpoint called");
+        LOG_DEBUG(TAG, "DCC address endpoint called");
         
         if (request->hasParam("address", true)) {
             String addressStr = request->getParam("address", true)->value();
             int address = addressStr.toInt();
             
             if (address >= 1 && address <= 2048) {
-                LOG_INFOF(TAG, "🚂 DCC address request: %d", address);
+                LOG_INFOF(TAG, "DCC address request: %d", address);
                 
                 // Send response immediately
                 request->send(200, "text/plain", "OK");
@@ -1305,7 +1306,7 @@ void WiFiManager::setupNormalModeRoutes() {
                     // Fallback to settings manager only
                     settingsManager->setDCCAddress(address);
                 }
-                LOG_INFOF(TAG, "🚂 DCC address saved: %d", address);
+                LOG_INFOF(TAG, "DCC address saved: %d", address);
             } else {
                 LOG_WARNF(TAG, "Invalid DCC address: %d", address);
                 request->send(400, "text/plain", "Invalid address (must be 1-2048)");
@@ -1318,14 +1319,14 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // DCC pin setting
     server->on("/dccpin", HTTP_POST, [this](AsyncWebServerRequest *request){
-        LOG_DEBUG(TAG, "🚂 DCC pin endpoint called");
+        LOG_DEBUG(TAG, "DCC pin endpoint called");
         
         if (request->hasParam("pin", true)) {
             String pinStr = request->getParam("pin", true)->value();
             int pin = pinStr.toInt();
             
             if (pin >= 0 && pin <= 39) {
-                LOG_INFOF(TAG, "🚂 DCC pin request: %d", pin);
+                LOG_INFOF(TAG, "DCC pin request: %d", pin);
                 
                 // Send response immediately
                 request->send(200, "text/plain", "OK");
@@ -1337,7 +1338,7 @@ void WiFiManager::setupNormalModeRoutes() {
                     // Fallback to settings manager only
                     settingsManager->setDCCPin(pin);
                 }
-                LOG_INFOF(TAG, "🚂 DCC pin saved: %d", pin);
+                LOG_INFOF(TAG, "DCC pin saved: %d", pin);
             } else {
                 LOG_WARNF(TAG, "Invalid DCC pin: %d", pin);
                 request->send(400, "text/plain", "Invalid pin (must be 0-39)");
@@ -1350,7 +1351,7 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // DCC address setting
     server->on("/dccaddress", HTTP_POST, [this](AsyncWebServerRequest *request){
-        LOG_DEBUG(TAG, "🚂 DCC address endpoint called");
+        LOG_DEBUG(TAG, "DCC address endpoint called");
         
         if (request->hasParam("address", true)) {
             String addressStr = request->getParam("address", true)->value();
@@ -1359,7 +1360,7 @@ void WiFiManager::setupNormalModeRoutes() {
             // Validate DCC address range (1-2048 for accessories)
             if (address >= 1 && address <= 2048) {
                 settingsManager->setDCCAddress(address);
-                LOG_INFOF(TAG, "🚂 DCC address set to: %d", address);
+                LOG_INFOF(TAG, "DCC address set to: %d", address);
                 request->send(200, "text/plain", "DCC address updated");
             } else {
                 LOG_WARNF(TAG, "Invalid DCC address: %d", address);
@@ -1373,7 +1374,7 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // DCC pin setting
     server->on("/dccpin", HTTP_POST, [this](AsyncWebServerRequest *request){
-        LOG_DEBUG(TAG, "🚂 DCC pin endpoint called");
+        LOG_DEBUG(TAG, "DCC pin endpoint called");
         
         if (request->hasParam("pin", true)) {
             String pinStr = request->getParam("pin", true)->value();
@@ -1382,7 +1383,7 @@ void WiFiManager::setupNormalModeRoutes() {
             // Validate GPIO pin range for ESP32
             if (pin >= 0 && pin <= 39) {
                 settingsManager->setDCCPin(pin);
-                LOG_INFOF(TAG, "🚂 DCC GPIO pin set to: %d", pin);
+                LOG_INFOF(TAG, "DCC GPIO pin set to: %d", pin);
                 request->send(200, "text/plain", "DCC pin updated");
             } else {
                 LOG_WARNF(TAG, "Invalid GPIO pin: %d", pin);
@@ -1417,7 +1418,7 @@ void WiFiManager::setupNormalModeRoutes() {
         if (request->hasParam("brightness", true)) {
             String brightness = request->getParam("brightness", true)->value();
             int brightnessValue = brightness.toInt();
-            LOG_INFOF(TAG, "🔆 Brightness set to: %d", brightnessValue);
+            LOG_INFOF(TAG, "Brightness set to: %d", brightnessValue);
             
             // Send response immediately to prevent timeout
             request->send(200, "text/plain", "OK");
@@ -1432,19 +1433,19 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // Clock display toggle
     server->on("/clock", HTTP_POST, [this](AsyncWebServerRequest *request){
-        LOG_DEBUG(TAG, "🕒 Clock endpoint called");
+        LOG_DEBUG(TAG, "Clock endpoint called");
         
         if (request->hasParam("clock", true)) {
             String enabled = request->getParam("clock", true)->value();
             bool isEnabled = (enabled == "true");
-            LOG_INFOF(TAG, "🕒 Clock display request: param='%s', parsed=%s", enabled.c_str(), isEnabled ? "true" : "false");
+            LOG_INFOF(TAG, "Clock display request: param='%s', parsed=%s", enabled.c_str(), isEnabled ? "true" : "false");
             
             // Send response immediately to prevent timeout
             request->send(200, "text/plain", "OK");
             
             // Save to persistent settings after response sent
             settingsManager->setClockEnabled(isEnabled);
-            LOG_INFOF(TAG, "🕒 Clock setting saved, current value: %s", settingsManager->isClockEnabled() ? "true" : "false");
+            LOG_INFOF(TAG, "Clock setting saved, current value: %s", settingsManager->isClockEnabled() ? "true" : "false");
         } else {
             LOG_WARN(TAG, "Missing clock parameter");
             request->send(400, "text/plain", "Missing parameter");
@@ -1453,12 +1454,12 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // Clock face selection endpoint
     server->on("/clockface", HTTP_POST, [this](AsyncWebServerRequest *request){
-        LOG_DEBUG(TAG, "🎨 Clock face endpoint called");
+        LOG_DEBUG(TAG, "Clock face endpoint called");
         
         if (request->hasParam("face", true)) {
             String faceStr = request->getParam("face", true)->value();
             int faceType = faceStr.toInt();
-            LOG_INFOF(TAG, "🎨 Clock face request: param='%s', parsed=%d", faceStr.c_str(), faceType);
+            LOG_INFOF(TAG, "Clock face request: param='%s', parsed=%d", faceStr.c_str(), faceType);
             
             // Validate face type
             if (faceType >= 0 && faceType < 4) {
@@ -1467,7 +1468,7 @@ void WiFiManager::setupNormalModeRoutes() {
                 
                 // Save to persistent settings after response sent
                 settingsManager->setClockFace(static_cast<ClockFaceType>(faceType));
-                LOG_INFOF(TAG, "🎨 Clock face setting saved, current value: %d", static_cast<int>(settingsManager->getClockFace()));
+                LOG_INFOF(TAG, "Clock face setting saved, current value: %d", static_cast<int>(settingsManager->getClockFace()));
             } else {
                 LOG_WARN(TAG, "Invalid clock face type");
                 request->send(400, "text/plain", "Invalid face type");
@@ -1527,7 +1528,7 @@ void WiFiManager::setupNormalModeRoutes() {
     });
     
     server->on("/api/portal-mode", HTTP_POST, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🌐 Portal mode activation requested via settings");
+        LOG_INFO(TAG, "Portal mode activation requested via settings");
         request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Switching to portal mode...\"}");
         // Set flag to switch to portal mode on next loop
         switchToPortalMode = true;
@@ -1536,7 +1537,7 @@ void WiFiManager::setupNormalModeRoutes() {
     server->on("/api/ntp-settings", HTTP_POST, [this](AsyncWebServerRequest *request){
         if (request->hasParam("server", true)) {
             String ntpServer = request->getParam("server", true)->value();
-            LOG_INFOF(TAG, "🕐 NTP server change requested: %s", ntpServer.c_str());
+            LOG_INFOF(TAG, "NTP server change requested: %s", ntpServer.c_str());
             
             if (ntpServer.length() == 0) {
                 request->send(400, "application/json", "{\"status\":\"error\",\"message\":\"NTP server cannot be empty\"}");
@@ -1559,7 +1560,7 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // Factory reset endpoint (for debugging)
     server->on("/factory-reset", HTTP_POST, [this](AsyncWebServerRequest *request){
-        LOG_WARN(TAG, "🏭 Factory reset requested via web interface");
+        LOG_WARN(TAG, "Factory reset requested via web interface");
         CredentialManager::clearCredentials();
         request->send(200, "application/json", "{\"status\":\"success\",\"message\":\"Credentials cleared. Restarting...\"}");
         restartPending = true;
@@ -1568,7 +1569,7 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // DEBUG: Test endpoints for display debugging
     server->on("/debug/display1", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🔬 Debug: Testing Display 1 brightness");
+        LOG_INFO(TAG, "Debug: Testing Display 1 brightness");
         if (displayManager) {
             displayManager->setBrightness(255, 1); // Max brightness on Display 1 only
             request->send(200, "text/plain", "Display 1 set to max brightness");
@@ -1578,7 +1579,7 @@ void WiFiManager::setupNormalModeRoutes() {
     });
     
     server->on("/debug/display2", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🔬 Debug: Testing Display 2 brightness");
+        LOG_INFO(TAG, "Debug: Testing Display 2 brightness");
         if (displayManager) {
             displayManager->setBrightness(255, 2); // Max brightness on Display 2 only
             request->send(200, "text/plain", "Display 2 set to max brightness");
@@ -1588,7 +1589,7 @@ void WiFiManager::setupNormalModeRoutes() {
     });
     
     server->on("/debug/display1-off", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🔬 Debug: Turning off Display 1");
+        LOG_INFO(TAG, "Debug: Turning off Display 1");
         if (displayManager) {
             displayManager->setBrightness(0, 1); // Turn off Display 1
             request->send(200, "text/plain", "Display 1 turned off");
@@ -1598,7 +1599,7 @@ void WiFiManager::setupNormalModeRoutes() {
     });
     
     server->on("/debug/display2-off", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🔬 Debug: Turning off Display 2");
+        LOG_INFO(TAG, "Debug: Turning off Display 2");
         if (displayManager) {
             displayManager->setBrightness(0, 2); // Turn off Display 2
             request->send(200, "text/plain", "Display 2 turned off");
@@ -1608,7 +1609,7 @@ void WiFiManager::setupNormalModeRoutes() {
     });
     
     server->on("/debug/both-on", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🔬 Debug: Turning on both displays");
+        LOG_INFO(TAG, "Debug: Turning on both displays");
         if (displayManager) {
             displayManager->setBrightness(255, 0); // Turn on both displays
             request->send(200, "text/plain", "Both displays turned on");
@@ -1625,12 +1626,12 @@ void WiFiManager::setupNormalModeRoutes() {
     
     // Simple inline rotation test for normal mode too
     server->on("/debug/rotation-test", HTTP_GET, [this](AsyncWebServerRequest *request){
-        LOG_INFO(TAG, "🔄 Rotation test requested (normal mode)");
+        LOG_INFO(TAG, "Rotation test requested (normal mode)");
         
         if (request->hasParam("rotation")) {
             String rotationStr = request->getParam("rotation")->value();
             int rotation = rotationStr.toInt();
-            LOG_INFOF(TAG, "🔄 Testing rotation %d", rotation);
+            LOG_INFOF(TAG, "Testing rotation %d", rotation);
             
             if (rotation >= 0 && rotation <= 3 && displayManager) {
                 // Simple test: set rotation and clear screen with colored label
@@ -1822,7 +1823,7 @@ void WiFiManager::setupImageRoutes() {
                         if (slideshowManager) {
                             Serial.println("SUCCESS: Image uploaded, refreshing slideshow...");
                             slideshowManager->refreshImageList();
-                            LOG_INFO(TAG, "📄 Slideshow refreshed after image upload");
+                            LOG_INFO(TAG, "Slideshow refreshed after image upload");
                         }
                     } else {
                         String errorMsg = imageManager->getLastError();
@@ -2143,27 +2144,27 @@ void WiFiManager::checkGpio0FactoryReset() {
         // Button just pressed
         gpio0Pressed = true;
         gpio0PressStart = currentTime;
-        LOG_DEBUG(TAG, "🔘 GPIO0 button pressed");
+        LOG_DEBUG(TAG, "GPIO0 button pressed");
         
     } else if (!gpio0State && gpio0Pressed) {
         // Button released
         gpio0Pressed = false;
         unsigned long pressDuration = currentTime - gpio0PressStart;
-        LOG_DEBUGF(TAG, "🔘 GPIO0 button released after %lu ms", pressDuration);
+        LOG_DEBUGF(TAG, "GPIO0 button released after %lu ms", pressDuration);
         
     } else if (gpio0State && gpio0Pressed) {
         // Button held down - check duration
         unsigned long pressDuration = currentTime - gpio0PressStart;
         
         if (pressDuration >= FACTORY_RESET_DURATION) {
-            LOG_WARN(TAG, "🏭 FACTORY RESET TRIGGERED! (GPIO0 held for 6+ seconds)");
+            LOG_WARN(TAG, "FACTORY RESET TRIGGERED! (GPIO0 held for 6+ seconds)");
             
             // Clear credentials and restart in setup mode
             CredentialManager::clearCredentials();
             gpio0Pressed = false; // Prevent multiple triggers
             
             // Restart the system
-            LOG_INFO(TAG, "🔄 Restarting system...");
+            LOG_INFO(TAG, "Restarting system...");
             restartPending = true;
             restartScheduledTime = millis() + 1000;  // 1 second restart
         }
@@ -2171,11 +2172,11 @@ void WiFiManager::checkGpio0FactoryReset() {
 }
 
 // ============================================================================
-// 📊 STATUS QUERY & UTILITY METHODS
+// STATUS QUERY & UTILITY METHODS
 // ============================================================================
 
 /**
- * @brief 📊 Checks current WiFi connection status and operational mode
+ * @brief Checks current WiFi connection status and operational mode
  * 
  * Verifies both WiFi hardware connection state and system operational mode.
  * Ensures accurate connection reporting by validating both network connectivity
@@ -2201,7 +2202,7 @@ bool WiFiManager::isConnectedToWiFi() const {
 }
 
 /**
- * @brief 🌐 Retrieves current WiFi IP address for network identification
+ * @brief Retrieves current WiFi IP address for network identification
  * 
  * Returns the assigned WiFi IP address when in normal mode with active connection.
  * Provides network identification information for status displays and remote access.
@@ -2229,7 +2230,7 @@ String WiFiManager::getWiFiIP() const {
 }
 
 /**
- * @brief 🔄 Executes scheduled system restart when timeout reached
+ * @brief Executes scheduled system restart when timeout reached
  * 
  * Monitors for pending restart conditions and executes system restart
  * when scheduled time is reached. Provides controlled restart capability
@@ -2255,13 +2256,13 @@ String WiFiManager::getWiFiIP() const {
  */
 void WiFiManager::checkScheduledRestart() {
     if (restartPending && millis() >= restartScheduledTime) {
-        LOG_INFO(TAG, "🔄 Executing scheduled restart...");
+        LOG_INFO(TAG, "Executing scheduled restart...");
         ESP.restart();
     }
 }
 
 /**
- * @brief 🔄 Checks for pending portal mode switch requests and executes transition
+ * @brief Checks for pending portal mode switch requests and executes transition
  * 
  * Monitors internal flag for portal mode switch requests typically triggered
  * by user interface actions or system conditions requiring configuration
@@ -2294,14 +2295,14 @@ void WiFiManager::checkScheduledRestart() {
  */
 void WiFiManager::checkPortalModeSwitch() {
     if (switchToPortalMode) {
-        LOG_INFO(TAG, "🌐 Switching to portal mode as requested via settings");
+        LOG_INFO(TAG, "Switching to portal mode as requested via settings");
         switchToPortalMode = false;
         switchToSetupMode();
     }
 }
 
 /**
- * @brief ⏰ Manages transition from connection success display to normal mode
+ * @brief Manages transition from connection success display to normal mode
  * 
  * Monitors display state timing to transition from connection success message
  * back to normal operation display after configured delay period. Provides
@@ -2332,7 +2333,7 @@ void WiFiManager::checkConnectionSuccessDisplay() {
     
     // Check if 5 seconds have passed
     if (millis() - connectionSuccessStartTime >= DISPLAY_MODE_SWITCH_DURATION_MS) {
-        LOG_INFO(TAG, "🕐 5 seconds passed, switching to normal mode display");
+        LOG_INFO(TAG, "5 seconds passed, switching to normal mode display");
         
         // Mark as no longer displaying
         connectionSuccessDisplayed = false;
@@ -2385,7 +2386,7 @@ bool WiFiManager::isShowingConnectionSuccess() const {
 // ========================================
 
 /**
- * @brief 🔄 Configures Over-The-Air (OTA) firmware update web endpoints
+ * @brief Configures Over-The-Air (OTA) firmware update web endpoints
  * 
  * Establishes secure web-based firmware update capability allowing remote
  * system updates without physical device access. Implements comprehensive
@@ -2418,13 +2419,13 @@ bool WiFiManager::isShowingConnectionSuccess() const {
  * @see validateFirmwareBinary() for binary integrity verification
  */
 void WiFiManager::setupOTARoutes() {
-    LOG_INFO(TAG, "🔄 Setting up OTA firmware update routes");
+    LOG_INFO(TAG, "Setting up OTA firmware update routes");
     
     // OTA firmware upload endpoint
     server->on("/ota-update", HTTP_POST, 
         [this](AsyncWebServerRequest *request) {
             // This handles the response after OTA upload is complete
-            LOG_INFO(TAG, "🔄 OTA update request completed");
+            LOG_INFO(TAG, "OTA update request completed");
             
             if (Update.hasError()) {
                 String errorMsg = "OTA Update failed with error: " + String(Update.getError());
@@ -2446,7 +2447,7 @@ void WiFiManager::setupOTARoutes() {
             if (index == 0) {
                 // First chunk - start OTA update
                 totalSize = request->contentLength();
-                LOG_INFOF(TAG, "🔄 Starting OTA update: %s (%d bytes)", filename.c_str(), totalSize);
+                LOG_INFOF(TAG, "Starting OTA update: %s (%d bytes)", filename.c_str(), totalSize);
                 
                 // Validate file extension
                 if (!filename.endsWith(".bin")) {
@@ -2506,7 +2507,7 @@ void WiFiManager::setupOTARoutes() {
             
             if (final) {
                 // Final chunk - complete the update
-                LOG_INFOF(TAG, "🔄 OTA upload complete, finalizing update...");
+                LOG_INFOF(TAG, "OTA upload complete, finalizing update...");
                 
                 if (!Update.end(true)) {
                     String errorMsg = "OTA end failed - error: " + String(Update.getError());
@@ -2735,7 +2736,7 @@ bool WiFiManager::validateFirmwareBinary(uint8_t* data, size_t length) {
 }
 
 /**
- * @brief 📋 Returns comprehensive firmware version information string
+ * @brief Returns comprehensive firmware version information string
  * 
  * Generates formatted version string containing firmware version, build type,
  * and build date for system identification, debugging, and compatibility
