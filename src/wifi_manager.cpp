@@ -34,8 +34,7 @@
  * 
  * @author ESP32 Dual Display Billboard System
  * @version 0.9
- * @date 2025
- */
+*/
 
 #include "wifi_manager.h"
 #include "dcc_manager.h"
@@ -50,43 +49,21 @@
 
 static const String TAG = "WIFI";
 
-const unsigned long WiFiManager::RETRY_DELAYS[] = {5000, 10000, 30000}; // 5s, 10s, 30s
+// Define retry delays (ms) used by connection retry logic
+const unsigned long WiFiManager::RETRY_DELAYS[] = { 5000, 15000, 30000 };
 
-// ============================================================================
-// 🏗️ CONSTRUCTOR & INITIALIZATION
-// ============================================================================
+// Minimal constructor implementation to initialize members
+WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* tm, SettingsManager* sm, DisplayManager* dm, ImageManager* im, SlideshowManager* ssm, DCCManager* dcm) {
+    server = webServer;
+    timeManager = tm;
+    settingsManager = sm;
+    displayManager = dm;
+    imageManager = im;
+    slideshowManager = ssm;
+    dccManager = dcm;
 
-/**
- * @brief 🏗️ Constructs WiFiManager with comprehensive system integration
- * 
- * @details Initializes the WiFi management system with references to all core system components.
- *          Sets up dual-mode operation state, connection retry logic, GPIO factory reset monitoring,
- *          and establishes communication pathways between web interface and system components.
- * 
- * Key Initialization:
- * • Dual-mode state management (Setup/Normal mode switching)
- * • Connection retry and timing control systems
- * • GPIO0 factory reset monitoring and debouncing
- * • Cross-component communication interfaces
- * • Memory and connection health monitoring
- * • Restart scheduling and portal mode switching
- * 
- * @param webServer Pointer to AsyncWebServer instance for HTTP request handling
- * @param timeManager Pointer to TimeManager for timestamp and scheduling operations
- * @param settingsManager Pointer to SettingsManager for configuration persistence
- * @param displayManager Pointer to DisplayManager for visual status feedback
- * @param imageManager Pointer to ImageManager for image storage and retrieval
- * @param slideshowManager Pointer to SlideshowManager for slideshow control
- * @param dccManager Pointer to DCCManager for model railroad command integration
- * 
- * @note Constructor establishes component relationships but does not initiate network operations.
- *       Call initializeAP() or initializeFromCredentials() to begin WiFi operations.
- */
-WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager, SlideshowManager* slideshowManager, class DCCManager* dccManager) 
-    : server(webServer), timeManager(timeManager), settingsManager(settingsManager), displayManager(displayManager), imageManager(imageManager), slideshowManager(slideshowManager), dccManager(dccManager) {
-    LOG_DEBUG(TAG, "WiFiManager constructor called");
-    
-    // Initialize new Step 2 variables
+    apSSID = "";
+    apPassword = "";
     currentMode = MODE_SETUP;
     lastConnectionAttempt = 0;
     connectionRetryCount = 0;
@@ -96,37 +73,106 @@ WiFiManager::WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, Se
     restartPending = false;
     restartScheduledTime = 0;
     switchToPortalMode = false;
-    
-    // Initialize connection success display tracking
     connectionSuccessDisplayed = false;
     connectionSuccessStartTime = 0;
-    
-    // Initialize GPIO0 pin for factory reset
-    pinMode(GPIO0_PIN, INPUT_PULLUP);
+
+    // WiFi scan cache defaults
+    cachedNetworksJson = "[]";
+    lastScanMs = 0;
+    scanInProgress = false;
+    scanTTLMs = 30000;
 }
 
-/**
- * @brief 🌐 Initializes WiFi Access Point for setup mode configuration
- * 
- * @details Establishes ESP32 as WiFi Access Point to enable initial system configuration.
- *          Creates isolated network environment for secure credential entry and system setup.
- *          Provides visual feedback through display manager and comprehensive logging for debugging.
- * 
- * Setup Process:
- * • Stores AP credentials for internal reference and display
- * • Configures ESP32 WiFi hardware for Access Point mode
- * • Displays setup status on connected displays
- * • Enables DHCP for client device connectivity
- * • Prepares for web server route configuration
- * 
- * @param ssid Access Point network name (visible to connecting devices)
- * @param password Access Point password for network security (WPA2-PSK)
- * 
- * @note This method only configures the Access Point. Call setupRoutes() and startServer()
- *       to enable web interface functionality for configuration.
- * @note Access Point mode provides isolated network for secure initial setup without
- *       requiring existing WiFi infrastructure.
- */
+// Background scan task — performs the synchronous scan off the webserver thread
+void WiFiManager::scanTask(void* pvParameters) {
+    WiFiManager* mgr = reinterpret_cast<WiFiManager*>(pvParameters);
+    if (!mgr) {
+        vTaskDelete(nullptr);
+        return;
+    }
+
+    LOG_INFO(TAG, "Background WiFi scan starting...");
+    mgr->scanInProgress = true;
+
+    // Clear any previous scan results first
+    WiFi.scanDelete();
+
+    // If AP-only, temporarily switch to AP+STA for scanning
+    wifi_mode_t currentMode = WiFi.getMode();
+    bool modeChanged = false;
+    if (currentMode == WIFI_AP) {
+        WiFi.mode(WIFI_AP_STA);
+        modeChanged = true;
+        unsigned long modeChangeStart = millis();
+        while (millis() - modeChangeStart < 100) {
+            yield();
+        }
+    }
+
+    int n = WiFi.scanNetworks(false, true);
+    if (n == WIFI_SCAN_FAILED) {
+        LOG_ERROR(TAG, "Background WiFi scan failed to start");
+        mgr->scanInProgress = false;
+        if (modeChanged) WiFi.mode(currentMode);
+        vTaskDelete(nullptr);
+        return;
+    }
+
+    // Build JSON locally to avoid repeated allocations
+    String networks = "[";
+    int validNetworkCount = 0;
+    for (int i = 0; i < n; i++) {
+        String ssid = WiFi.SSID(i);
+        if (ssid.length() == 0) continue;
+        ssid.trim();
+        if (ssid.length() == 0) continue;
+        if (WiFi.RSSI(i) < -90) continue;
+
+        if (validNetworkCount > 0) networks += ",";
+        ssid.replace("\"", "\\\"");
+        networks += "{\"ssid\":\"" + ssid + "\",\"rssi\":" + String(WiFi.RSSI(i)) + "}";
+        validNetworkCount++;
+        if (validNetworkCount >= 10) break;
+    }
+    networks += "]";
+
+    // Restore WiFi mode if changed
+    if (modeChanged) {
+        WiFi.mode(currentMode);
+        unsigned long modeRestoreStart = millis();
+        while (millis() - modeRestoreStart < 50) {
+            yield();
+        }
+    }
+
+    // Update cache atomically
+    mgr->cachedNetworksJson = networks;
+    mgr->lastScanMs = millis();
+    LOG_INFOF(TAG, "Background WiFi scan complete: found %d total, %d used", n, validNetworkCount);
+
+    // Clean up scan results to free memory
+    WiFi.scanDelete();
+
+    mgr->scanInProgress = false;
+    vTaskDelete(nullptr);
+}
+
+void WiFiManager::startBackgroundScan(unsigned long ttlMs) {
+    if (scanInProgress) return;
+    scanTTLMs = ttlMs;
+    // Create a small task to run the blocking scan
+    BaseType_t ok = xTaskCreate(
+        WiFiManager::scanTask,
+        "wifi_scan",
+        4096, // stack size
+        this,
+        tskIDLE_PRIORITY + 1,
+        nullptr
+    );
+    if (ok != pdPASS) {
+        LOG_ERROR(TAG, "Failed to create background wifi_scan task");
+    }
+}
 void WiFiManager::initializeAP(const String& ssid, const String& password) {
     apSSID = ssid;
     apPassword = password;
