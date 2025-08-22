@@ -19,7 +19,7 @@ ethernet_monitor.py
 logs/
 firmware/
 todo/
-
+api-docs/
 # Documentation generation output (ignore generated files)
 docs/generated/
 docs/html/
