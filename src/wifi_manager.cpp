@@ -186,7 +186,7 @@ void WiFiManager::initializeAP(const String& ssid, const String& password) {
         LOG_ERROR(TAG, "Check if another AP is running or SSID is too long");
         
         // Show error status
-        displayManager->showQuickStatus("AP Start Failed", TFT_RED);
+        displayManager->showQuickStatus("AP Start Failed", 0x6000);  // #cc0000 (red) converted to RGB565
     }
 }
 
@@ -743,7 +743,7 @@ void WiFiManager::handleConnect(AsyncWebServerRequest* request) {
             
             // Show connection failed status on display
             if (displayManager) {
-                displayManager->showQuickStatus("Connection Failed", TFT_RED);
+                displayManager->showQuickStatus("Connection Failed", 0x6000);  // #cc0000 (red) converted to RGB565
             }
         }
     } else {

@@ -75,7 +75,7 @@ const char* SettingsManager::CLOCK_FACE_FILE = "/clock_face.txt";
 SettingsManager::SettingsManager() {
     // Initialize with safe default values - will be overridden by persistent storage in begin()
 #ifdef DUAL_DISPLAY_ENABLED
-    secondDisplayEnabled = false;           // Dual display disabled by default - user must enable via web interface
+    secondDisplayEnabled = true;            // Dual display enabled by default for dual display builds
 #else
     secondDisplayEnabled = false;           // Single display mode when dual display not compiled
 #endif
@@ -135,7 +135,11 @@ bool SettingsManager::begin() {
     
     // Ensure all configuration files exist with default values to prevent VFS errors
     if (!LittleFS.exists(SECOND_DISPLAY_FILE)) {
-        saveBoolean(SECOND_DISPLAY_FILE, false);
+#ifdef DUAL_DISPLAY_ENABLED
+        saveBoolean(SECOND_DISPLAY_FILE, true);   // Default to enabled for dual display builds
+#else
+        saveBoolean(SECOND_DISPLAY_FILE, false);  // Default to disabled when single display compiled
+#endif
     }
     if (!LittleFS.exists(DCC_ENABLED_FILE)) {
         saveBoolean(DCC_ENABLED_FILE, false);
@@ -164,7 +168,7 @@ bool SettingsManager::begin() {
     
     // Load all settings from LittleFS with appropriate defaults
 #ifdef DUAL_DISPLAY_ENABLED
-    secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, false);  // Default to disabled - user must enable via web interface
+    secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, true);   // Default to enabled for dual display builds
 #else
     secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, false);  // Default to disabled when single display compiled
 #endif

@@ -16,6 +16,7 @@
  * @since v0.9
  */
 DisplayManager::DisplayManager() : initialized(false), brightness1(255), brightness2(255), 
+                                   secondDisplayEnabled(true),  // Default to enabled for dual display builds
                                    splashStartTime(0), splashActive(false), splashTimeoutMs(2000),
                                    portalSequenceActive(false) {
 }
@@ -509,13 +510,17 @@ void DisplayManager::drawText(const char* text, int x, int y, uint16_t color, in
  * @since v0.9
  */
 void DisplayManager::enableSecondDisplay(bool enable) {
+    secondDisplayEnabled = enable;  // Store the state
+    
     if (enable) {
-        LOG_INFO("DISPLAY", "Second display enabled");
+        setBrightness(255, 2);  // Enable brightness for Display 2
+        LOG_INFO("DISPLAY", "Second display enabled with full brightness");
     } else {
         selectDisplay(2);
         tft.fillScreen(TFT_BLACK);
         deselectAll();
-        LOG_INFO("DISPLAY", "⚫ Second display disabled");
+        setBrightness(0, 2);  // Disable brightness for Display 2
+        LOG_INFO("DISPLAY", "⚫ Second display disabled (brightness = 0)");
     }
 }
 
@@ -595,7 +600,8 @@ void DisplayManager::showQuickStatus(const String& message, uint16_t color) {
     // Display 1: Show status messages
     selectDisplay(1);  
     tft.fillScreen(color);
-    tft.setTextColor(color == TFT_RED ? TFT_WHITE : TFT_BLACK);
+    // Always use WHITE text for all status messages (matches user specifications)
+    tft.setTextColor(TFT_WHITE);
     tft.setTextSize(1);
     tft.setTextDatum(MC_DATUM);
     tft.drawString(message, 80, 40, 2);
@@ -684,7 +690,7 @@ void DisplayManager::showAPReady() {
  */
 // Quick connecting indicator
 void DisplayManager::showConnecting() {
-    showQuickStatus("Connecting...", TFT_YELLOW);
+    showQuickStatus("Connecting...", 0xFCC0);  // #ff9900 (orange) converted to RGB565
 }
 
 /**
@@ -723,10 +729,10 @@ void DisplayManager::showPortalInfo(const String& ssid, const String& ip, const 
     
     LOG_INFO("DISPLAY", "📋 Showing portal information on display 1");  // FIXED
     
-    // Display 1: Show portal info with GREEN background (FIXED)
+    // Display 1: Show portal info with #00b33c background (brighter green)
     selectDisplay(1);  // FIXED: Changed to 1
-    tft.fillScreen(TFT_GREEN);  // Green background
-    tft.setTextColor(TFT_BLACK, TFT_GREEN);  // Black text on green background
+    tft.fillScreen(0x058F);  // #00b33c (brighter green) converted to RGB565
+    tft.setTextColor(TFT_WHITE, 0x058F);  // WHITE text on brighter green background
     tft.setTextSize(1);  // Text size 1
     
     // Use LEFT alignment to prevent clipping
@@ -749,7 +755,7 @@ void DisplayManager::showPortalInfo(const String& ssid, const String& ip, const 
     
     deselectAll();
     
-    LOG_INFO("DISPLAY", "Portal info displayed - Screen 1: GREEN with text");
+    LOG_INFO("DISPLAY", "Portal info displayed - Screen 1: #00b33c background with WHITE text");
 }
 
 /**
@@ -785,10 +791,10 @@ void DisplayManager::showConnectionSuccess(const String& ip) {
     
     LOG_INFO("DISPLAY", "📶 Showing WiFi connection success on display 1");
     
-    // Display 1: Show connection success with BLUE background
+    // Display 1: Show connection success with #0000cc background (blue)
     selectDisplay(1);
-    tft.fillScreen(TFT_BLUE);  // Blue background
-    tft.setTextColor(TFT_WHITE, TFT_BLUE);  // White text on blue background
+    tft.fillScreen(0x001F);  // #0000cc (blue) converted to RGB565
+    tft.setTextColor(TFT_WHITE, 0x001F);  // WHITE text on blue background
     tft.setTextSize(1);  // Text size 1
     
     // Use LEFT alignment (same as portal info)
@@ -884,20 +890,31 @@ void DisplayManager::drawColorBitmap(int16_t x, int16_t y, const uint16_t *bitma
  */
 void DisplayManager::drawColorBitmapRotated(int16_t x, int16_t y, const uint16_t *bitmap, 
                                           int16_t w, int16_t h, int displayNum) {
-    selectDisplay(displayNum);  // Keep original working method
+    selectDisplayForImage(displayNum);  // Uses DISPLAY_IMAGE_ROTATION = 0
     
-    // Rotate 270 degrees CW (or 90 degrees CCW) to fix upside down issue
-    // For each pixel at (i,j) in original, draw at (h-1-j, i) in rotated
-    for (int16_t j = 0; j < h; j++) {
-        for (int16_t i = 0; i < w; i++) {
-            int16_t pixelIndex = j * w + i;
-            uint16_t color = pgm_read_word(&bitmap[pixelIndex]);
-            
-            // Calculate rotated position: 270 degrees CW (fixes upside down)
-            int16_t rotatedX = x + (h - 1 - j);
-            int16_t rotatedY = y + i;
-            
-            tft.drawPixel(rotatedX, rotatedY, color);
+    // Respect DISPLAY_IMAGE_ROTATION setting instead of hardcoded rotation
+    if (DISPLAY_IMAGE_ROTATION == 0) {
+        // No rotation: draw bitmap as-is (portrait 80x160)
+        for (int16_t j = 0; j < h; j++) {
+            for (int16_t i = 0; i < w; i++) {
+                int16_t pixelIndex = j * w + i;
+                uint16_t color = pgm_read_word(&bitmap[pixelIndex]);
+                tft.drawPixel(x + i, y + j, color);
+            }
+        }
+    } else {
+        // Rotate 270 degrees CW for other rotation settings
+        for (int16_t j = 0; j < h; j++) {
+            for (int16_t i = 0; i < w; i++) {
+                int16_t pixelIndex = j * w + i;
+                uint16_t color = pgm_read_word(&bitmap[pixelIndex]);
+                
+                // Calculate rotated position: 270 degrees CW
+                int16_t rotatedX = x + (h - 1 - j);
+                int16_t rotatedY = y + i;
+                
+                tft.drawPixel(rotatedX, rotatedY, color);
+            }
         }
     }
     
@@ -936,13 +953,16 @@ void DisplayManager::drawColorBitmapRotated(int16_t x, int16_t y, const uint16_t
  */
 void DisplayManager::showSplashScreen(int displayNum, unsigned long timeoutMs) {
     if (displayNum == 0) {
-        // Show on both displays
+        // Show on both displays (always show splash on both, regardless of settings)
         showSplashScreen(1, timeoutMs);
-        showSplashScreen(2, timeoutMs);
+        showSplashScreen(2, timeoutMs);  // Always show splash on Display 2
         return;
     }
     
-    selectDisplayForImage(displayNum);  // Use image rotation for splash screen
+    LOG_INFOF("DISPLAY", "DEBUG: showSplashScreen called for display %d", displayNum);
+    LOG_INFOF("DISPLAY", "DEBUG: firstScreenCS=%d, secondScreenCS=%d", firstScreenCS, secondScreenCS);
+    
+    selectDisplayForImage(displayNum);  // Use image rotation (0) for splash screen
     
     // SELF-CONTAINED: Ensure display has proper brightness for splash screen
     setBrightness(255, displayNum);  // Full brightness for splash screen visibility
@@ -963,25 +983,26 @@ void DisplayManager::showSplashScreen(int displayNum, unsigned long timeoutMs) {
     splashActive = true;
     splashTimeoutMs = timeoutMs;
     
-    LOG_INFOF("DISPLAY", "Rotated color splash screen displayed on display %d with full brightness (timeout: %lums)", displayNum, timeoutMs);
+    LOG_INFOF("DISPLAY", "Splash screen displayed on display %d in portrait mode (rotation 0) with full brightness (timeout: %lums)", displayNum, timeoutMs);
 }
 
 void DisplayManager::updateSplashScreen() {
     if (splashActive && (millis() - splashStartTime >= splashTimeoutMs)) {
         splashActive = false;
         
-        // DIAGNOSTIC: Temporarily disable portal transition to test Display 2 holding
-        LOG_INFO("DISPLAY", "🧪 DIAGNOSTIC: Splash timeout reached, but portal transition DISABLED for Display 2 testing");
-        
         // Check if we need to show portal info after splash
         if (portalSequenceActive) {
             portalSequenceActive = false;
+            // Show portal info on Display 1
             showPortalInfo(pendingSSID, pendingIP, pendingStatus);
-            LOG_INFO("DISPLAY", "Splash completed, showing portal info");
+            // Clear Display 2 and turn off brightness when transitioning to portal mode
+            fillScreen(TFT_BLACK, 2);
+            setBrightness(0, 2);  // Turn off Display 2 brightness
+            LOG_INFO("DISPLAY", "Splash completed, showing portal info on Display 1, cleared and disabled Display 2");
         } else {
-            // Just clear screen
-            fillScreen(TFT_BLACK);
-            LOG_INFO("DISPLAY", "Splash screen auto-cleared");
+            // Clear Display 1 only - Display 2 will be handled by main.cpp logic
+            fillScreen(TFT_BLACK, 1);
+            LOG_INFO("DISPLAY", "Splash screen auto-cleared on Display 1");
         }
     }
 }
