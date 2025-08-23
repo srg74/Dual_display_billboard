@@ -385,15 +385,8 @@ void loop() {
         
         // Step 4: System ready
         if (displayInitialized && wifiInitialized) {
-#ifndef ESP32S3_MODE
-            // ESP32: Defer second display setting until after splash (matches ESP32S3 behavior)
-            // This ensures splash shows on both displays regardless of user settings
-            LOG_INFO("MAIN", "ESP32: Deferring second display setting until after splash completion");
-#else
-            // ESP32S3: Second display setting will be applied after splash screen completes
-            // This ensures splash shows on both displays regardless of user settings
-            LOG_INFO("MAIN", "ESP32S3: Deferring second display setting until after splash completion");
-#endif
+            // Display 2 behavior is now handled directly in updateSplashScreen()
+            // Both ESP32 and ESP32S3 have unified behavior: Display 2 goes dark after splash
             
             // Integrate SettingsManager with DisplayManager for immediate brightness application
             settingsManager.setDisplayManager(&displayManager);
@@ -414,7 +407,7 @@ void loop() {
         displayManager.updateSplashScreen();
         
         // NOTE: Display 2 control is now handled directly in updateSplashScreen()
-        // No need for additional settings logic here - splash screen handles it properly
+        // Unified behavior: Display 2 goes dark after splash during portal mode
         
         // Initialize time system if not already done and now in normal mode
         if (!timeInitialized && wifiInitialized && 

@@ -986,6 +986,20 @@ void DisplayManager::showSplashScreen(int displayNum, unsigned long timeoutMs) {
     LOG_INFOF("DISPLAY", "Splash screen displayed on display %d in portrait mode (rotation 0) with full brightness (timeout: %lums)", displayNum, timeoutMs);
 }
 
+/**
+ * @brief Updates splash screen state and handles timeout transitions
+ * 
+ * Monitors splash screen timeout and performs appropriate transitions:
+ * - Portal mode: Shows portal info on Display 1, clears Display 2 (unified behavior)
+ * - Normal mode: Clears Display 1 only
+ * 
+ * This ensures consistent behavior across ESP32 and ESP32S3 platforms.
+ * 
+ * @note Display 2 is always disabled during portal mode for both platforms
+ * @see showPortalInfo() for portal display details
+ * 
+ * @since v0.9
+ */
 void DisplayManager::updateSplashScreen() {
     if (splashActive && (millis() - splashStartTime >= splashTimeoutMs)) {
         splashActive = false;
@@ -995,14 +1009,14 @@ void DisplayManager::updateSplashScreen() {
             portalSequenceActive = false;
             // Show portal info on Display 1
             showPortalInfo(pendingSSID, pendingIP, pendingStatus);
-            // Clear Display 2 and turn off brightness when transitioning to portal mode
+            // Clear Display 2 and turn off brightness (unified behavior for all platforms)
             fillScreen(TFT_BLACK, 2);
-            setBrightness(0, 2);  // Turn off Display 2 brightness
-            LOG_INFO("DISPLAY", "Splash completed, showing portal info on Display 1, cleared and disabled Display 2");
+            setBrightness(0, 2);
+            LOG_INFO("DISPLAY", "Portal transition: Display 1 = portal info, Display 2 = disabled");
         } else {
-            // Clear Display 1 only - Display 2 will be handled by main.cpp logic
+            // Normal transition: clear Display 1 only
             fillScreen(TFT_BLACK, 1);
-            LOG_INFO("DISPLAY", "Splash screen auto-cleared on Display 1");
+            LOG_INFO("DISPLAY", "Normal transition: Display 1 cleared");
         }
     }
 }
