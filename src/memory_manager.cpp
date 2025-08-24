@@ -959,7 +959,7 @@ void MemoryManager::printMemoryReport(bool includeHistory) {
               currentStats.uptimeMs, currentStats.uptimeMs / 60000.0f);
     
     // Heap Statistics
-    LOG_INFOF(TAG, "📊 HEAP MEMORY:");
+    LOG_INFOF(TAG, " HEAP MEMORY:");
     LOG_INFOF(TAG, "   Total: %d bytes (%.1f KB)", 
               currentStats.heapTotal, currentStats.heapTotal / 1024.0f);
     LOG_INFOF(TAG, "   Free: %d bytes (%.1f KB)", 
@@ -973,7 +973,7 @@ void MemoryManager::printMemoryReport(bool includeHistory) {
     
     // PSRAM Statistics
     if (currentStats.psramAvailable) {
-        LOG_INFOF(TAG, "📊 PSRAM MEMORY:");
+        LOG_INFOF(TAG, " PSRAM MEMORY:");
         LOG_INFOF(TAG, "   Total: %d bytes (%.1f KB)", 
                   currentStats.psramTotal, currentStats.psramTotal / 1024.0f);
         LOG_INFOF(TAG, "   Free: %d bytes (%.1f KB)", 
@@ -982,15 +982,15 @@ void MemoryManager::printMemoryReport(bool includeHistory) {
                   currentStats.psramUsed, currentStats.psramUsed / 1024.0f, getUsagePercentage(PSRAM_EXTERNAL));
         LOG_INFOF(TAG, "   Health: %s", getHealthStatusString(currentStats.psramHealth));
     } else {
-        LOG_INFOF(TAG, "📊 PSRAM: Not available or not detected");
+        LOG_INFOF(TAG, " PSRAM: Not available or not detected");
     }
     
     // Overall Health
-    LOG_INFOF(TAG, "🏥 OVERALL HEALTH: %s", getHealthStatusString(currentStats.overallHealth));
+    LOG_INFOF(TAG, " OVERALL HEALTH: %s", getHealthStatusString(currentStats.overallHealth));
     
     // Historical Statistics (if requested)
     if (includeHistory) {
-        LOG_INFOF(TAG, "📈 HISTORICAL STATISTICS:");
+        LOG_INFOF(TAG, " HISTORICAL STATISTICS:");
         LOG_INFOF(TAG, "   Average Free Heap: %d bytes", currentStats.avgFreeHeap);
         LOG_INFOF(TAG, "   Peak Heap Usage: %d bytes", currentStats.peakHeapUsage);
         LOG_INFOF(TAG, "   Low Memory Events: %lu", currentStats.lowMemoryEvents);
@@ -1165,7 +1165,7 @@ void MemoryManager::resetStatistics() {
     heapSampleSum = currentStats.heapFree;
     currentStats.avgFreeHeap = currentStats.heapFree;
     
-    LOG_INFOF(TAG, "📊 Memory statistics reset");
+    LOG_INFOF(TAG, " Memory statistics reset");
 }
 
 /**

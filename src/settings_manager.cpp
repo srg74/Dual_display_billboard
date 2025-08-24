@@ -75,7 +75,7 @@ const char* SettingsManager::CLOCK_FACE_FILE = "/clock_face.txt";
 SettingsManager::SettingsManager() {
     // Initialize with safe default values - will be overridden by persistent storage in begin()
 #ifdef DUAL_DISPLAY_ENABLED
-    secondDisplayEnabled = false;           // Dual display disabled by default - user must enable via web interface
+    secondDisplayEnabled = true;            // Display 2 enabled by default in dual display mode
 #else
     secondDisplayEnabled = false;           // Single display mode when dual display not compiled
 #endif
@@ -135,7 +135,11 @@ bool SettingsManager::begin() {
     
     // Ensure all configuration files exist with default values to prevent VFS errors
     if (!LittleFS.exists(SECOND_DISPLAY_FILE)) {
-        saveBoolean(SECOND_DISPLAY_FILE, false);
+#ifdef DUAL_DISPLAY_ENABLED
+        saveBoolean(SECOND_DISPLAY_FILE, false);  // Default to disabled - user must enable via web UI
+#else
+        saveBoolean(SECOND_DISPLAY_FILE, false);  // Default to disabled when single display compiled
+#endif
     }
     if (!LittleFS.exists(DCC_ENABLED_FILE)) {
         saveBoolean(DCC_ENABLED_FILE, false);
@@ -164,7 +168,7 @@ bool SettingsManager::begin() {
     
     // Load all settings from LittleFS with appropriate defaults
 #ifdef DUAL_DISPLAY_ENABLED
-    secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, false);  // Default to disabled - user must enable via web interface
+    secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, true);   // Default to enabled in dual display mode
 #else
     secondDisplayEnabled = loadBoolean(SECOND_DISPLAY_FILE, false);  // Default to disabled when single display compiled
 #endif
@@ -180,20 +184,20 @@ bool SettingsManager::begin() {
     // Validate and correct loaded settings to ensure they're within acceptable ranges
     int correctedCount = validateAndCorrectSettings();
     if (correctedCount > 0) {
-        LOG_INFOF(TAG, "� Corrected %d out-of-range setting value(s)", correctedCount);
+    LOG_INFOF(TAG, "Corrected %d out-of-range setting value(s)", correctedCount);
     }
     
     // Log current configuration for diagnostic purposes
-    LOG_INFOF(TAG, "�📺 Second Display: %s", secondDisplayEnabled ? "enabled" : "disabled");
-    LOG_INFOF(TAG, "🚂 DCC Interface: %s", dccEnabled ? "enabled" : "disabled");
+    LOG_INFOF(TAG, "Second Display: %s", secondDisplayEnabled ? "enabled" : "disabled");
+    LOG_INFOF(TAG, "DCC Interface: %s", dccEnabled ? "enabled" : "disabled");
     if (dccEnabled) {
-        LOG_INFOF(TAG, "🚂 DCC Address: %d", dccAddress);
-        LOG_INFOF(TAG, "🚂 DCC GPIO Pin: %d", dccPin);
+        LOG_INFOF(TAG, "DCC Address: %d", dccAddress);
+        LOG_INFOF(TAG, "DCC GPIO Pin: %d", dccPin);
     }
     LOG_INFOF(TAG, "Image Interval: %d seconds", imageInterval);
     LOG_INFOF(TAG, "Image Display: %s", imageEnabled ? "enabled" : "disabled");
-    LOG_INFOF(TAG, "🔆 Brightness: %d (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
-    LOG_INFOF(TAG, "🕒 Clock Display: %s", clockEnabled ? "enabled" : "disabled");
+    LOG_INFOF(TAG, "Brightness: %d (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
+    LOG_INFOF(TAG, "Clock Display: %s", clockEnabled ? "enabled" : "disabled");
     
     LOG_INFO(TAG, "Settings Manager initialized successfully");
     return true;
@@ -238,11 +242,11 @@ bool SettingsManager::begin() {
 void SettingsManager::setDisplayManager(DisplayManager* dm) {
     displayManager = dm;
     if (dm) {
-        LOG_INFO(TAG, "🔗 DisplayManager integration enabled for immediate brightness application");
+        LOG_INFO(TAG, "DisplayManager integration enabled for immediate brightness application");
         // Apply current brightness setting to hardware immediately
         if (secondDisplayEnabled) {
             dm->setBrightness(brightness, 0); // Both displays
-            LOG_DEBUG(TAG, "Applied current brightness to both displays");
+                LOG_DEBUG(TAG, "Applied current brightness to both displays");
         } else {
             dm->setBrightness(brightness, 1); // Main display only
             // Don't turn off Display 2 if splash screen is active (let splash complete first)
@@ -254,7 +258,7 @@ void SettingsManager::setDisplayManager(DisplayManager* dm) {
             }
         }
     } else {
-        LOG_INFO(TAG, "🔗 DisplayManager integration disabled");
+    LOG_INFO(TAG, "DisplayManager integration disabled");
     }
 }
 
@@ -303,13 +307,13 @@ void SettingsManager::setSecondDisplayEnabled(bool enabled) {
     if (displayManager) {
         if (enabled) {
             displayManager->setBrightness(brightness, 0); // Both displays
-            LOG_DEBUG(TAG, "🔆 Applied current brightness to both displays");
+            LOG_DEBUG(TAG, "Applied current brightness to both displays");
         } else {
             displayManager->setBrightness(brightness, 1);  // Main display only
             // Don't turn off Display 2 if splash screen is active (let splash complete first)
             if (!displayManager->isSplashActive()) {
                 displayManager->setBrightness(0, 2);           // Turn off second display
-                LOG_DEBUG(TAG, "🔆 Applied brightness to main display only, turned off second");
+                LOG_DEBUG(TAG, "Applied brightness to main display only, turned off second");
             } else {
                 LOG_INFO(TAG, "Splash active - deferring Display 2 brightness setting");
             }
@@ -778,13 +782,13 @@ void SettingsManager::setBrightness(int value) {
     if (displayManager) {
         if (secondDisplayEnabled) {
             displayManager->setBrightness(value, 0); // Both displays
-            LOG_DEBUG(TAG, "🔆 Applied brightness to both displays immediately");
+            LOG_DEBUG(TAG, "Applied brightness to both displays immediately");
         } else {
             displayManager->setBrightness(value, 1);  // Main display only
             // Don't turn off Display 2 if splash screen is active (let splash complete first)
             if (!displayManager->isSplashActive()) {
                 displayManager->setBrightness(0, 2);      // Turn off second display
-                LOG_DEBUG(TAG, "🔆 Applied brightness to main display only, turned off second");
+                LOG_DEBUG(TAG, "Applied brightness to main display only, turned off second");
             } else {
                 LOG_INFO(TAG, "Splash active - deferring Display 2 brightness setting");
             }
@@ -999,21 +1003,21 @@ ClockFaceType SettingsManager::getClockFace() {
  * @since v0.9
  */
 void SettingsManager::printSettings() {
-    LOG_INFO(TAG, "📋 === CURRENT SYSTEM SETTINGS ===");
-    LOG_INFOF(TAG, "  📺 Second Display: %s", secondDisplayEnabled ? "enabled" : "disabled");
-    LOG_INFOF(TAG, "  🚂 DCC Interface: %s", dccEnabled ? "enabled" : "disabled");
+    LOG_INFO(TAG, "=== CURRENT SYSTEM SETTINGS ===");
+    LOG_INFOF(TAG, "  Second Display: %s", secondDisplayEnabled ? "enabled" : "disabled");
+    LOG_INFOF(TAG, "  DCC Interface: %s", dccEnabled ? "enabled" : "disabled");
     if (dccEnabled) {
-        LOG_INFOF(TAG, "  🚂 DCC Address: %d", dccAddress);
-        LOG_INFOF(TAG, "  🚂 DCC GPIO Pin: %d", dccPin);
+        LOG_INFOF(TAG, "  DCC Address: %d", dccAddress);
+        LOG_INFOF(TAG, "  DCC GPIO Pin: %d", dccPin);
     }
     LOG_INFOF(TAG, "  Image Interval: %d seconds", imageInterval);
     LOG_INFOF(TAG, "  Image Slideshow: %s", imageEnabled ? "enabled" : "disabled");
-    LOG_INFOF(TAG, "  🔆 Brightness: %d (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
-    LOG_INFOF(TAG, "  🕒 Clock Display: %s", clockEnabled ? "enabled" : "disabled");
+    LOG_INFOF(TAG, "  Brightness: %d (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
+    LOG_INFOF(TAG, "  Clock Display: %s", clockEnabled ? "enabled" : "disabled");
     if (clockEnabled) {
-        LOG_INFOF(TAG, "  🕒 Clock Face: %d", static_cast<int>(clockFace));
+        LOG_INFOF(TAG, "  Clock Face: %d", static_cast<int>(clockFace));
     }
-    LOG_INFO(TAG, "📋 === END SETTINGS SUMMARY ===");
+    LOG_INFO(TAG, "=== END SETTINGS SUMMARY ===");
 }
 
 /**
@@ -1056,7 +1060,7 @@ void SettingsManager::printSettings() {
  * @since v0.9
  */
 void SettingsManager::resetToDefaults() {
-    LOG_INFO(TAG, "🔄 Resetting all settings to factory defaults...");
+    LOG_INFO(TAG, "Resetting all settings to factory defaults...");
     
     // Reset all settings to their default values with persistence
     setSecondDisplayEnabled(true);

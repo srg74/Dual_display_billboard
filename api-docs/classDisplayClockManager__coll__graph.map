@@ -1,7 +1,0 @@
-<map id="DisplayClockManager" name="DisplayClockManager">
-<area shape="rect" id="Node000001" title="Advanced clock display system with multiple face styles." alt="" coords="59,93,223,119"/>
-<area shape="rect" id="Node000002" href="$classDisplayManager.html" title="Dual TFT display hardware controller." alt="" coords="5,5,133,31"/>
-<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="70,44,72,56,77,68,90,81,106,91,104,96,87,85,72,71,67,58,65,44"/>
-<area shape="rect" id="Node000003" href="$classTimeManager.html" title="Advanced time management system with NTP synchronization and timezone support." alt="" coords="157,5,269,31"/>
-<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="204,44,186,71,160,95,156,91,182,68,200,41"/>
-</map>

@@ -64,7 +64,7 @@ TimeManager::TimeManager() : timeInitialized(false) {
  */
 
 bool TimeManager::begin() {
-    LOG_INFO(TAG, "🕐 Initializing Time Manager...");
+    LOG_INFO(TAG, "Initializing Time Manager...");
     
     if (timeInitialized) {
         LOG_INFO(TAG, "Time Manager already initialized");
@@ -75,25 +75,25 @@ bool TimeManager::begin() {
     String savedTimezone = loadTimezone();
     if (!savedTimezone.isEmpty()) {
         currentTimezone = savedTimezone;
-        LOG_INFOF(TAG, "📅 Loaded timezone from LittleFS: %s", currentTimezone.c_str());
+    LOG_INFOF(TAG, "Loaded timezone from LittleFS: %s", currentTimezone.c_str());
     } else {
-        LOG_INFOF(TAG, "📅 Using default timezone: %s", currentTimezone.c_str());
+    LOG_INFOF(TAG, "Using default timezone: %s", currentTimezone.c_str());
     }
     
     String savedClockLabel = loadClockLabel();
     if (!savedClockLabel.isEmpty()) {
         clockLabel = savedClockLabel;
-        LOG_INFOF(TAG, "🏷️ Loaded clock label from LittleFS: %s", clockLabel.c_str());
+    LOG_INFOF(TAG, "Loaded clock label from LittleFS: %s", clockLabel.c_str());
     } else {
-        LOG_INFOF(TAG, "🏷️ Using default clock label: %s", clockLabel.c_str());
+    LOG_INFOF(TAG, "Using default clock label: %s", clockLabel.c_str());
     }
     
     String savedNTPServer = loadNTPServer();
     if (!savedNTPServer.isEmpty()) {
         customNTPServer1 = savedNTPServer;
-        LOG_INFOF(TAG, "🌐 Loaded NTP server from LittleFS: %s", customNTPServer1.c_str());
+    LOG_INFOF(TAG, "Loaded NTP server from LittleFS: %s", customNTPServer1.c_str());
     } else {
-        LOG_INFOF(TAG, "🌐 Using default NTP server: %s", customNTPServer1.c_str());
+    LOG_INFOF(TAG, "Using default NTP server: %s", customNTPServer1.c_str());
     }
     
     configureNTP();
@@ -101,7 +101,7 @@ bool TimeManager::begin() {
     if (waitForTimeSync()) {
         timeInitialized = true;
         LOG_INFO(TAG, "Time Manager initialized successfully");
-        LOG_INFOF(TAG, "📅 Current time: %s", getCurrentTime().c_str());
+    LOG_INFOF(TAG, "Current time: %s", getCurrentTime().c_str());
         return true;
     } else {
         LOG_ERROR(TAG, "Time synchronization failed");
@@ -124,14 +124,14 @@ bool TimeManager::begin() {
  */
 
 void TimeManager::configureNTP() {
-    LOG_INFO(TAG, "🌐 Configuring NTP servers...");
+    LOG_INFO(TAG, "Configuring NTP servers...");
     
     // Select custom or default NTP servers based on configuration
     const char* server1 = customNTPServer1.length() > 0 ? customNTPServer1.c_str() : NTP_SERVER1;
     const char* server2 = customNTPServer2.length() > 0 ? customNTPServer2.c_str() : NTP_SERVER2;
     const char* server3 = customNTPServer3.length() > 0 ? customNTPServer3.c_str() : NTP_SERVER3;
     
-    LOG_INFOF(TAG, "📡 Using NTP servers: %s, %s, %s", server1, server2, server3);
+    LOG_INFOF(TAG, "Using NTP servers: %s, %s, %s", server1, server2, server3);
     
     // Configure ESP32 time system with multiple NTP servers for redundancy
     configTime(0, 0, server1, server2, server3);
@@ -156,7 +156,7 @@ void TimeManager::configureNTP() {
  */
 
 bool TimeManager::waitForTimeSync(int maxRetries) {
-    LOG_INFO(TAG, "⏳ Waiting for time synchronization...");
+    LOG_INFO(TAG, "Waiting for time synchronization...");
     
     unsigned long startTime = micros();
     const unsigned long attemptInterval = 2000000UL; // 2 seconds in microseconds
@@ -164,10 +164,10 @@ bool TimeManager::waitForTimeSync(int maxRetries) {
     for (int retries = 0; retries < maxRetries; retries++) {
         time_t currentTime = time(nullptr);
         
-        LOG_INFOF(TAG, "⏳ Time sync attempt %d/%d (current time: %ld)", retries + 1, maxRetries, currentTime);
+    LOG_INFOF(TAG, "Time sync attempt %d/%d (current time: %ld)", retries + 1, maxRetries, currentTime);
         
         if (currentTime > 100000) {
-            LOG_INFOF(TAG, "✅ Time synchronized successfully! Current epoch: %ld", currentTime);
+            LOG_INFOF(TAG, "Time synchronized successfully! Current epoch: %ld", currentTime);
             return true;
         }
         
@@ -179,7 +179,7 @@ bool TimeManager::waitForTimeSync(int maxRetries) {
     }
     
     time_t finalTime = time(nullptr);
-    LOG_ERRORF(TAG, "❌ Time sync failed after %d attempts (final time: %ld)", maxRetries, finalTime);
+    LOG_ERRORF(TAG, "Time sync failed after %d attempts (final time: %ld)", maxRetries, finalTime);
     return false;
 }
 
@@ -283,8 +283,8 @@ void TimeManager::setTimezone(const String& timezone) {
     if (timeInitialized) {
         setenv("TZ", timezone.c_str(), 1);
         tzset();  // Apply timezone change to system
-        LOG_INFOF(TAG, "🌍 Timezone updated to: %s", timezone.c_str());
-        LOG_INFOF(TAG, "📅 New time: %s", getCurrentTime().c_str());
+        LOG_INFOF(TAG, " Timezone updated to: %s", timezone.c_str());
+        LOG_INFOF(TAG, " New time: %s", getCurrentTime().c_str());
     }
 }
 
@@ -334,7 +334,7 @@ void TimeManager::setClockLabel(const String& label) {
         LOG_WARN(TAG, "Failed to save clock label to LittleFS");
     }
     
-    LOG_INFOF(TAG, "🏷️ Clock label set to: %s", label.c_str());
+    LOG_INFOF(TAG, "Clock label set to: %s", label.c_str());
 }
 
 /**
@@ -371,7 +371,7 @@ bool TimeManager::getCurrentTimeStruct(struct tm* timeinfo) {
  */
 
 void TimeManager::forceResync() {
-    LOG_INFO(TAG, "🔄 Forcing time resync...");
+    LOG_INFO(TAG, "Forcing time resync...");
     
     // Stop and restart SNTP service
     sntp_stop();
@@ -379,7 +379,7 @@ void TimeManager::forceResync() {
     
     if (waitForTimeSync(5)) {
         LOG_INFO(TAG, "Time resync successful");
-        LOG_INFOF(TAG, "📅 Updated time: %s", getCurrentTime().c_str());
+    LOG_INFOF(TAG, "Updated time: %s", getCurrentTime().c_str());
     } else {
         LOG_WARN(TAG, "Time resync failed");
     }
@@ -395,7 +395,7 @@ void TimeManager::forceResync() {
  * @param server3 Tertiary NTP server address (optional)
  */
 void TimeManager::setNTPServer(const String& server1, const String& server2, const String& server3) {
-    LOG_INFOF(TAG, "🌐 Setting custom NTP server: %s", server1.c_str());
+    LOG_INFOF(TAG, "Setting custom NTP server: %s", server1.c_str());
     
     customNTPServer1 = server1;
     if (server2.length() > 0) {
@@ -439,7 +439,7 @@ String TimeManager::getNTPServer1() {
  *          Automatically attempts time synchronization with restored servers.
  */
 void TimeManager::resetToDefaultNTP() {
-    LOG_INFO(TAG, "🔄 Resetting to default NTP servers");
+    LOG_INFO(TAG, " Resetting to default NTP servers");
     customNTPServer1 = NTP_SERVER1;
     customNTPServer2 = NTP_SERVER2;
     customNTPServer3 = NTP_SERVER3;

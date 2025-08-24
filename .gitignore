@@ -18,7 +18,8 @@ ethernet_monitor.py
 # Project specific folders
 logs/
 firmware/
-
+todo/
+api-docs/
 # Documentation generation output (ignore generated files)
 docs/generated/
 docs/html/
@@ -32,3 +33,4 @@ doxygen_warnings.log
 # Keep source documentation files but ignore temporary artifacts
 .doxygen/
 build_info.json
+api-docs/

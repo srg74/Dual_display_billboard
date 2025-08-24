@@ -24,8 +24,8 @@ def rename_firmware(source, target, env):
     
     # Only process production builds
     if "production" not in env_name:
-        print(f"📝 Debug build detected ({env_name}) - skipping firmware archival")
-        print(f"💡 Only production builds are copied to firmware/ folder")
+        print(f" Debug build detected ({env_name}) - skipping firmware archival")
+        print(f" Only production builds are copied to firmware/ folder")
         return
     
     # Parse environment name to extract info
@@ -60,11 +60,11 @@ def rename_firmware(source, target, env):
         # Copy firmware to descriptive name
         shutil.copy2(source_path, dest_path)
         
-        print(f"✅ Firmware copied to: firmware/{firmware_name}")
-        print(f"📁 Ready for OTA upload: {firmware_name}")
+        print(f" Firmware copied to: firmware/{firmware_name}")
+        print(f" Ready for OTA upload: {firmware_name}")
         
     except Exception as e:
-        print(f"❌ Error copying firmware: {e}")
+        print(f" Error copying firmware: {e}")
 
 # Add the post-build action
 if 'env' in globals():

@@ -113,9 +113,17 @@ private:
     // New private variables
     bool connectionSuccessDisplayed;
     unsigned long connectionSuccessStartTime;
+    // WiFi scan cache
+    String cachedNetworksJson;
+    unsigned long lastScanMs;
+    bool scanInProgress;
+    unsigned long scanTTLMs; // cache TTL in ms
     
 public:
     WiFiManager(AsyncWebServer* webServer, TimeManager* timeManager, SettingsManager* settingsManager, DisplayManager* displayManager, ImageManager* imageManager, class SlideshowManager* slideshowManager = nullptr, class DCCManager* dccManager = nullptr);
+    // Start an asynchronous background WiFi scan (non-blocking)
+    void startBackgroundScan(unsigned long ttlMs = 30000);
+    static void scanTask(void* pvParameters);
     
     // Only change the hardcoded password to use secrets.h
     void initializeAP(const String& ssid = "Billboard-Portal", const String& password = PORTAL_PASSWORD);

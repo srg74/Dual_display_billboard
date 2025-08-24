@@ -6,7 +6,7 @@
  * This file defines default passwords and authentication tokens used by various
  * system components for initial setup and administrative access.
  * 
- * **SECURITY CONSIDERATIONS** ⚠️
+ * **SECURITY CONSIDERATIONS** 
  * 
  * IMPORTANT: This file contains sensitive security information and should be:
  * - Modified with unique passwords before deployment

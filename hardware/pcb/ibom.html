@@ -1066,7 +1066,7 @@ function saveBomTable(output) {
       for (var node of cell.childNodes) {
         if (node.nodeName == "INPUT") {
           if (node.checked) {
-            val += '✓';
+            val += '';
           }
         } else if ((node.nodeName == "MARK") || (node.nodeName == "A")) {
           val += node.firstChild.nodeValue;

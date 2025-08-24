@@ -27,7 +27,7 @@
 #include <Arduino.h>
 
 /**
- * @brief 📦 Version Information Namespace
+ * @brief  Version Information Namespace
  * 
  * Provides centralized access to all firmware version and build information.
  * All version data is automatically generated during build time.
@@ -156,7 +156,7 @@ namespace Version {
      * @param detailed Include detailed build information
      */
     inline void printVersionInfo(bool detailed = false) {
-        Serial.println("=== 📦 Firmware Version Information ===");
+        Serial.println("===  Firmware Version Information ===");
         Serial.println("Version: " + getFirmwareVersion());
         Serial.println("Full Version: " + getFirmwareVersionFull());
         Serial.println("Build Number: " + getBuildNumber());

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🔧 Enhanced Build Information Generator for ESP32 Dual Display Billboard
+ Enhanced Build Information Generator for ESP32 Dual Display Billboard
 @version 0.9
 @author Dual Display Billboard Team
 @date 2025-08-16
@@ -26,7 +26,7 @@ except NameError:
 
 class BuildInfoGenerator:
     """
-    📦 Comprehensive build information generator with version management
+     Comprehensive build information generator with version management
     
     Features:
     • Base version extraction from platformio.ini
@@ -56,7 +56,7 @@ class BuildInfoGenerator:
             if match:
                 return match.group(1)
         except Exception as e:
-            print(f"⚠️  Could not read current_version from platformio.ini: {e}")
+            print(f"  Could not read current_version from platformio.ini: {e}")
             
         return "0.9"  # Fallback version
             
@@ -75,7 +75,7 @@ class BuildInfoGenerator:
             if match:
                 return match.group(1)
         except Exception as e:
-            print(f"⚠️  Could not read production_build from platformio.ini: {e}")
+            print(f"  Could not read production_build from platformio.ini: {e}")
         
         # Fallback to date-based number
         now = datetime.now()
@@ -97,7 +97,7 @@ class BuildInfoGenerator:
             with open(self.build_info_file, 'w') as f:
                 json.dump(build_info, f, indent=2)
         except Exception as e:
-            print(f"⚠️  Warning: Could not save build info: {e}")
+            print(f"  Warning: Could not save build info: {e}")
     
     def _generate_build_number(self):
         """
@@ -110,11 +110,11 @@ class BuildInfoGenerator:
         if "production" in env_name.lower():
             # Production build: Use manual number from platformio.ini
             build_number = self._get_production_build_number()
-            print(f"📦 Using manual production build number: {build_number}")
+            print(f" Using manual production build number: {build_number}")
             return build_number, 0  # No daily counter for manual builds
         else:
             # Debug build: Use original automatic logic (but this shouldn't happen)
-            print(f"⚠️  Warning: Debug build calling generate_build_info.py - this should not happen")
+            print(f"  Warning: Debug build calling generate_build_info.py - this should not happen")
             now = datetime.now()
             date_part = now.strftime("%y%m%d")  # YYMMDD
             
@@ -135,7 +135,7 @@ class BuildInfoGenerator:
             # Ensure counter stays within 0-9
             if daily_counter > 9:
                 daily_counter = 9
-                print(f"⚠️  Warning: Daily build limit reached (9), keeping counter at 9")
+                print(f"  Warning: Daily build limit reached (9), keeping counter at 9")
             
             # Generate build number
             build_number = f"{date_part}{daily_counter}"
@@ -190,14 +190,14 @@ class BuildInfoGenerator:
         ])
         
         # Print build information
-        print(f"🏗️  Build Information Generated:")
-        print(f"   📦 Version: {version_short}")
-        print(f"   🔧 Build Type: {build_type}")
-        print(f"   🏗️  Build: {build_number}")
-        print(f"   📅 Build Date: {build_date}")
-        print(f"   🕐 Daily Build: #{daily_counter}")
-        print(f"   ✅ Full Version: {full_version}")
-        print(f"   🏷️  Environment: {env_name}")
+        print(f"  Build Information Generated:")
+        print(f"    Version: {version_short}")
+        print(f"    Build Type: {build_type}")
+        print(f"     Build: {build_number}")
+        print(f"    Build Date: {build_date}")
+        print(f"    Daily Build: #{daily_counter}")
+        print(f"    Full Version: {full_version}")
+        print(f"     Environment: {env_name}")
     
     def _update_config_header(self, version, build_type, build_number):
         """Update the config.h file with current build information"""
@@ -238,25 +238,25 @@ class BuildInfoGenerator:
             with open(config_path, 'w') as f:
                 f.write(content)
                 
-            print(f"📝 Updated config.h: {version}, {build_type}, {build_number}")
+            print(f" Updated config.h: {version}, {build_type}, {build_number}")
             
         except Exception as e:
-            print(f"⚠️  Warning: Could not update config.h: {e}")
+            print(f"  Warning: Could not update config.h: {e}")
 
 def generate_build_info(source, target, env):
     """Generate build information for the project"""
-    print("🏗️  Build Info Generator Starting...")
+    print("  Build Info Generator Starting...")
     try:
         generator = BuildInfoGenerator(env)
         generator.generate()
-        print("✅ Build info generated successfully!")
+        print(" Build info generated successfully!")
     except Exception as e:
-        print(f"❌ Build info generation failed: {e}")
+        print(f" Build info generation failed: {e}")
 
 # Execute during PlatformIO build process
 try:
     Import("env")
-    print("📦 Registering build info generator...")
+    print(" Registering build info generator...")
     env.AddPreAction("buildprog", generate_build_info)
 except NameError:
     # Not running in PlatformIO environment

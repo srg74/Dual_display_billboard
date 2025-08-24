@@ -21,6 +21,18 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y doxygen graphviz
+      
+    - name: Sync Doxygen project number from platformio.ini
+      run: |
+        # Read base version from platformio.ini and set PROJECT_NUMBER in Doxyfile
+        version=$(grep -Ei '^\s*current_version\s*=' platformio.ini | sed -E 's/.*= *//; s/[[:space:]]//g')
+        if [ -z "$version" ]; then
+          echo "No current_version found in platformio.ini; leaving Doxyfile unchanged.";
+        else
+          echo "Setting Doxyfile PROJECT_NUMBER to v$version"
+          sed -E -i "s/^PROJECT_NUMBER.*/PROJECT_NUMBER         = \"v$version\"/" Doxyfile
+          echo "Doxyfile updated:"; grep -n "PROJECT_NUMBER" Doxyfile || true
+        fi
         
     - name: Generate documentation
       run: |

@@ -142,13 +142,13 @@ def convert_png_to_header(input_file, output_file, display_type=None):
             f.write("};\n\n")
             f.write("#endif // SPLASH_SCREEN_H\n")
         
-        print(f"✅ Successfully generated {output_file}")
-        print(f"📊 Array size: {total_pixels} uint16_t values ({total_bytes} bytes)")
+        print(f" Successfully generated {output_file}")
+        print(f" Array size: {total_pixels} uint16_t values ({total_bytes} bytes)")
         
         return True
         
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f" Error: {e}")
         return False
 
 def main():
@@ -177,7 +177,7 @@ Supported display types:
     
     # Validate input file
     if not os.path.exists(args.input):
-        print(f"❌ Error: Input file '{args.input}' not found")
+        print(f" Error: Input file '{args.input}' not found")
         return 1
     
     # Ensure output directory exists

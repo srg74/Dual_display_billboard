@@ -82,10 +82,10 @@ bool DCCManager::begin() {
     pin = settingsManager->getDCCPin();
     
     // Log initialization status for debugging
-    LOG_INFOF(TAG, "🚂 DCC Manager initializing...");
-    LOG_INFOF(TAG, "🚂 Enabled: %s", enabled ? "yes" : "no");
-    LOG_INFOF(TAG, "🚂 Address: %d", address);
-    LOG_INFOF(TAG, "🚂 GPIO Pin: %d", pin);
+    LOG_INFOF(TAG, "DCC Manager initializing...");
+    LOG_INFOF(TAG, "Enabled: %s", enabled ? "yes" : "no");
+    LOG_INFOF(TAG, "Address: %d", address);
+    LOG_INFOF(TAG, "GPIO Pin: %d", pin);
     
     // Start DCC decoder if enabled
     if (enabled) {
@@ -124,13 +124,13 @@ void DCCManager::restart() {
     // Stop processing if currently disabled
     if (!enabled) {
         if (initialized) {
-            LOG_INFO(TAG, "🚂 Stopping DCC decoder");
+            LOG_INFO(TAG, "Stopping DCC decoder");
             initialized = false;
         }
         return;
     }
     
-    LOG_INFOF(TAG, "🚂 Starting DCC decoder on pin %d with address %d", pin, address);
+    LOG_INFOF(TAG, "Starting DCC decoder on pin %d with address %d", pin, address);
     
     // Configure GPIO pin for DCC signal input with pull-up resistor
     pinMode(pin, INPUT_PULLUP);
@@ -142,7 +142,7 @@ void DCCManager::restart() {
     // Validate DCC address range for accessory decoders
     if (address >= 1 && address <= 2048) {
         // NmraDcc library expects 0-based addressing for accessories
-        LOG_INFOF(TAG, "🚂 Setting DCC accessory address to %d", address);
+    LOG_INFOF(TAG, "Setting DCC accessory address to %d", address);
         initialized = true;
     } else {
         LOG_ERRORF(TAG, "Invalid DCC address: %d (must be 1-2048)", address);
@@ -170,7 +170,7 @@ void DCCManager::setEnabled(bool enable) {
             restart();  // Start DCC processing
         } else {
             initialized = false;
-            LOG_INFO(TAG, "🚂 DCC decoder disabled");
+            LOG_INFO(TAG, "DCC decoder disabled");
         }
     }
 }
@@ -197,7 +197,7 @@ void DCCManager::setAddress(int addr) {
             settingsManager->setDCCAddress(addr);
         }
         
-        LOG_INFOF(TAG, "🚂 DCC address changed to %d", addr);
+    LOG_INFOF(TAG, "DCC address changed to %d", addr);
         
         // Restart decoder with new address if currently enabled
         if (enabled) {
@@ -228,7 +228,7 @@ void DCCManager::setPin(int pinNumber) {
             settingsManager->setDCCPin(pinNumber);
         }
         
-        LOG_INFOF(TAG, "🚂 DCC GPIO pin changed to %d", pin);
+        LOG_INFOF(TAG, "DCC GPIO pin changed to %d", pin);
         
         // Restart decoder with new pin configuration if currently enabled
         if (enabled) {
@@ -265,7 +265,7 @@ void DCCManager::setState(bool state) {
     currentState = state;
     lastCommandTime = millis();  // Update command timestamp
     
-    LOG_INFOF(TAG, "🚂 DCC state changed to: %s", state ? "activated" : "deactivated");
+    LOG_INFOF(TAG, "DCC state changed to: %s", state ? "activated" : "deactivated");
     
     // Trigger appropriate display mode based on state
     if (state) {
@@ -293,13 +293,13 @@ bool DCCManager::isInitialized() {
  * @param activate Command direction (true=thrown/clock, false=closed/gallery)
  */
 void DCCManager::handleDCCCommand(uint16_t addr, bool activate) {
-    LOG_INFOF(TAG, "🚂 DCC command received - Address: %d, Activate: %s", addr, activate ? "true" : "false");
+    LOG_INFOF(TAG, "DCC command received - Address: %d, Activate: %s", addr, activate ? "true" : "false");
     
     // Validate command is for our configured address
     if (addr == address) {
         setState(activate);  // Process command and update display mode
     } else {
-        LOG_INFOF(TAG, "🚂 DCC command ignored (address %d != our address %d)", addr, address);
+    LOG_INFOF(TAG, "DCC command ignored (address %d != our address %d)", addr, address);
     }
 }
 
@@ -310,12 +310,12 @@ void DCCManager::handleDCCCommand(uint16_t addr, bool activate) {
  * Called when DCC command direction is 0 (closed/straight).
  */
 void DCCManager::switchToGallery() {
-    LOG_INFO(TAG, "🚂 Switching to gallery mode");
+    LOG_INFO(TAG, "Switching to gallery mode");
     
     if (slideshowManager) {
         // Start slideshow to activate gallery mode
         slideshowManager->startSlideshow();
-        LOG_INFO(TAG, "🚂 Gallery mode activated - slideshow started");
+    LOG_INFO(TAG, "Gallery mode activated - slideshow started");
     } else {
         LOG_WARN(TAG, "SlideshowManager not available for gallery mode");
     }
@@ -328,12 +328,12 @@ void DCCManager::switchToGallery() {
  * Called when DCC command direction is 1 (thrown/diverging).
  */
 void DCCManager::switchToClock() {
-    LOG_INFO(TAG, "🚂 Switching to clock mode");
+    LOG_INFO(TAG, "Switching to clock mode");
     
     if (slideshowManager) {
         // Force clock display mode
         slideshowManager->showClock();
-        LOG_INFO(TAG, "🚂 Clock mode activated - clock displayed");
+    LOG_INFO(TAG, "Clock mode activated - clock displayed");
     } else {
         LOG_WARN(TAG, "SlideshowManager not available for clock mode");
     }
