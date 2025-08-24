@@ -1,0 +1,36 @@
+var classLogger =
+[
+    [ "Level", "classLogger.html#ad766a24576ea8b27ad9d5649cef46d8f", [
+      [ "ERROR", "classLogger.html#ad766a24576ea8b27ad9d5649cef46d8fa3ce1bbeb15a3d8e29e4c5e75492a781b", null ],
+      [ "WARN", "classLogger.html#ad766a24576ea8b27ad9d5649cef46d8fa0e11f461815c2881cd2c3c334a0d3979", null ],
+      [ "INFO", "classLogger.html#ad766a24576ea8b27ad9d5649cef46d8fa61a9b6fc1e9babc448984b8a34ca2ed2", null ],
+      [ "DEBUG", "classLogger.html#ad766a24576ea8b27ad9d5649cef46d8fabdc8d840ac4b73e1bd3212184af8f85e", null ],
+      [ "VERBOSE", "classLogger.html#ad766a24576ea8b27ad9d5649cef46d8fa0555f85cdf6f189fbed972eb61aa30af", null ]
+    ] ],
+    [ "debug", "classLogger.html#ac8499f2d541f448c7865f09162de4cdd", null ],
+    [ "debugf", "classLogger.html#a78e93728975fa7d9304308fa4727251a", null ],
+    [ "disableFileLogging", "classLogger.html#aafa3ed876755cb0afe343c0f1844a314", null ],
+    [ "enableFileLogging", "classLogger.html#a5b539f000eff1afb1519f2bbd68e5330", null ],
+    [ "ensureInitialized", "classLogger.html#a69de08a11528b0359405b240191d9cae", null ],
+    [ "error", "classLogger.html#a4338f31f4b549d720363561e4d51b2e2", null ],
+    [ "errorf", "classLogger.html#ab861daa563cccbf75716ca88585abba5", null ],
+    [ "getLevel", "classLogger.html#a098bfabd965be44d84fc1ca7672f13b0", null ],
+    [ "info", "classLogger.html#aa4b96fc56d30c5eb9c50cda0bf3d437f", null ],
+    [ "infof", "classLogger.html#ab2f0695148349d1706c4c630e9236277", null ],
+    [ "init", "classLogger.html#abafcb752e75799b0ec508baefe92cf9b", null ],
+    [ "isFileLoggingEnabled", "classLogger.html#a61cf6248e76b63e40a312a2cb80399f0", null ],
+    [ "log", "classLogger.html#a0d4aad19fd0f1fd93dfd4970036eafec", null ],
+    [ "logf", "classLogger.html#a10120338f1c1df4d0af23f258e54d9b1", null ],
+    [ "printMemoryInfo", "classLogger.html#adf7ad23ebb84c573cf4d51927c559c8b", null ],
+    [ "printSystemInfo", "classLogger.html#a2136a8461d51c61cfbb9b72931703502", null ],
+    [ "printWiFiStatus", "classLogger.html#ae501c3cd1c04506dd5389877cb394e18", null ],
+    [ "setLevel", "classLogger.html#ab138ded838fa6698b7e6f74f5fc57efc", null ],
+    [ "verbose", "classLogger.html#a99bc178b9f7ca5b7b7bce4a4fd81b9f2", null ],
+    [ "verbosef", "classLogger.html#a133efd6c91f8932312ed46046cd248dc", null ],
+    [ "warn", "classLogger.html#a79aeac8799db3146a786401d6020ce41", null ],
+    [ "warnf", "classLogger.html#a437712542b3379185f43926de8ff3620", null ],
+    [ "writeToFile", "classLogger.html#af46a93300ff855ef9783e09b699ad041", null ],
+    [ "currentLogFile", "classLogger.html#a985a1efca7d4b774ae1ea6b6ece7ddd7", null ],
+    [ "fileLogging", "classLogger.html#a6c3ed8dd93bc351f575c1ae0eef047f0", null ],
+    [ "initialized", "classLogger.html#aef732b653322fdd9ba7b0a72e90814a4", null ]
+];

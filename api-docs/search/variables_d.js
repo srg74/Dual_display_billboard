@@ -1,0 +1,21 @@
+var searchData=
+[
+  ['password_0',['password',['../structCredentialManager_1_1WiFiCredentials.html#a96945f246ecf040991a9a75ec65f1470',1,'CredentialManager::WiFiCredentials']]],
+  ['peakheapusage_1',['peakHeapUsage',['../structMemoryManager_1_1MemoryStats.html#ae12aac4cc39126971f9680e475caac93',1,'MemoryManager::MemoryStats']]],
+  ['pendingip_2',['pendingIP',['../classDisplayManager.html#a847f2bd924ccec709e96a5ee3d7943d7',1,'DisplayManager']]],
+  ['pendingssid_3',['pendingSSID',['../classDisplayManager.html#ae568df6944fc6bd86d1feb42957dc16e',1,'DisplayManager']]],
+  ['pendingstatus_4',['pendingStatus',['../classDisplayManager.html#a4c2e621de678a693c937a88de65e282c',1,'DisplayManager']]],
+  ['pin_5',['pin',['../classDCCManager.html#a6d47c289e4225182d83c3d22c200965f',1,'DCCManager']]],
+  ['platformname_6',['platformName',['../structConfigValidator_1_1PlatformConstraints.html#a39b5386336f3c65537b0cc6b16be11c6',1,'ConfigValidator::PlatformConstraints']]],
+  ['portalsequenceactive_7',['portalSequenceActive',['../classDisplayManager.html#aa03f241470589011d4eb29d1a9399fe0',1,'DisplayManager']]],
+  ['posixtz_8',['posixTZ',['../structTimezoneOption.html#a3c2d64161a69c395355d2afca6cae3a8',1,'TimezoneOption']]],
+  ['progmem_9',['PROGMEM',['../splash__screen_8h.html#af6b3611fd26607c079d7234782701b7c',1,'splash_screen.h']]],
+  ['psramactuallypresent_10',['psramActuallyPresent',['../structPlatformDetector_1_1PlatformInfo.html#a863377adb0bb46382c878619e33410e1',1,'PlatformDetector::PlatformInfo']]],
+  ['psramavailable_11',['psramAvailable',['../structMemoryManager_1_1MemoryStats.html#aa0f65c64093782683200bea57645c02c',1,'MemoryManager::MemoryStats']]],
+  ['psramconfigured_12',['psramConfigured',['../structPlatformDetector_1_1PlatformInfo.html#aafc5fbf4f13de7f80e3a96513c71c98b',1,'PlatformDetector::PlatformInfo']]],
+  ['psramfree_13',['psramfree',['../structMemoryManager_1_1MemoryStats.html#ad98124616ec99453f69269b617ef699e',1,'MemoryManager::MemoryStats::psramFree'],['../structPlatformDetector_1_1PlatformInfo.html#a08fe4a2835a5293d34fd5a35c10ca8c6',1,'PlatformDetector::PlatformInfo::psramFree']]],
+  ['psramhealth_14',['psramHealth',['../structMemoryManager_1_1MemoryStats.html#a278e1a4e9360de13729fbddb6a633a80',1,'MemoryManager::MemoryStats']]],
+  ['psramsize_15',['psramSize',['../structPlatformDetector_1_1PlatformInfo.html#a27bddd9c640955671204f5551eaf21cc',1,'PlatformDetector::PlatformInfo']]],
+  ['psramtotal_16',['psramTotal',['../structMemoryManager_1_1MemoryStats.html#a388795f1e6178195cbf1156a9644471b',1,'MemoryManager::MemoryStats']]],
+  ['psramused_17',['psramUsed',['../structMemoryManager_1_1MemoryStats.html#a464b1f4c82a76d35eede1dc013f390f2',1,'MemoryManager::MemoryStats']]]
+];

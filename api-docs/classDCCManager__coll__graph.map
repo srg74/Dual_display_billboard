@@ -1,0 +1,20 @@
+<map id="DCCManager" name="DCCManager">
+<area shape="rect" id="Node000001" title="Digital Command Control accessory decoder for model railway integration." alt="" coords="21,269,127,295"/>
+<area shape="poly" id="edge11_Node000001_Node000001" title=" " alt="" coords="142,273,154,282,146,290,128,293,127,287,143,285,149,282,140,278"/>
+<area shape="rect" id="Node000002" href="$classSettingsManager.html" title="Comprehensive configuration persistence and management system with hardware integration." alt="" coords="5,93,137,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="71,133,67,168,67,207,75,269,69,269,62,207,62,167,65,132"/>
+<area shape="rect" id="Node000004" href="$classSlideshowManager.html" title="Advanced image slideshow system with clock integration." alt="" coords="191,181,336,207"/>
+<area shape="poly" id="edge7_Node000004_Node000002" title=" " alt="" coords="91,128,123,155,156,170,191,180,190,185,155,175,121,160,88,132"/>
+<area shape="rect" id="Node000003" href="$classDisplayManager.html" title="Dual TFT display hardware controller." alt="" coords="155,5,283,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="145,37,108,57,90,75,79,94,74,92,86,72,104,53,143,33"/>
+<area shape="rect" id="Node000005" href="$classImageManager.html" title="Comprehensive image management system." alt="" coords="162,93,282,119"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="223,45,223,69,224,93,219,93,218,69,217,45"/>
+<area shape="rect" id="Node000006" href="$classDisplayClockManager.html" title="Advanced clock display system with multiple face styles." alt="" coords="391,93,555,119"/>
+<area shape="poly" id="edge9_Node000006_Node000003" title=" " alt="" coords="270,32,331,52,371,67,440,91,438,96,369,72,329,57,269,37"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="227,215,101,271,99,267,224,210"/>
+<area shape="poly" id="edge4_Node000004_Node000005" title=" " alt="" coords="236,130,260,180,255,182,231,132"/>
+<area shape="poly" id="edge6_Node000005_Node000005" title=" " alt="" coords="297,97,309,106,300,114,282,116,282,111,298,109,303,106,294,102"/>
+<area shape="poly" id="edge8_Node000004_Node000006" title=" " alt="" coords="434,127,355,160,294,184,292,179,353,155,432,122"/>
+<area shape="rect" id="Node000007" href="$classTimeManager.html" title="Advanced time management system with NTP synchronization and timezone support." alt="" coords="443,5,555,31"/>
+<area shape="poly" id="edge10_Node000006_Node000007" title=" " alt="" coords="494,44,479,94,474,92,489,43"/>
+</map>
