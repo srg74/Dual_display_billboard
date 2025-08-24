@@ -261,7 +261,7 @@ void DisplayClockManager::displayModernSquareClock(TFT_eSPI& tft) {
     if (now < 1000000000) { // Check for reasonable timestamp (post-2001)
         String clockLabel = getClockLabel();
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
-        tft.setTextFont(2);
+        tft.setTextFont(4);
         int textWidth = tft.textWidth(clockLabel.c_str());
         
         // Adaptive positioning for different display sizes
