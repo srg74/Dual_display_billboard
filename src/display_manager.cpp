@@ -89,16 +89,19 @@ void DisplayManager::initializeBacklight() {
     LOG_INFO("DISPLAY", "Setting up backlights...");
     
 #ifdef ESP32S3_MODE
-    // ESP32S3: Use PWM channels 3,4 to avoid conflict with ESP32 channels 1,2
+    // ESP32S3: Use higher resolution PWM for better brightness control
+    // Different pins but optimized PWM settings to match ESP32 brightness levels
+    // Note: ESP32S3 also has text rendering differences requiring position adjustments
+    // in TextUtils and DisplayClockManager for consistent Unicode character display
     ledcAttachPin(TFT_BACKLIGHT1_PIN, 3); // GPIO 7 → Channel 3
-    ledcSetup(3, 5000, 8); // Channel 3, 5 KHz, 8-bit
-    ledcWrite(3, 255); // Full brightness
+    ledcSetup(3, 5000, 10); // Channel 3, 5 KHz, 10-bit (higher resolution than ESP32)
+    ledcWrite(3, 1023); // Full brightness (10-bit max = 1023)
     
     ledcAttachPin(TFT_BACKLIGHT2_PIN, 4); // GPIO 8 → Channel 4  
-    ledcSetup(4, 5000, 8); // Channel 4, 5 KHz, 8-bit
-    ledcWrite(4, 255); // Full brightness
+    ledcSetup(4, 5000, 10); // Channel 4, 5 KHz, 10-bit (higher resolution than ESP32)
+    ledcWrite(4, 1023); // Full brightness (10-bit max = 1023)
     
-    LOG_INFO("DISPLAY", "ESP32S3 backlights initialized (PWM channels 3,4, 8-bit)");
+    LOG_INFO("DISPLAY", "ESP32S3 backlights initialized (PWM channels 3,4, 10-bit, 5kHz - optimized for brightness)");
 #else
     // ESP32 original setup (working) - keep PWM
     ledcAttachPin(TFT_BACKLIGHT1_PIN, 1); // GPIO 22 → Channel 1
@@ -352,10 +355,10 @@ void DisplayManager::clearBothDisplaysToBlack() {
     deselectAll();
 
 #ifdef ESP32S3_MODE
-    // ESP32S3: Keep backlights ON (simple GPIO control) - don't turn off like ESP32
-    setBrightness(255, 1);  // Keep Display 1 brightness ON
-    setBrightness(255, 2);  // Keep Display 2 brightness ON
-    LOG_INFO("DISPLAY", "ESP32S3: Both displays cleared to black with backlights ON");
+    // ESP32S3: Keep backlights ON with 10-bit PWM (1023 = max brightness)
+    setBrightness(255, 1);  // Keep Display 1 brightness ON (will be scaled to 1023 internally)
+    setBrightness(255, 2);  // Keep Display 2 brightness ON (will be scaled to 1023 internally)
+    LOG_INFO("DISPLAY", "ESP32S3: Both displays cleared to black with backlights ON (10-bit PWM)");
 #else
     // ESP32: Turn off brightness for complete darkness during startup
     setBrightness(0, 1);  // Turn off Display 1 brightness
@@ -369,11 +372,13 @@ void DisplayManager::clearBothDisplaysToBlack() {
  * 
  * Controls the PWM-driven backlight brightness for one or both displays.
  * Uses hardware PWM channels to provide smooth brightness control from
- * 0 (completely off) to 255 (maximum brightness).
+ * 0 (completely off) to 255 (maximum brightness). Platform-specific PWM:
+ * - ESP32: 8-bit PWM (0-255 range, 5kHz)
+ * - ESP32S3: 8-bit PWM (0-255 range, 5kHz) for consistent brightness
  * 
  * Channel mapping (hardware-specific):
- * - Display 1: GPIO 27 on PWM Channel 2 (Blue display)
- * - Display 2: GPIO 22 on PWM Channel 1 (Yellow display)
+ * - ESP32: Display 1=GPIO22/Ch1, Display 2=GPIO27/Ch2  
+ * - ESP32S3: Display 1=GPIO7/Ch3, Display 2=GPIO8/Ch4
  * 
  * @param brightness PWM duty cycle value (0-255)
  *                   0 = backlight off, 255 = maximum brightness
@@ -393,27 +398,28 @@ void DisplayManager::clearBothDisplaysToBlack() {
  */
 void DisplayManager::setBrightness(uint8_t brightness, int displayNum) {
 #ifdef ESP32S3_MODE
-    // ESP32S3: Use PWM channels 3,4 for proper brightness control (0-255)
+    // ESP32S3: Use 10-bit PWM resolution, scale 8-bit brightness (0-255) to 10-bit (0-1023)
+    uint32_t scaledBrightness = (brightness * 1023) / 255;
     if (displayNum == 1 || displayNum == 0) {
         brightness1 = brightness;
-        ledcWrite(3, brightness); // Apply to backlight 1 (GPIO 7, Channel 3)
-        LOG_INFOF("DISPLAY", "🔆 ESP32S3 Backlight 1: %d/255 (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
+        ledcWrite(3, scaledBrightness); // Apply to backlight 1 (GPIO 7, Channel 3)
+        LOG_INFOF("DISPLAY", "ESP32S3 Backlight 1: %d/255 -> %d/1023 (%.1f%%)", brightness, scaledBrightness, (brightness / 255.0f) * 100.0f);
     }
     if (displayNum == 2 || displayNum == 0) {
         brightness2 = brightness;
-        ledcWrite(4, brightness); // Apply to backlight 2 (GPIO 8, Channel 4)
-        LOG_INFOF("DISPLAY", "🔆 ESP32S3 Backlight 2: %d/255 (%.1f%%)", brightness, (brightness / 255.0f) * 100.0f);
+        ledcWrite(4, scaledBrightness); // Apply to backlight 2 (GPIO 8, Channel 4)
+        LOG_INFOF("DISPLAY", "ESP32S3 Backlight 2: %d/255 -> %d/1023 (%.1f%%)", brightness, scaledBrightness, (brightness / 255.0f) * 100.0f);
     }
 #else
-    // ESP32 original setup (working) - uses 8-bit PWM and channels 1,2 (swapped)
+    // ESP32 original setup (working) - restore original channel mapping
     if (displayNum == 1 || displayNum == 0) {
         brightness1 = brightness;
-        ledcWrite(2, brightness); // Apply to backlight 1 (GPIO 27, Channel 2) - SWAPPED: Blue display is on Channel 2
+        ledcWrite(2, brightness); // Apply to backlight 1 (GPIO 22, Channel 2) - Original working
         LOG_INFOF("DISPLAY", "🔆 Brightness set - Display 1: %d", brightness);
     }
     if (displayNum == 2 || displayNum == 0) {
         brightness2 = brightness;
-        ledcWrite(1, brightness); // Apply to backlight 2 (GPIO 22, Channel 1) - SWAPPED: Yellow display is on Channel 1
+        ledcWrite(1, brightness); // Apply to backlight 2 (GPIO 27, Channel 1) - Original working
         LOG_INFOF("DISPLAY", "🔆 Brightness set - Display 2: %d", brightness);
     }
 #endif
@@ -789,7 +795,7 @@ void DisplayManager::showConnectionSuccess(const String& ip) {
         return;
     }
     
-    LOG_INFO("DISPLAY", "📶 Showing WiFi connection success on display 1");
+    LOG_INFO("DISPLAY", "Showing WiFi connection success on display 1");
     
     // Display 1: Show connection success with #0000cc background (blue)
     selectDisplay(1);
@@ -1004,19 +1010,22 @@ void DisplayManager::updateSplashScreen() {
     if (splashActive && (millis() - splashStartTime >= splashTimeoutMs)) {
         splashActive = false;
         
+        // ALWAYS disable Display 2 after splash, regardless of mode
+        // Display 2 stays dark until user explicitly enables it via web UI
+        fillScreen(TFT_BLACK, 2);
+        setBrightness(0, 2);
+        LOG_INFO("DISPLAY", "Splash complete: Display 2 disabled (stays dark until user enables via web UI)");
+        
         // Check if we need to show portal info after splash
         if (portalSequenceActive) {
             portalSequenceActive = false;
             // Show portal info on Display 1
             showPortalInfo(pendingSSID, pendingIP, pendingStatus);
-            // Clear Display 2 and turn off brightness (unified behavior for all platforms)
-            fillScreen(TFT_BLACK, 2);
-            setBrightness(0, 2);
             LOG_INFO("DISPLAY", "Portal transition: Display 1 = portal info, Display 2 = disabled");
         } else {
             // Normal transition: clear Display 1 only
             fillScreen(TFT_BLACK, 1);
-            LOG_INFO("DISPLAY", "Normal transition: Display 1 cleared");
+            LOG_INFO("DISPLAY", "Normal transition: Display 1 cleared, Display 2 disabled");
         }
     }
 }

@@ -12,7 +12,7 @@
 
 #include "text_utils.h"
 
-// Font size matches TFT_eSPI font 2
+// Font size matches TFT_eSPI font 1
 static const uint8_t FONT_HEIGHT = 16;
 static const uint8_t FONT_WIDTH = 8;
 static const uint8_t LOWERCASE_HEIGHT = 11; // Lowercase letters are shorter
@@ -138,7 +138,19 @@ static const int GLYPH_COUNT = sizeof(unicode_glyphs) / sizeof(UnicodeGlyph);
 /**
  * @brief Render Unicode text string at specified position
  */
+/**
+ * @brief Draw Unicode text string on TFT display with platform-specific adjustments
+ */
 int TextUtils::drawUnicodeText(TFT_eSPI& tft, const String& text, int x, int y, uint16_t color) {
+    // Platform-specific positioning adjustments for ESP32S3
+    // ESP32S3 has different SPI timing and memory alignment affecting text positioning
+#ifdef ESP32S3_MODE
+    // ESP32S3: Adjust Y position for better umlaut alignment
+    y += 1;  // Slight downward shift to compensate for memory alignment differences
+    // ESP32S3: Adjust X position for better character spacing
+    x += 1;  // Slight rightward shift for better centering
+#endif
+
     int currentX = x;
     int index = 0;
     
@@ -160,16 +172,19 @@ int TextUtils::drawUnicodeText(TFT_eSPI& tft, const String& text, int x, int y, 
         const UnicodeGlyph* glyph = findGlyph(codepoint);
         if (glyph) {
             drawGlyph(tft, glyph, currentX, y, color);
-            currentX += glyph->xAdvance;
+            int advance = glyph->xAdvance;
+            currentX += advance;
         } else if (codepoint > 0 && codepoint < 128) {
             // ASCII character - use built-in font
             tft.setTextFont(2);
             tft.setTextColor(color);
             tft.drawChar(codepoint, currentX, y);
-            currentX += tft.textWidth(String((char)codepoint));
+            int advance = tft.textWidth(String((char)codepoint));
+            currentX += advance;
         } else if (codepoint > 0) {
             // Unknown Unicode character - draw placeholder or skip
-            currentX += FONT_WIDTH; // Default advance
+            int advance = FONT_WIDTH;
+            currentX += advance;
         }
     }
     
@@ -201,7 +216,7 @@ int TextUtils::getUnicodeTextWidth(TFT_eSPI& tft, const String& text) {
             // ASCII character - use actual TFT font width measurement
             totalWidth += tft.textWidth(String((char)codepoint));
         } else {
-            totalWidth += 6; // Default width for unknown (font 2 standard)
+            totalWidth += 6; // Default width for unknown (font 1 standard)
         }
     }
     
