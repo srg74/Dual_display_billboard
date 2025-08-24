@@ -2,7 +2,7 @@
 
 // Build Information (auto-generated during compilation)
 #ifndef BUILD_DATE
-#define BUILD_DATE "2508211"  // YYMMDDx format x = daily build counter
+#define BUILD_DATE "2508240"  // YYMMDDx format x = daily build counter
 #endif
 
 #ifndef BUILD_TYPE
