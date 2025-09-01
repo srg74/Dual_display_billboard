@@ -50,7 +50,7 @@ This breakout board is compatible with:
 
 - ST7735 80x160 TFT LCD displays
 - SPI interface displays with similar pinouts
-- [Display data sheet](Newvisio-N096-1608TBBIG11-H13_C2890616.pdf)
+- [ST7735 display data sheet used in design](Newvisio-N096-1608TBBIG11-H13_C2890616.pdf)
 
 ## Usage
 
