@@ -22,6 +22,10 @@ This folder contains all hardware-related resources for the ST7735 Dual Display 
   - `ESP32S3 dual ST7735 display controller.pdf`: Complete circuit schematic
   - `GERBER-ESP32S3_dual_ST7735_display.zip`: Gerber files for PCB fabrication
 
+- **Display_boards/**  
+  Display breakout board designs and resources:
+  - See [`Display_boards/Readme.md`](Display_boards/Readme.md) for detailed information
+
 ### Visual References
 
 - **ESP32/images/**  
