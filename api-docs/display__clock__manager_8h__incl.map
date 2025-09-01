@@ -1,0 +1,25 @@
+<map id="include/display_clock_manager.h" name="include/display_clock_manager.h">
+<area shape="rect" id="Node000001" title="Professional clock display system with multiple face styles for dual display billboard." alt="" coords="52,5,214,45"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="286,240,370,265"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="83,48,52,67,27,95,14,121,9,144,12,167,26,190,41,203,65,213,130,230,204,240,272,246,271,251,204,246,129,235,64,218,39,207,22,194,7,169,3,144,9,119,23,92,48,63,80,43"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="36,167,128,192"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="88,48,58,67,36,95,32,110,37,126,60,156,55,159,32,129,27,110,31,92,55,63,85,43"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="45,93,109,119"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="122,47,96,84,91,80,117,44"/>
+<area shape="rect" id="Node000005" href="$clock__types_8h.html" title="Clock face type definitions for dual display billboard system." alt="" coords="134,93,244,119"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="149,44,175,80,171,84,145,47"/>
+<area shape="rect" id="Node000006" href="$display__manager_8h.html" title="Hardware abstraction for dual TFT display control." alt="" coords="268,93,414,119"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="184,43,299,86,297,91,182,48"/>
+<area shape="rect" id="Node000008" href="$time__manager_8h.html" title="Professional time management system for ESP32 dual display billboard." alt="" coords="464,93,592,119"/>
+<area shape="poly" id="edge9_Node000001_Node000008" title=" " alt="" coords="214,40,457,88,456,93,213,45"/>
+<area shape="poly" id="edge6_Node000006_Node000002" title=" " alt="" coords="290,121,251,139,234,152,221,168,217,178,217,187,228,205,251,220,278,233,275,238,248,225,225,209,212,189,211,177,216,165,230,148,248,134,288,116"/>
+<area shape="poly" id="edge7_Node000006_Node000003" title=" " alt="" coords="300,121,138,166,137,160,299,116"/>
+<area shape="rect" id="Node000007" href="$display__hardware__config_8h.html" title="Centralized hardware pin configuration for dual TFT displays." alt="" coords="230,167,425,192"/>
+<area shape="poly" id="edge8_Node000006_Node000007" title=" " alt="" coords="342,119,335,154,330,153,336,119"/>
+<area shape="poly" id="edge10_Node000008_Node000002" title=" " alt="" coords="519,121,485,155,439,194,367,236,364,232,436,190,481,151,516,117"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="500,167,582,192"/>
+<area shape="poly" id="edge11_Node000008_Node000009" title=" " alt="" coords="533,119,539,153,534,154,527,119"/>
+<area shape="rect" id="Node000010" href="$timezone__config_8h.html" title="User&#45;configurable timezone definitions for the dual display billboard system." alt="" coords="606,167,748,192"/>
+<area shape="poly" id="edge12_Node000008_Node000010" title=" " alt="" coords="553,116,642,158,639,163,551,121"/>
+<area shape="poly" id="edge13_Node000010_Node000002" title=" " alt="" coords="622,195,384,243,383,237,620,189"/>
+</map>

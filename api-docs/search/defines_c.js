@@ -1,0 +1,21 @@
+var searchData=
+[
+  ['settings_5fbrightness_0',['SETTINGS_BRIGHTNESS',['../settings__manager_8h.html#a2010e4ae52395a12b090948f51781ede',1,'settings_manager.h']]],
+  ['settings_5fclock_5fenabled_1',['SETTINGS_CLOCK_ENABLED',['../settings__manager_8h.html#a98fbb0c4a3674fc5fbe6d8ce886214bc',1,'settings_manager.h']]],
+  ['settings_5fclock_5fface_2',['SETTINGS_CLOCK_FACE',['../settings__manager_8h.html#a66ea01f7b41a61c69e11af0d446f3f0b',1,'settings_manager.h']]],
+  ['settings_5fdcc_5faddress_3',['SETTINGS_DCC_ADDRESS',['../settings__manager_8h.html#ae6056eccd8b5757e1cb4493da72b15b8',1,'settings_manager.h']]],
+  ['settings_5fdcc_5fenabled_4',['SETTINGS_DCC_ENABLED',['../settings__manager_8h.html#aced92c76fd87966ee4d9ae2535576e15',1,'settings_manager.h']]],
+  ['settings_5fdcc_5fpin_5',['SETTINGS_DCC_PIN',['../settings__manager_8h.html#a57dd87f29656924ddbf54e858d2b9896',1,'settings_manager.h']]],
+  ['settings_5fimage_5fenabled_6',['SETTINGS_IMAGE_ENABLED',['../settings__manager_8h.html#a7b85481eaf36e81c8e60a8e56bf7d403',1,'settings_manager.h']]],
+  ['settings_5fimage_5finterval_7',['SETTINGS_IMAGE_INTERVAL',['../settings__manager_8h.html#adda17c75ecbbab23dd135814d8955bc0',1,'settings_manager.h']]],
+  ['settings_5fprint_8',['SETTINGS_PRINT',['../settings__manager_8h.html#a7fee32d9bc0ac057de18e4bc3d9f5b98',1,'settings_manager.h']]],
+  ['settings_5freset_9',['SETTINGS_RESET',['../settings__manager_8h.html#a6598247eb47d326e327f889894777b33',1,'settings_manager.h']]],
+  ['settings_5fsecond_5fdisplay_10',['SETTINGS_SECOND_DISPLAY',['../settings__manager_8h.html#a61b51233edd2c3fc5b8e77c29ff4bab9',1,'settings_manager.h']]],
+  ['slideshow_5fdefault_5finterval_5fms_11',['SLIDESHOW_DEFAULT_INTERVAL_MS',['../display__timing__config_8h.html#ace1e66173d0d8d545a95eb1ba26a9356',1,'display_timing_config.h']]],
+  ['slideshow_5fdefault_5finterval_5fsec_12',['SLIDESHOW_DEFAULT_INTERVAL_SEC',['../display__timing__config_8h.html#a457d34715221e7704011a281906137d4',1,'display_timing_config.h']]],
+  ['splash_5fheight_13',['SPLASH_HEIGHT',['../splash__screen_8h.html#a0751a8420b717eb073eab7b05a9954dd',1,'splash_screen.h']]],
+  ['splash_5fsize_14',['SPLASH_SIZE',['../splash__screen_8h.html#a851b4838a949e15eee05fdf1e7d41304',1,'splash_screen.h']]],
+  ['splash_5fwidth_15',['SPLASH_WIDTH',['../splash__screen_8h.html#a300803638e66cb9428c1ab04712c70a6',1,'splash_screen.h']]],
+  ['startup_5fdelay_16',['STARTUP_DELAY',['../config_8h.html#aaed067aba1d8dc17479c812291ca1bcc',1,'config.h']]],
+  ['system_5fheartbeat_5finterval_5fms_17',['SYSTEM_HEARTBEAT_INTERVAL_MS',['../display__timing__config_8h.html#ac6c592ade4ad311c3bed6c3c94691e24',1,'display_timing_config.h']]]
+];

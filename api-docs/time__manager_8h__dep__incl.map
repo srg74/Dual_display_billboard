@@ -1,0 +1,26 @@
+<map id="include/time_manager.h" name="include/time_manager.h">
+<area shape="rect" id="Node000001" title="Professional time management system for ESP32 dual display billboard." alt="" coords="541,5,720,31"/>
+<area shape="rect" id="Node000002" href="$display__clock__manager_8h.html" title="Professional clock display system with multiple face styles for dual display billboard." alt="" coords="358,79,519,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="591,38,486,81,484,76,589,33"/>
+<area shape="rect" id="Node000005" href="$main_8cpp.html" title="Dual Display Billboard System &#45; Multi&#45;Mode Application Entry Point." alt="" coords="623,240,729,265"/>
+<area shape="poly" id="edge13_Node000001_Node000005" title=" " alt="" coords="653,39,696,94,716,128,732,166,735,179,732,193,715,221,693,242,690,238,710,217,727,191,729,179,727,167,712,131,691,97,649,42"/>
+<area shape="rect" id="Node000008" href="$display__clock__manager_8cpp.html" title="Advanced clock display system with multiple face styles and dual display support." alt="" coords="5,167,229,192"/>
+<area shape="poly" id="edge12_Node000001_Node000008" title=" " alt="" coords="543,36,448,55,347,81,230,127,141,169,138,164,228,122,346,76,447,49,542,30"/>
+<area shape="rect" id="Node000009" href="$wifi__manager_8h.html" title="Advanced WiFi management system with dual&#45;mode operation for ESP32 dual display billboard." alt="" coords="545,167,717,192"/>
+<area shape="poly" id="edge9_Node000001_Node000009" title=" " alt="" coords="633,44,633,166,628,166,628,44"/>
+<area shape="rect" id="Node000010" href="$time__manager_8cpp.html" title="Professional time management implementation for ESP32 dual display billboard." alt="" coords="793,86,959,111"/>
+<area shape="poly" id="edge14_Node000001_Node000010" title=" " alt="" coords="680,32,841,83,839,89,678,37"/>
+<area shape="rect" id="Node000003" href="$slideshow__manager_8h.html" title="Advanced image slideshow system with clock integration for dual display billboard." alt="" coords="254,167,469,192"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="412,130,375,168,371,164,409,127"/>
+<area shape="poly" id="edge8_Node000002_Node000005" title=" " alt="" coords="465,127,497,159,535,190,588,218,639,237,637,242,585,223,532,194,493,163,461,131"/>
+<area shape="poly" id="edge7_Node000002_Node000008" title=" " alt="" coords="349,124,165,169,164,164,348,119"/>
+<area shape="rect" id="Node000004" href="$dcc__manager_8cpp.html" title="Digital Command Control (DCC) interface implementation for model railway integration." alt="" coords="33,240,191,265"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="309,198,153,242,152,237,307,193"/>
+<area shape="poly" id="edge4_Node000003_Node000005" title=" " alt="" coords="426,192,626,237,624,242,425,198"/>
+<area shape="rect" id="Node000006" href="$slideshow__manager_8cpp.html" title="Advanced slideshow management system with clock integration and DCC control." alt="" coords="215,240,417,265"/>
+<area shape="poly" id="edge5_Node000003_Node000006" title=" " alt="" coords="349,205,326,241,321,238,344,202"/>
+<area shape="rect" id="Node000007" href="$wifi__manager_8cpp.html" title="ESP32 Dual Display Billboard &#45; Advanced WiFi Management System v0.9." alt="" coords="441,240,599,265"/>
+<area shape="poly" id="edge6_Node000003_Node000007" title=" " alt="" coords="400,195,495,237,493,242,398,200"/>
+<area shape="poly" id="edge10_Node000009_Node000005" title=" " alt="" coords="648,202,671,238,666,241,643,205"/>
+<area shape="poly" id="edge11_Node000009_Node000007" title=" " alt="" coords="603,202,540,242,537,238,600,197"/>
+</map>

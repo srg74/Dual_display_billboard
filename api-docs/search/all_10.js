@@ -1,0 +1,27 @@
+var searchData=
+[
+  ['tag_0',['tag',['../classPlatformDetector.html#a92c34bcac9182c51ed9a30735a37af49',1,'PlatformDetector::TAG'],['../settings__manager_8cpp.html#a0ccfc586aa70c5a8ae673c025fdd5972',1,'TAG:&#160;settings_manager.cpp'],['../time__manager_8cpp.html#a0ccfc586aa70c5a8ae673c025fdd5972',1,'TAG:&#160;time_manager.cpp'],['../wifi__manager_8cpp.html#a0ccfc586aa70c5a8ae673c025fdd5972',1,'TAG:&#160;wifi_manager.cpp'],['../classMemoryManager.html#a4f9ca40aab0c372a492c12aa7594d827',1,'MemoryManager::TAG'],['../classDCCManager.html#ab381903d7b4f8cffd31b71308f051619',1,'DCCManager::TAG'],['../classCredentialManager.html#a597069112483c9a492e1554cb8f66e71',1,'CredentialManager::TAG'],['../classConfigValidator.html#ac8bc9d45adc19fd163502afe4ab1e33d',1,'ConfigValidator::TAG']]],
+  ['testpsramallocation_1',['testPSRAMAllocation',['../classPlatformDetector.html#aa4fc35b82be015a21119122e8c364513',1,'PlatformDetector']]],
+  ['text_5futils_2ecpp_2',['text_utils.cpp',['../text__utils_8cpp.html',1,'']]],
+  ['text_5futils_2eh_3',['text_utils.h',['../text__utils_8h.html',1,'']]],
+  ['textutils_4',['TextUtils',['../classTextUtils.html',1,'']]],
+  ['tft_5',['tft',['../classDisplayManager.html#a6cea718a3da74fcbd30e8249a7c3c594',1,'DisplayManager']]],
+  ['tft_5fbacklight1_5fpin_6',['TFT_BACKLIGHT1_PIN',['../classDisplayManager.html#afbc7af5d5e7ab3a90dd433b85cb2ae03',1,'DisplayManager']]],
+  ['tft_5fbacklight2_5fpin_7',['TFT_BACKLIGHT2_PIN',['../classDisplayManager.html#afb6369272ec74001d342b0b5ff7a1c7c',1,'DisplayManager']]],
+  ['tft_5fdc_5fpin_8',['TFT_DC_PIN',['../classDisplayManager.html#a57075bd39ded4a354ff06269f26ca774',1,'DisplayManager']]],
+  ['tft_5foutput_9',['tft_output',['../classImageManager.html#af2d9908fa84163ae8cf94d529ec5ec68',1,'ImageManager']]],
+  ['time_5fmanager_2ecpp_10',['time_manager.cpp',['../time__manager_8cpp.html',1,'']]],
+  ['time_5fmanager_2eh_11',['time_manager.h',['../time__manager_8h.html',1,'']]],
+  ['time_5fsync_5finterval_12',['time_sync_interval',['../config__validator_8h.html#ae96aa4fafcb44ccfb53e8694389cdce1',1,'TIME_SYNC_INTERVAL:&#160;config_validator.h'],['../config_8h.html#ae96aa4fafcb44ccfb53e8694389cdce1',1,'TIME_SYNC_INTERVAL:&#160;config.h']]],
+  ['timeinitialized_13',['timeinitialized',['../classTimeManager.html#a43f307a3e523b9ca2f2cb2d2517fec01',1,'TimeManager::timeInitialized'],['../main_8cpp.html#ab15f2e0a57e6bfe90ee9539fb9654c85',1,'timeInitialized:&#160;main.cpp']]],
+  ['timemanager_14',['timemanager',['../classTimeManager.html',1,'TimeManager'],['../main_8cpp.html#a1e6f8d8851f4aed1936054f12be1aab0',1,'timeManager:&#160;main.cpp'],['../classWiFiManager.html#a2bc0cfc959113c9f138f91d49c78b1fd',1,'WiFiManager::timeManager'],['../classDisplayClockManager.html#ae4cf26ce8961bc42e2a991e721fd78e1',1,'DisplayClockManager::timeManager'],['../classTimeManager.html#ab1c3cbb48ad68d928bb8b9a4ef210ed6',1,'TimeManager::TimeManager()']]],
+  ['timezone_5fconfig_2eh_15',['timezone_config.h',['../timezone__config_8h.html',1,'']]],
+  ['timezone_5ffile_16',['TIMEZONE_FILE',['../classTimeManager.html#a428311e947bdb237f8ddb62ad9adfc15',1,'TimeManager']]],
+  ['timezone_5foptions_17',['TIMEZONE_OPTIONS',['../timezone__config_8h.html#ae886332230bd2579385f4bb50b1a7ec0',1,'timezone_config.h']]],
+  ['timezone_5foptions_5fcount_18',['TIMEZONE_OPTIONS_COUNT',['../timezone__config_8h.html#a21910be47f4719c757963af9e6773627',1,'timezone_config.h']]],
+  ['timezoneoption_19',['TimezoneOption',['../structTimezoneOption.html',1,'']]],
+  ['toasciifallback_20',['toASCIIFallback',['../classTextUtils.html#ada9b4faf483d3128732639205b22b70f',1,'TextUtils']]],
+  ['todisplaytext_21',['toDisplayText',['../classTextUtils.html#aa7a93402f14e58c7ee7d68356f9f11ae',1,'TextUtils']]],
+  ['transliteratetext_22',['transliterateText',['../classTextUtils.html#ad2a45182f125995d829c126eec0bcf42',1,'TextUtils']]],
+  ['triggercleanupifneeded_23',['triggerCleanupIfNeeded',['../classMemoryManager.html#aade00d2e337dd0200112e5aac461307b',1,'MemoryManager']]]
+];
