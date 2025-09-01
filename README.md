@@ -1,5 +1,7 @@
 # Dual Display Billboard for scale modellers
 
+![ESP32 Dual ST7735 Display Hardware](hardware/images/ESP32_dual_ST7735_display.png)
+
 ## ESP32/ESP32-S3 Digital Billboard with Image Management
 
 Dual display billboard system designed for scale modelers, featuring WiFi connectivity, image slideshow capabilities, multiple clock faces.
