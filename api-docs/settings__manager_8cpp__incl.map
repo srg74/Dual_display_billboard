@@ -1,0 +1,22 @@
+<map id="src/settings_manager.cpp" name="src/settings_manager.cpp">
+<area shape="rect" id="Node000001" title="Implementation of comprehensive configuration persistence system with hardware integration." alt="" coords="188,5,376,31"/>
+<area shape="rect" id="Node000002" href="$settings__manager_8h.html" title="Comprehensive configuration persistence and management system for ESP32 dual display billboard." alt="" coords="121,79,272,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="270,33,222,72,219,68,266,29"/>
+<area shape="rect" id="Node000007" href="$display__manager_8h.html" title="Hardware abstraction for dual TFT display control." alt="" coords="373,79,518,104"/>
+<area shape="poly" id="edge8_Node000001_Node000007" title=" " alt="" coords="309,28,408,71,405,76,307,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="229,225,313,251"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="210,103,230,124,248,151,261,181,269,211,264,212,256,183,243,153,225,127,207,106"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="34,225,116,251"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="121,99,91,105,62,116,35,132,13,153,8,169,15,186,28,201,46,216,42,220,25,205,10,188,3,170,9,151,32,128,59,111,90,100,120,94"/>
+<area shape="rect" id="Node000005" href="$logger_8h.html" title="Hierarchical logging system with build&#45;time optimization for ESP32 dual display billboard." alt="" coords="159,152,234,177"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="199,104,199,138,194,138,194,104"/>
+<area shape="rect" id="Node000006" href="$clock__types_8h.html" title="Clock face type definitions for dual display billboard system." alt="" coords="24,152,134,177"/>
+<area shape="poly" id="edge7_Node000002_Node000006" title=" " alt="" coords="179,106,111,147,109,142,176,102"/>
+<area shape="poly" id="edge5_Node000005_Node000003" title=" " alt="" coords="210,175,251,214,247,218,206,179"/>
+<area shape="poly" id="edge6_Node000005_Node000004" title=" " alt="" coords="178,180,108,221,105,216,175,175"/>
+<area shape="poly" id="edge9_Node000007_Node000003" title=" " alt="" coords="519,98,570,108,616,124,632,135,642,147,643,162,634,179,613,195,582,208,500,225,408,235,327,239,327,233,407,229,499,220,580,203,611,190,630,176,638,161,637,149,629,139,613,129,569,114,518,103"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="309,152,401,177"/>
+<area shape="poly" id="edge10_Node000007_Node000008" title=" " alt="" coords="433,106,382,145,379,141,429,102"/>
+<area shape="rect" id="Node000009" href="$display__hardware__config_8h.html" title="Centralized hardware pin configuration for dual TFT displays." alt="" coords="426,152,620,177"/>
+<area shape="poly" id="edge11_Node000007_Node000009" title=" " alt="" coords="460,102,502,141,498,144,456,106"/>
+</map>

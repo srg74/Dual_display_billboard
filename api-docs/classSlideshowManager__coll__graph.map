@@ -1,0 +1,16 @@
+<map id="SlideshowManager" name="SlideshowManager">
+<area shape="rect" id="Node000001" title="Advanced image slideshow system with clock integration." alt="" coords="227,181,373,207"/>
+<area shape="rect" id="Node000002" href="$classImageManager.html" title="Comprehensive image management system." alt="" coords="5,93,125,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="106,121,193,155,264,179,262,184,191,160,104,126"/>
+<area shape="poly" id="edge3_Node000002_Node000002" title=" " alt="" coords="140,97,152,106,144,114,126,116,125,111,141,109,147,106,138,102"/>
+<area shape="rect" id="Node000003" href="$classDisplayManager.html" title="Dual TFT display hardware controller." alt="" coords="212,5,340,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="220,37,162,57,86,96,83,91,160,52,218,32"/>
+<area shape="rect" id="Node000004" href="$classSettingsManager.html" title="Comprehensive configuration persistence and management system with hardware integration." alt="" coords="234,93,366,119"/>
+<area shape="poly" id="edge5_Node000004_Node000003" title=" " alt="" coords="277,44,280,69,293,92,288,94,275,70,271,44"/>
+<area shape="rect" id="Node000005" href="$classDisplayClockManager.html" title="Advanced clock display system with multiple face styles." alt="" coords="390,93,554,119"/>
+<area shape="poly" id="edge7_Node000005_Node000003" title=" " alt="" coords="333,32,388,52,454,91,451,96,386,57,332,37"/>
+<area shape="poly" id="edge4_Node000001_Node000004" title=" " alt="" coords="303,133,303,181,297,181,297,133"/>
+<area shape="poly" id="edge6_Node000001_Node000005" title=" " alt="" coords="455,131,420,160,390,174,359,184,357,179,388,169,417,155,452,127"/>
+<area shape="rect" id="Node000006" href="$classTimeManager.html" title="Advanced time management system with NTP synchronization and timezone support." alt="" coords="500,5,612,31"/>
+<area shape="poly" id="edge8_Node000005_Node000006" title=" " alt="" coords="547,45,529,71,496,95,493,91,525,67,543,42"/>
+</map>

@@ -1,0 +1,25 @@
+var dir_d44c64559bbebec7f509842c48db8b23 =
+[
+    [ "clock_types.h", "clock__types_8h.html", "clock__types_8h" ],
+    [ "config.h", "config_8h.html", "config_8h" ],
+    [ "config_validator.h", "config__validator_8h.html", "config__validator_8h" ],
+    [ "credential_manager.h", "credential__manager_8h.html", "credential__manager_8h" ],
+    [ "dcc_manager.h", "dcc__manager_8h.html", "dcc__manager_8h" ],
+    [ "display_clock_manager.h", "display__clock__manager_8h.html", "display__clock__manager_8h" ],
+    [ "display_hardware_config.h", "display__hardware__config_8h.html", "display__hardware__config_8h" ],
+    [ "display_manager.h", "display__manager_8h.html", "display__manager_8h" ],
+    [ "display_timing_config.h", "display__timing__config_8h.html", "display__timing__config_8h" ],
+    [ "image_manager.h", "image__manager_8h.html", "image__manager_8h" ],
+    [ "logger.h", "logger_8h.html", "logger_8h" ],
+    [ "memory_manager.h", "memory__manager_8h.html", "memory__manager_8h" ],
+    [ "platform_detector.h", "platform__detector_8h.html", "platform__detector_8h" ],
+    [ "secrets.h", "secrets_8h.html", "secrets_8h" ],
+    [ "settings_manager.h", "settings__manager_8h.html", "settings__manager_8h" ],
+    [ "slideshow_manager.h", "slideshow__manager_8h.html", "slideshow__manager_8h" ],
+    [ "splash_screen.h", "splash__screen_8h.html", "splash__screen_8h" ],
+    [ "text_utils.h", "text__utils_8h.html", "text__utils_8h" ],
+    [ "time_manager.h", "time__manager_8h.html", "time__manager_8h" ],
+    [ "timezone_config.h", "timezone__config_8h.html", "timezone__config_8h" ],
+    [ "version.h", "version_8h.html", "version_8h" ],
+    [ "wifi_manager.h", "wifi__manager_8h.html", "wifi__manager_8h" ]
+];

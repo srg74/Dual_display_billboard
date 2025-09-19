@@ -1,0 +1,99 @@
+<map id="src/main.cpp" name="src/main.cpp">
+<area shape="rect" id="Node000001" title="Dual Display Billboard System &#45; Multi&#45;Mode Application Entry Point." alt="" coords="1307,5,1413,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="1585,372,1669,397"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="1413,19,1764,37,1942,54,2006,64,2043,76,2067,93,2084,112,2093,134,2096,163,2096,240,2093,256,2083,271,2048,297,1997,320,1935,338,1799,365,1683,381,1682,375,1798,360,1934,333,1995,315,2045,293,2079,267,2088,254,2091,239,2091,163,2088,135,2079,115,2064,97,2040,81,2005,70,1942,59,1764,42,1413,24"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="831,299,913,324"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="1307,25,1174,42,1096,58,1019,81,949,106,922,123,897,153,882,186,874,221,872,285,867,285,868,221,876,184,892,151,919,119,946,101,1018,76,1095,53,1173,37,1307,20"/>
+<area shape="rect" id="Node000004" href="$logger_8h.html" title="Hierarchical logging system with build&#45;time optimization for ESP32 dual display billboard." alt="" coords="756,225,831,251"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="1307,21,1197,23,1062,30,996,38,936,49,887,63,852,81,827,110,811,145,802,181,797,212,792,211,796,180,806,143,823,107,849,77,885,58,935,43,995,33,1061,25,1197,17,1307,16"/>
+<area shape="rect" id="Node000005" href="$display__manager_8h.html" title="Hardware abstraction for dual TFT display control." alt="" coords="1179,225,1325,251"/>
+<area shape="poly" id="edge6_Node000001_Node000005" title=" " alt="" coords="1364,31,1361,97,1353,139,1336,179,1315,203,1290,221,1287,216,1311,199,1331,176,1348,137,1356,96,1358,31"/>
+<area shape="rect" id="Node000008" href="$wifi__manager_8h.html" title="Advanced WiFi management system with dual&#45;mode operation for ESP32 dual display billboard." alt="" coords="446,79,567,104"/>
+<area shape="poly" id="edge10_Node000001_Node000008" title=" " alt="" coords="1307,26,628,81,581,86,581,80,628,76,1307,21"/>
+<area shape="rect" id="Node000012" href="$credential__manager_8h.html" title="Secure WiFi credential storage and management system for ESP32 dual display billboard." alt="" coords="5,152,168,177"/>
+<area shape="poly" id="edge37_Node000001_Node000012" title=" " alt="" coords="1307,22,1157,25,940,33,689,51,560,64,434,81,352,96,271,115,138,151,137,145,270,110,351,91,433,76,559,59,689,46,940,28,1157,19,1307,17"/>
+<area shape="rect" id="Node000013" href="$time__manager_8h.html" title="Professional time management system for ESP32 dual display billboard." alt="" coords="1673,225,1801,251"/>
+<area shape="poly" id="edge38_Node000001_Node000013" title=" " alt="" coords="1414,28,1474,44,1545,69,1618,104,1653,126,1686,150,1712,180,1730,212,1725,214,1708,183,1682,154,1650,130,1616,109,1543,74,1472,49,1412,33"/>
+<area shape="rect" id="Node000015" href="$settings__manager_8h.html" title="Comprehensive configuration persistence and management system for ESP32 dual display billboard." alt="" coords="907,152,1058,177"/>
+<area shape="poly" id="edge39_Node000001_Node000015" title=" " alt="" coords="1307,22,1252,25,1186,35,1118,52,1055,81,1022,110,998,142,993,139,1018,106,1052,76,1117,47,1185,29,1251,20,1307,16"/>
+<area shape="rect" id="Node000017" href="$image__manager_8h.html" title="Manages JPEG image storage, validation, and display for dual TFT displays." alt="" coords="541,152,680,177"/>
+<area shape="poly" id="edge40_Node000001_Node000017" title=" " alt="" coords="1307,22,1169,25,992,34,820,51,751,65,700,81,679,93,659,109,629,143,625,139,656,105,675,89,698,76,750,59,820,46,992,28,1169,20,1307,17"/>
+<area shape="rect" id="Node000020" href="$slideshow__manager_8h.html" title="Advanced image slideshow system with clock integration for dual display billboard." alt="" coords="1065,79,1228,104"/>
+<area shape="poly" id="edge41_Node000001_Node000020" title=" " alt="" coords="1327,33,1195,77,1193,72,1325,28"/>
+<area shape="rect" id="Node000023" href="$display__clock__manager_8h.html" title="Professional clock display system with multiple face styles for dual display billboard." alt="" coords="1448,152,1635,177"/>
+<area shape="poly" id="edge56_Node000001_Node000023" title=" " alt="" coords="1376,29,1518,141,1514,145,1373,33"/>
+<area shape="rect" id="Node000025" href="$dcc__manager_8h.html" title="Digital Command Control (DCC) interface for model railway integration." alt="" coords="1707,79,1827,104"/>
+<area shape="poly" id="edge57_Node000001_Node000025" title=" " alt="" coords="1413,26,1693,75,1692,80,1412,31"/>
+<area shape="rect" id="Node000027" href="$memory__manager_8h.html" title="Comprehensive memory monitoring and management system for ESP32&#45;S3 dual display billboard." alt="" coords="1851,79,2005,104"/>
+<area shape="poly" id="edge60_Node000001_Node000027" title=" " alt="" coords="1413,23,1838,76,1837,81,1412,28"/>
+<area shape="rect" id="Node000028" href="$config_8h.html" title=" " alt="" coords="1982,152,2055,177"/>
+<area shape="poly" id="edge67_Node000001_Node000028" title=" " alt="" coords="1413,18,1564,22,1755,32,1926,49,1985,61,2005,68,2018,77,2027,91,2030,107,2028,138,2023,138,2025,107,2022,93,2014,81,2003,73,1984,66,1925,54,1755,37,1564,27,1413,23"/>
+<area shape="rect" id="Node000029" href="$platform__detector_8h.html" title="Multiplatform detection and PSRAM capability testing." alt="" coords="2131,79,2282,104"/>
+<area shape="poly" id="edge64_Node000001_Node000029" title=" " alt="" coords="1413,20,1711,41,2112,76,2118,77,2118,82,2112,81,1710,47,1413,25"/>
+<area shape="poly" id="edge4_Node000004_Node000002" title=" " alt="" coords="796,251,800,287,808,306,820,322,836,330,861,337,937,350,1037,360,1151,368,1388,377,1570,380,1570,386,1388,382,1151,373,1036,365,936,355,860,342,834,335,817,326,803,309,795,288,790,251"/>
+<area shape="poly" id="edge5_Node000004_Node000003" title=" " alt="" coords="808,249,851,288,847,291,804,253"/>
+<area shape="poly" id="edge7_Node000005_Node000002" title=" " alt="" coords="1243,253,1231,268,1220,287,1216,306,1222,322,1245,339,1280,353,1325,363,1375,370,1480,379,1571,381,1571,386,1480,384,1374,376,1324,368,1279,358,1243,344,1218,326,1211,306,1215,285,1226,265,1239,249"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="1451,299,1543,324"/>
+<area shape="poly" id="edge8_Node000005_Node000006" title=" " alt="" coords="1292,248,1445,292,1444,297,1291,253"/>
+<area shape="rect" id="Node000007" href="$display__hardware__config_8h.html" title="Centralized hardware pin configuration for dual TFT displays." alt="" coords="1232,299,1427,324"/>
+<area shape="poly" id="edge9_Node000005_Node000007" title=" " alt="" coords="1266,249,1308,287,1305,291,1263,253"/>
+<area shape="poly" id="edge28_Node000008_Node000005" title=" " alt="" coords="555,101,707,136,895,175,1166,221,1165,226,894,180,706,141,554,107"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="454,152,517,177"/>
+<area shape="poly" id="edge11_Node000008_Node000009" title=" " alt="" coords="506,105,495,140,490,138,501,104"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="300,225,465,251"/>
+<area shape="poly" id="edge12_Node000008_Node000010" title=" " alt="" coords="446,100,385,106,321,117,266,133,246,143,233,154,227,165,226,175,231,184,241,193,270,208,307,219,305,224,268,213,238,197,227,187,221,176,221,164,229,150,243,138,264,128,320,112,385,101,445,94"/>
+<area shape="rect" id="Node000011" title=" " alt="" coords="243,152,325,177"/>
+<area shape="poly" id="edge13_Node000008_Node000011" title=" " alt="" coords="472,107,334,150,332,145,470,101"/>
+<area shape="poly" id="edge14_Node000008_Node000012" title=" " alt="" coords="446,106,168,152,167,147,445,100"/>
+<area shape="poly" id="edge18_Node000008_Node000013" title=" " alt="" coords="568,91,816,95,1153,105,1468,123,1581,135,1648,150,1671,162,1691,179,1723,213,1719,216,1688,183,1668,167,1646,154,1580,140,1467,128,1153,111,816,101,568,96"/>
+<area shape="poly" id="edge23_Node000008_Node000015" title=" " alt="" coords="568,99,894,147,893,153,567,104"/>
+<area shape="poly" id="edge29_Node000008_Node000017" title=" " alt="" coords="525,102,584,142,581,146,522,106"/>
+<area shape="rect" id="Node000019" href="$secrets_8h.html" title="Security credentials and authentication constants for ESP32 dual display billboard." alt="" coords="349,152,430,177"/>
+<area shape="poly" id="edge36_Node000008_Node000019" title=" " alt="" coords="489,106,422,147,419,142,486,102"/>
+<area shape="poly" id="edge15_Node000012_Node000002" title=" " alt="" coords="101,175,147,212,178,232,210,248,314,285,398,302,596,321,883,349,1164,367,1405,376,1571,380,1571,385,1405,382,1164,372,882,355,596,327,398,307,313,290,208,253,175,236,144,216,98,179"/>
+<area shape="poly" id="edge16_Node000012_Node000003" title=" " alt="" coords="109,175,187,212,237,232,289,248,436,277,584,295,717,304,817,307,817,312,716,309,584,300,436,283,287,253,235,237,185,217,107,180"/>
+<area shape="poly" id="edge17_Node000012_Node000004" title=" " alt="" coords="168,171,694,223,743,228,742,233,693,228,168,176"/>
+<area shape="poly" id="edge19_Node000013_Node000002" title=" " alt="" coords="1730,253,1646,362,1642,359,1726,249"/>
+<area shape="poly" id="edge20_Node000013_Node000003" title=" " alt="" coords="1673,248,1611,253,927,308,927,303,1610,248,1673,243"/>
+<area shape="rect" id="Node000014" href="$timezone__config_8h.html" title="User&#45;configurable timezone definitions for the dual display billboard system." alt="" coords="1715,299,1856,324"/>
+<area shape="poly" id="edge21_Node000013_Node000014" title=" " alt="" coords="1747,250,1772,286,1768,289,1743,253"/>
+<area shape="poly" id="edge22_Node000014_Node000002" title=" " alt="" coords="1761,326,1666,369,1664,364,1759,322"/>
+<area shape="poly" id="edge24_Node000015_Node000002" title=" " alt="" coords="991,176,1010,207,1039,247,1078,289,1124,322,1160,335,1210,347,1333,364,1464,374,1571,379,1571,384,1463,379,1333,369,1209,352,1159,340,1121,326,1074,293,1035,251,1005,210,987,179"/>
+<area shape="poly" id="edge25_Node000015_Node000003" title=" " alt="" coords="976,179,891,289,887,286,971,176"/>
+<area shape="poly" id="edge26_Node000015_Node000004" title=" " alt="" coords="953,180,838,223,836,218,951,175"/>
+<area shape="rect" id="Node000016" href="$clock__types_8h.html" title="Clock face type definitions for dual display billboard system." alt="" coords="1349,225,1459,251"/>
+<area shape="poly" id="edge27_Node000015_Node000016" title=" " alt="" coords="1051,175,1335,222,1335,228,1050,180"/>
+<area shape="poly" id="edge30_Node000017_Node000002" title=" " alt="" coords="593,180,572,194,554,212,544,231,544,240,549,249,575,278,600,296,627,307,656,312,720,314,798,321,908,339,1021,352,1242,370,1434,378,1571,381,1571,386,1434,384,1242,376,1020,358,907,344,797,327,720,320,655,317,626,312,598,301,571,282,544,252,539,241,539,230,550,209,569,190,589,175"/>
+<area shape="poly" id="edge32_Node000017_Node000003" title=" " alt="" coords="629,175,680,209,745,248,833,291,831,295,743,253,677,214,626,180"/>
+<area shape="poly" id="edge34_Node000017_Node000004" title=" " alt="" coords="641,175,752,218,750,223,639,180"/>
+<area shape="poly" id="edge35_Node000017_Node000005" title=" " alt="" coords="681,171,1166,225,1165,230,680,176"/>
+<area shape="poly" id="edge33_Node000017_Node000010" title=" " alt="" coords="575,180,434,224,432,219,573,175"/>
+<area shape="rect" id="Node000018" title=" " alt="" coords="559,225,681,251"/>
+<area shape="poly" id="edge31_Node000017_Node000018" title=" " alt="" coords="615,177,619,211,614,212,610,178"/>
+<area shape="poly" id="edge42_Node000020_Node000002" title=" " alt="" coords="1148,104,1146,148,1150,209,1157,242,1169,273,1186,300,1210,322,1237,335,1276,346,1374,363,1480,374,1571,379,1571,384,1480,379,1373,369,1275,352,1235,340,1206,326,1182,303,1164,275,1152,243,1145,210,1140,148,1143,104"/>
+<area shape="poly" id="edge45_Node000020_Node000003" title=" " alt="" coords="1139,106,1110,140,1071,179,983,245,906,294,903,289,980,241,1068,175,1106,137,1135,103"/>
+<area shape="poly" id="edge46_Node000020_Node000004" title=" " alt="" coords="1066,105,981,123,938,137,896,154,851,184,815,217,811,213,848,180,893,150,936,132,980,118,1065,99"/>
+<area shape="poly" id="edge48_Node000020_Node000015" title=" " alt="" coords="1121,106,1023,149,1021,144,1119,102"/>
+<area shape="poly" id="edge47_Node000020_Node000017" title=" " alt="" coords="1066,106,694,155,693,150,1065,101"/>
+<area shape="rect" id="Node000021" title=" " alt="" coords="1259,152,1322,177"/>
+<area shape="poly" id="edge43_Node000020_Node000021" title=" " alt="" coords="1171,102,1256,143,1254,148,1169,106"/>
+<area shape="rect" id="Node000022" title=" " alt="" coords="1184,152,1235,177"/>
+<area shape="poly" id="edge44_Node000020_Node000022" title=" " alt="" coords="1159,103,1192,140,1188,143,1155,106"/>
+<area shape="poly" id="edge49_Node000020_Node000023" title=" " alt="" coords="1211,101,1464,147,1464,152,1210,107"/>
+<area shape="poly" id="edge50_Node000023_Node000002" title=" " alt="" coords="1564,176,1590,196,1613,224,1626,259,1632,295,1632,358,1627,358,1627,296,1621,260,1608,227,1587,199,1561,180"/>
+<area shape="poly" id="edge54_Node000023_Node000005" title=" " alt="" coords="1495,180,1313,225,1311,219,1494,175"/>
+<area shape="poly" id="edge51_Node000023_Node000006" title=" " alt="" coords="1540,178,1525,226,1507,286,1502,285,1520,225,1535,177"/>
+<area shape="poly" id="edge55_Node000023_Node000013" title=" " alt="" coords="1574,175,1693,218,1692,223,1572,180"/>
+<area shape="poly" id="edge53_Node000023_Node000016" title=" " alt="" coords="1520,180,1440,221,1437,217,1518,175"/>
+<area shape="rect" id="Node000024" title=" " alt="" coords="1535,225,1599,251"/>
+<area shape="poly" id="edge52_Node000023_Node000024" title=" " alt="" coords="1548,177,1561,212,1556,213,1543,179"/>
+<area shape="poly" id="edge58_Node000025_Node000002" title=" " alt="" coords="1805,102,1840,120,1856,134,1869,151,1892,197,1902,240,1901,261,1896,282,1870,326,1858,336,1839,346,1791,361,1683,380,1682,375,1790,356,1837,341,1855,332,1866,322,1891,280,1896,260,1897,241,1887,199,1864,153,1852,138,1837,125,1802,106"/>
+<area shape="rect" id="Node000026" title=" " alt="" coords="1761,152,1855,177"/>
+<area shape="poly" id="edge59_Node000025_Node000026" title=" " alt="" coords="1776,103,1797,139,1792,141,1771,106"/>
+<area shape="poly" id="edge61_Node000027_Node000002" title=" " alt="" coords="1933,104,1940,146,1943,206,1940,239,1932,271,1918,301,1898,326,1882,337,1860,346,1804,361,1682,380,1682,375,1803,356,1859,341,1880,332,1894,322,1914,298,1927,269,1934,238,1938,206,1935,147,1928,105"/>
+<area shape="poly" id="edge62_Node000027_Node000004" title=" " alt="" coords="1851,105,1839,107,1637,127,1549,137,1437,155,1385,167,1334,180,1196,201,1058,217,844,236,844,231,1058,212,1195,196,1333,175,1384,162,1435,149,1548,131,1636,121,1838,101,1851,100"/>
+<area shape="poly" id="edge63_Node000027_Node000028" title=" " alt="" coords="1944,102,1995,141,1991,145,1941,106"/>
+<area shape="poly" id="edge65_Node000029_Node000002" title=" " alt="" coords="2226,102,2243,116,2260,134,2270,155,2268,178,2240,233,2209,270,2168,299,2113,326,2077,339,2029,350,1911,366,1786,377,1683,384,1682,378,1786,372,1910,361,2028,344,2076,334,2111,322,2165,294,2205,266,2236,230,2263,177,2264,156,2255,137,2240,120,2223,106"/>
+<area shape="rect" id="Node000030" title=" " alt="" coords="2131,152,2253,177"/>
+<area shape="poly" id="edge66_Node000029_Node000030" title=" " alt="" coords="2207,105,2200,139,2195,138,2202,104"/>
+</map>

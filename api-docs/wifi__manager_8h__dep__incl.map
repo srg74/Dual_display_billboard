@@ -1,0 +1,7 @@
+<map id="include/wifi_manager.h" name="include/wifi_manager.h">
+<area shape="rect" id="Node000001" title="Advanced WiFi management system with dual&#45;mode operation for ESP32 dual display billboard." alt="" coords="49,5,221,31"/>
+<area shape="rect" id="Node000002" href="$main_8cpp.html" title="Dual Display Billboard System &#45; Multi&#45;Mode Application Entry Point." alt="" coords="5,79,111,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="115,42,72,80,69,76,111,38"/>
+<area shape="rect" id="Node000003" href="$wifi__manager_8cpp.html" title="ESP32 Dual Display Billboard &#45; Advanced WiFi Management System v0.9." alt="" coords="135,79,293,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="160,38,203,76,199,80,156,42"/>
+</map>

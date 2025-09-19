@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['scaninprogress_0',['scanInProgress',['../classWiFiManager.html#ad87de5e12925ffc3e474a48adff7b521',1,'WiFiManager']]],
+  ['scanttlms_1',['scanTTLMs',['../classWiFiManager.html#ab44584b23b64431fe440a76751e07a18',1,'WiFiManager']]],
+  ['second_5fdisplay_5ffile_2',['SECOND_DISPLAY_FILE',['../classSettingsManager.html#ab3158d95c6eaf714610ac467e79affc8',1,'SettingsManager']]],
+  ['seconddisplayenabled_3',['seconddisplayenabled',['../classDisplayManager.html#ad44b741f160ba7f6f8bd898c64f893d6',1,'DisplayManager::secondDisplayEnabled'],['../classSettingsManager.html#a72e28e77e7295a1225a97df75f28d238',1,'SettingsManager::secondDisplayEnabled']]],
+  ['secondscreencs_4',['secondscreencs',['../classDisplayClockManager.html#afe88b8efa41b7148b543b747602b19bc',1,'DisplayClockManager::secondScreenCS'],['../classDisplayManager.html#abc47e23090fbc74036b6041793584600',1,'DisplayManager::secondScreenCS']]],
+  ['server_5',['server',['../classWiFiManager.html#a7f44b8f8e353da2f28c05f28e00a51c1',1,'WiFiManager::server'],['../main_8cpp.html#ab3b1a2de97f8a60db4db4b64b53aa74f',1,'server:&#160;main.cpp']]],
+  ['settingsmanager_6',['settingsmanager',['../classDCCManager.html#abf472d20ebc82b27510bdc9bcdd707e3',1,'DCCManager::settingsManager'],['../classSlideshowManager.html#a274ed40c5cc05678d254d186b6aa4e3e',1,'SlideshowManager::settingsManager'],['../classWiFiManager.html#a490ac6998429583727960f91ee07d06e',1,'WiFiManager::settingsManager'],['../main_8cpp.html#a8db2a5d8370a9f714b11df03a012aef0',1,'settingsManager:&#160;main.cpp']]],
+  ['severity_7',['severity',['../structConfigValidator_1_1ValidationResult.html#af48fac957e985a2725ed9286a03a69db',1,'ConfigValidator::ValidationResult']]],
+  ['showingclock_8',['showingClock',['../classSlideshowManager.html#a5ddb45a079a8a666cb22f87b664ddaee',1,'SlideshowManager']]],
+  ['slideshowactive_9',['slideshowActive',['../classSlideshowManager.html#abf736684eb5be3ff822107c6daef7343',1,'SlideshowManager']]],
+  ['slideshowmanager_10',['slideshowmanager',['../classWiFiManager.html#a926e5137bd7951831c99f3758c3f8dfc',1,'WiFiManager::slideshowManager'],['../classDCCManager.html#ab55b7fd97528cd31374ffb9f4cd2e8b1',1,'DCCManager::slideshowManager']]],
+  ['spipins_11',['spiPins',['../structConfigValidator_1_1PlatformConstraints.html#af455347eac9eb6a68757cc03e7800556',1,'ConfigValidator::PlatformConstraints']]],
+  ['splashactive_12',['splashActive',['../classDisplayManager.html#a31f272588451f5716559265f51bd25f5',1,'DisplayManager']]],
+  ['splashstarttime_13',['splashStartTime',['../classDisplayManager.html#a62f562fdfdaf57cb14e54d2ed9d294f3',1,'DisplayManager']]],
+  ['splashtimeoutms_14',['splashTimeoutMs',['../classDisplayManager.html#a32b375f2dc4d568ee320161add72d56c',1,'DisplayManager']]],
+  ['ssid_15',['ssid',['../structCredentialManager_1_1WiFiCredentials.html#a3536f0e3e7e978c42c31e80eb1c2d37e',1,'CredentialManager::WiFiCredentials']]],
+  ['startuptime_16',['startupTime',['../main_8cpp.html#a82a0a01420f361ce5e984f419ac4388c',1,'main.cpp']]],
+  ['switchtoportalmode_17',['switchToPortalMode',['../classWiFiManager.html#a1c4bf72672f95bd174c72a58fe70e272',1,'WiFiManager']]],
+  ['systeminitialized_18',['systemInitialized',['../main_8cpp.html#a24ddc71dd6bfdd998fd68a4d04dcc5b3',1,'main.cpp']]],
+  ['systemready_19',['systemReady',['../structConfigValidator_1_1ValidationReport.html#ace5c8bab95637d306497b4e951c49f86',1,'ConfigValidator::ValidationReport']]]
+];
