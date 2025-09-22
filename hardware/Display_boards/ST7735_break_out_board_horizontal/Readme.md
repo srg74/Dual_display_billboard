@@ -1,18 +1,18 @@
-# ST7735 Vertical Breakout Board
+# ST7735 Horizontal Breakout Board
 
-![ST7735 Vertical Breakout Board](ST7735_break_out_board_vertical.png)
+![ST7735 Horizontal Breakout Board](ST7735_break_out_board_horizontal.png)
 
-This folder contains the design files and manufacturing resources for the ST7735 vertical orientation breakout board.
+This folder contains the design files and manufacturing resources for the ST7735 horizontal orientation breakout board.
 
 ## Overview
 
-The ST7735 vertical breakout board is designed to provide a clean, reliable interface for ST7735 TFT LCD displays in a vertical mounting configuration. This board simplifies connections and provides mechanical stability for display modules.
+The ST7735 horizontal breakout board is designed to provide a clean, reliable interface for ST7735 TFT LCD displays in a horizontal mounting configuration. This board offers an alternative layout orientation for different enclosure designs and space constraints.
 
 ## Files Included
 
 ### Manufacturing Files
 
-- **`GERBER-ST7735_break_out_board_vertical.zip`**  
+- **`GERBER-ST7735_break_out_board_horizontal.zip`**  
   Complete Gerber files ready for PCB fabrication, including:
   - Copper layers
   - Solder mask layers
@@ -20,21 +20,16 @@ The ST7735 vertical breakout board is designed to provide a clean, reliable inte
   - Drill files
   - Pick and place files
 
-### Documentation
-
-- **`ST7735_break_out_board_vertical.pdf`**  
-  Complete circuit schematic and PCB layout documentation
-
 ### Visual References
 
-- **`ST7735_break_out_board_vertical.png`**  
+- **`ST7735_break_out_board_horizontal.png`**  
   PCB layout image showing component placement and routing
 
 ## Board Specifications
 
 ### Physical Characteristics
 
-- **Orientation**: Vertical mounting configuration
+- **Orientation**: Horizontal mounting configuration
 - **Connector Type**: Standard 2.54mm pitch headers
 - **PCB Thickness**: Standard 1.0mm FR4
 - **Dimensions**: Optimized for ST7735 display modules
@@ -52,7 +47,6 @@ This breakout board is compatible with:
 
 - ST7735 80x160 TFT LCD displays
 - SPI interface displays with similar pinouts
-- [ST7735 display data sheet used in design](Newvisio-N096-1608TBBIG11-H13_C2890616.pdf)
 
 ## Usage
 
@@ -66,6 +60,14 @@ This breakout board is compatible with:
 For detailed pin mapping and wiring instructions, refer to:
 
 - [`../../../docs/hardware connections.md`](../../../docs/hardware%20connections.md)
+
+## Differences from Vertical Variant
+
+The horizontal orientation provides:
+
+- **Compact Width**: Reduced overall width for tight spaces
+- **Alternative Mounting**: Different mechanical mounting options
+- **Connector Placement**: Optimized connector positioning for horizontal layouts
 
 ## Manufacturing Notes
 
@@ -84,9 +86,3 @@ The original design files are maintained in KiCAD format. The exported files in 
 - Manufacturing files are production-ready for PCB fabrication
 - This design is optimized for cost-effective fabrication
 - This project is in active development and files may change at any time without notice. Use at your own risk and responsibility
-
-## Related Resources
-
-- [Main Hardware Documentation](../../Readme.md)
-- [Display Boards Overview](../Readme.md)
-- [Project Documentation](../../../docs/)
