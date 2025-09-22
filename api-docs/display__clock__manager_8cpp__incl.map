@@ -1,0 +1,34 @@
+<map id="src/display_clock_manager.cpp" name="src/display_clock_manager.cpp">
+<area shape="rect" id="Node000001" title="Advanced clock display system with multiple face styles and dual display support." alt="" coords="370,5,594,31"/>
+<area shape="rect" id="Node000002" href="$display__clock__manager_8h.html" title="Professional clock display system with multiple face styles for dual display billboard." alt="" coords="323,79,510,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="473,33,438,70,435,67,469,29"/>
+<area shape="rect" id="Node000009" href="$time__manager_8h.html" title="Professional time management system for ESP32 dual display billboard." alt="" coords="621,152,749,177"/>
+<area shape="poly" id="edge15_Node000001_Node000009" title=" " alt="" coords="494,29,529,63,576,102,648,144,645,148,572,106,526,67,491,33"/>
+<area shape="rect" id="Node000012" href="$text__utils_8h.html" title="Unicode text rendering utilities for international character support." alt="" coords="5,152,100,177"/>
+<area shape="poly" id="edge16_Node000001_Node000012" title=" " alt="" coords="449,33,101,150,99,145,447,28"/>
+<area shape="rect" id="Node000013" title=" " alt="" coords="585,79,653,104"/>
+<area shape="poly" id="edge19_Node000001_Node000013" title=" " alt="" coords="505,28,586,70,584,75,503,33"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="541,299,625,324"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="479,102,523,120,543,133,560,150,578,183,587,220,590,255,589,285,584,285,585,256,582,221,573,185,556,154,540,137,520,124,477,107"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="184,225,276,251"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="410,106,380,141,338,179,304,203,269,221,267,217,301,198,335,175,376,137,406,102"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="125,152,189,177"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="376,107,203,154,201,148,374,101"/>
+<area shape="rect" id="Node000006" href="$clock__types_8h.html" title="Clock face type definitions for dual display billboard system." alt="" coords="213,152,324,177"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="394,106,306,148,304,144,392,102"/>
+<area shape="rect" id="Node000007" href="$display__manager_8h.html" title="Hardware abstraction for dual TFT display control." alt="" coords="400,152,545,177"/>
+<area shape="poly" id="edge6_Node000002_Node000007" title=" " alt="" coords="428,103,457,140,453,143,424,106"/>
+<area shape="poly" id="edge10_Node000002_Node000009" title=" " alt="" coords="460,101,629,146,628,151,459,107"/>
+<area shape="poly" id="edge7_Node000007_Node000003" title=" " alt="" coords="484,176,568,286,564,289,480,179"/>
+<area shape="poly" id="edge8_Node000007_Node000004" title=" " alt="" coords="434,180,283,224,281,219,433,175"/>
+<area shape="rect" id="Node000008" href="$display__hardware__config_8h.html" title="Centralized hardware pin configuration for dual TFT displays." alt="" coords="301,225,495,251"/>
+<area shape="poly" id="edge9_Node000007_Node000008" title=" " alt="" coords="463,179,422,218,418,214,459,175"/>
+<area shape="poly" id="edge11_Node000009_Node000003" title=" " alt="" coords="679,179,601,289,597,286,674,176"/>
+<area shape="rect" id="Node000010" title=" " alt="" coords="671,225,754,251"/>
+<area shape="poly" id="edge12_Node000009_Node000010" title=" " alt="" coords="692,177,706,212,701,214,687,179"/>
+<area shape="rect" id="Node000011" href="$timezone__config_8h.html" title="User&#45;configurable timezone definitions for the dual display billboard system." alt="" coords="778,225,919,251"/>
+<area shape="poly" id="edge13_Node000009_Node000011" title=" " alt="" coords="712,175,811,217,808,222,710,180"/>
+<area shape="poly" id="edge14_Node000011_Node000003" title=" " alt="" coords="807,253,640,298,638,293,805,248"/>
+<area shape="poly" id="edge17_Node000012_Node000003" title=" " alt="" coords="66,176,111,212,140,232,172,248,267,278,365,295,455,304,528,308,527,313,454,310,364,301,266,283,170,253,138,237,108,217,63,180"/>
+<area shape="poly" id="edge18_Node000012_Node000004" title=" " alt="" coords="82,175,190,218,188,223,80,180"/>
+</map>

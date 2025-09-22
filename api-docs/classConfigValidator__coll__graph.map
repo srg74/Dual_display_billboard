@@ -1,0 +1,7 @@
+<map id="ConfigValidator" name="ConfigValidator">
+<area shape="rect" id="Node000001" title="Comprehensive multiplatform configuration validation system." alt="" coords="149,108,270,133"/>
+<area shape="rect" id="Node000002" href="$structConfigValidator_1_1ValidationReport.html" title="Comprehensive validation report." alt="" coords="5,5,200,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="136,52,198,106,194,110,133,56"/>
+<area shape="rect" id="Node000003" href="$structConfigValidator_1_1PlatformConstraints.html" title="Platform&#45;specific GPIO constraints." alt="" coords="225,5,410,45"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="287,56,225,110,221,106,283,52"/>
+</map>

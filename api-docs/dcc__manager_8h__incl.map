@@ -1,0 +1,7 @@
+<map id="include/dcc_manager.h" name="include/dcc_manager.h">
+<area shape="rect" id="Node000001" title="Digital Command Control (DCC) interface for model railway integration." alt="" coords="18,5,189,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,79,89,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="96,33,67,69,63,66,92,29"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="113,79,208,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="115,29,145,66,141,70,111,33"/>
+</map>

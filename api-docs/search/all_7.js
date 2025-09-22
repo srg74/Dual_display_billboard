@@ -1,0 +1,22 @@
+var searchData=
+[
+  ['handleconnect_0',['handleConnect',['../classWiFiManager.html#a5a787f6ec6716a13ba4a65e392377052',1,'WiFiManager']]],
+  ['handledcccommand_1',['handleDCCCommand',['../classDCCManager.html#a8032d96106cb90013d4241a5b5393b43',1,'DCCManager']]],
+  ['handleimageupload_2',['handleImageUpload',['../classImageManager.html#a5abd42819d11b0f22c35777e0a114daa',1,'ImageManager']]],
+  ['hascredentials_3',['hasCredentials',['../classCredentialManager.html#a537613155ecd68597fa6f2f1d68748f5',1,'CredentialManager']]],
+  ['haspsram_4',['hasPSRAM',['../structConfigValidator_1_1PlatformConstraints.html#ad7db8474d798d96468f3f5f61dde83d1',1,'ConfigValidator::PlatformConstraints']]],
+  ['healthstatus_5',['HealthStatus',['../classMemoryManager.html#a516133f354823c80735516101fc2d4ea',1,'MemoryManager']]],
+  ['heap_5finternal_6',['HEAP_INTERNAL',['../classMemoryManager.html#afd0fe6b9f227fed24b6162f1856d8197af48be09e30c5c8bc1e5094b3eb530345',1,'MemoryManager']]],
+  ['heapfragmentation_7',['heapFragmentation',['../structMemoryManager_1_1MemoryStats.html#a3438513bf2953f4477d7306888d972fa',1,'MemoryManager::MemoryStats']]],
+  ['heapfree_8',['heapfree',['../structMemoryManager_1_1MemoryStats.html#a521c5fa3d516c7861088e3a2faf56122',1,'MemoryManager::MemoryStats::heapFree'],['../structPlatformDetector_1_1PlatformInfo.html#a1d52d6a0010bd06aa02b527751ca22ed',1,'PlatformDetector::PlatformInfo::heapFree']]],
+  ['heaphealth_9',['heapHealth',['../structMemoryManager_1_1MemoryStats.html#aa9e1ae983798b4583fd4e4615ea32b6f',1,'MemoryManager::MemoryStats']]],
+  ['heapmaxalloc_10',['heapMaxAlloc',['../structMemoryManager_1_1MemoryStats.html#a3f3b2f506c26873b6bb89c12311cab9c',1,'MemoryManager::MemoryStats']]],
+  ['heapminfree_11',['heapMinFree',['../structMemoryManager_1_1MemoryStats.html#affdd3aae064e0032bd194a3637ad1420',1,'MemoryManager::MemoryStats']]],
+  ['heapsamplecount_12',['heapSampleCount',['../classMemoryManager.html#a90642ea0249157aee03ad43f461c9582',1,'MemoryManager']]],
+  ['heapsamplesum_13',['heapSampleSum',['../classMemoryManager.html#af9503cf8ffa7202709cbf14c68240688',1,'MemoryManager']]],
+  ['heapsize_14',['heapSize',['../structPlatformDetector_1_1PlatformInfo.html#a271f98d6224cedc29daabfa1a4a861dd',1,'PlatformDetector::PlatformInfo']]],
+  ['heaptotal_15',['heapTotal',['../structMemoryManager_1_1MemoryStats.html#a246f964de1de58b4feb1a90716a0fba5',1,'MemoryManager::MemoryStats']]],
+  ['heapused_16',['heapUsed',['../structMemoryManager_1_1MemoryStats.html#ad35a938beeb50c7785ea60c7674fba5f',1,'MemoryManager::MemoryStats']]],
+  ['heartbeat_5finterval_17',['HEARTBEAT_INTERVAL',['../config_8h.html#a7f8d257cf2ab673b88ae1307011cbcf5',1,'config.h']]],
+  ['height_18',['height',['../structImageInfo.html#a3e7aeaa04148292810c97333819139a4',1,'ImageInfo::height'],['../structUnicodeGlyph.html#aedbd120b9c343c6d0e01663af4cb80ef',1,'UnicodeGlyph::height']]]
+];
